@@ -1,0 +1,5 @@
+User-agent: *
+Allow: /
+
+# Replace example.com after attaching your real domain.
+Sitemap: https://example.com/sitemap.xml

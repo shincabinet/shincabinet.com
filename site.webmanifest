@@ -1,0 +1,9 @@
+{
+  "name": "Shin Cabinet",
+  "short_name": "SHIN",
+  "start_url": "/",
+  "display": "standalone",
+  "background_color": "#f6f0e5",
+  "theme_color": "#111017",
+  "icons": []
+}
