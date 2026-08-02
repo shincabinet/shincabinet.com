@@ -4,11 +4,7 @@
   const data = window.SHIN_SITE;
   const pageConfig = window.SHIN_PAGES || { options: {}, items: [] };
   const customPages = window.SHIN_CUSTOM_PAGES || {};
-
-  if (!data) {
-    console.error("SHIN_SITE content data is missing.");
-    return;
-  }
+  if (!data) return;
 
   const qs = (selector, root = document) => root.querySelector(selector);
   const qsa = (selector, root = document) => [...root.querySelectorAll(selector)];
@@ -26,37 +22,30 @@
     return path.replace(/\/+/g, "/");
   };
 
-  function flattenPages(items, parentIds = [], parentEnabled = true, depth = 0, output = []) {
-    (items || []).forEach((page, index) => {
+  function flattenPages(items, parents = [], parentEnabled = true, output = []) {
+    (items || []).forEach((page) => {
       const effectiveEnabled = parentEnabled && page.enabled !== false;
       const record = {
         ...page,
         path: normalizePath(page.path),
-        parentIds: [...parentIds],
-        effectiveEnabled,
-        depth,
-        order: index
+        parentIds: [...parents],
+        effectiveEnabled
       };
       output.push(record);
-      flattenPages(page.children || [], [...parentIds, page.id], effectiveEnabled, depth + 1, output);
+      flattenPages(page.children || [], [...parents, page.id], effectiveEnabled, output);
     });
     return output;
   }
 
   const pages = flattenPages(pageConfig.items || []);
-  const pageById = new Map(pages.map(page => [page.id, page]));
-  const pageByPath = new Map(pages.map(page => [page.path, page]));
+  const pageById = new Map(pages.map((page) => [page.id, page]));
+  const pageByPath = new Map(pages.map((page) => [page.path, page]));
   const currentPageId = document.body.dataset.page || "";
   const currentPage = pageById.get(currentPageId) || pageByPath.get(normalizePath(location.pathname));
+  const isVisible = (page) => Boolean(page && page.effectiveEnabled);
 
-  function getConfiguredChildren(page) {
-    return (page.children || [])
-      .map(child => pageById.get(child.id))
-      .filter(Boolean);
-  }
-
-  function isVisiblePage(page) {
-    return Boolean(page && page.effectiveEnabled);
+  function configuredChildren(page) {
+    return (page?.children || []).map((child) => pageById.get(child.id)).filter(Boolean);
   }
 
   function setMetadata(page) {
@@ -67,7 +56,7 @@
   }
 
   function applySiteContent() {
-    const map = {
+    const values = {
       "[data-site-name]": data.site.name,
       "[data-short-name]": data.site.shortName,
       "[data-artist-name]": data.site.artistName,
@@ -80,134 +69,87 @@
       "[data-fursuit-note]": data.site.fursuitNote
     };
 
-    Object.entries(map).forEach(([selector, value]) => {
-      qsa(selector).forEach(element => { element.textContent = value; });
+    Object.entries(values).forEach(([selector, value]) => {
+      qsa(selector).forEach((element) => { element.textContent = value; });
     });
 
-    qsa("[data-email-link]").forEach(element => {
+    qsa("[data-email-link]").forEach((element) => {
       element.textContent = data.site.email;
       element.href = `mailto:${data.site.email}`;
     });
 
-    qsa("[data-commission-email]").forEach(element => {
+    qsa("[data-commission-email]").forEach((element) => {
       element.href = `mailto:${data.site.email}?subject=Commission%20request`;
     });
 
-    qsa("[data-social-links]").forEach(element => {
+    qsa("[data-social-links]").forEach((element) => {
       element.innerHTML = data.site.socialLinks
-        .map(link => `<a href="${esc(link.url)}" target="_blank" rel="noreferrer">${esc(link.label)}</a>`)
+        .map((link) => `<a href="${esc(link.url)}" target="_blank" rel="noreferrer">${esc(link.label)}</a>`)
         .join("");
-    });
-
-    qsa("[data-specialties]").forEach(element => {
-      element.innerHTML = data.site.specialties.map(item => `<span>${esc(item)}</span>`).join("");
     });
   }
 
-  function navLink(page, extraClass = "") {
+  function navLink(page, className = "") {
     const active = currentPage && (currentPage.id === page.id || currentPage.parentIds.includes(page.id));
-    return `<a class="${extraClass}" href="${esc(page.path)}" data-nav-page="${esc(page.id)}"${active ? ' aria-current="page"' : ""}>${esc(page.label)}</a>`;
+    return `<a class="${className}" href="${esc(page.path)}"${active ? ' aria-current="page"' : ""}>${esc(page.label)}</a>`;
   }
 
   function renderNavigation() {
     const nav = qs("[data-site-nav]");
     if (!nav) return;
 
-    nav.setAttribute("aria-label", pageConfig.options?.navigationLabel || "Primary navigation");
-
     const topLevel = (pageConfig.items || [])
-      .map(item => pageById.get(item.id))
-      .filter(page => page && page.menu !== false && isVisiblePage(page));
+      .map((item) => pageById.get(item.id))
+      .filter((page) => page && page.menu !== false && isVisible(page));
 
-    const renderNavNode = (page, level = 0) => {
-      const children = getConfiguredChildren(page)
-        .filter(child => child.menu !== false && isVisiblePage(child));
-
+    const renderNode = (page) => {
+      const children = configuredChildren(page).filter((child) => child.menu !== false && isVisible(child));
       if (!children.length) return navLink(page);
-
-      return `<div class="site-nav__group site-nav__group--level-${level}">
-        ${navLink(page, "site-nav__parent")}
-        <div class="site-nav__submenu" aria-label="${esc(page.label)} pages">
-          ${children.map(child => renderNavNode(child, level + 1)).join("")}
-        </div>
-      </div>`;
+      return `<div class="site-nav__group">${navLink(page, "site-nav__parent")}<div class="site-nav__submenu">${children.map(renderNode).join("")}</div></div>`;
     };
 
-    const items = topLevel.map(page => renderNavNode(page));
-
+    const links = topLevel.map(renderNode);
     const cta = pageConfig.options?.cta || {};
     const ctaPage = pageById.get(cta.page);
-    if (isVisiblePage(ctaPage)) {
-      items.push(`<a class="nav-cta" href="${esc(ctaPage.path)}">${esc(cta.label || ctaPage.label)}</a>`);
-    } else if (cta.fallbackToEmail) {
-      items.push(`<a class="nav-cta" href="mailto:${esc(data.site.email)}?subject=Commission%20request">${esc(cta.label || "Contact")}</a>`);
-    }
-
-    nav.innerHTML = items.join("");
+    if (isVisible(ctaPage)) links.push(`<a class="nav-cta" href="${esc(ctaPage.path)}">${esc(cta.label || ctaPage.label)}</a>`);
+    nav.innerHTML = links.join("");
   }
 
   function renderFooter() {
     const links = qs("[data-footer-links]");
     if (!links) return;
-
     const pageLinks = pages
-      .filter(page => page.footer !== false && page.id !== "home" && isVisiblePage(page))
-      .map(page => {
-        const prefix = page.parentIds.length
-          ? `${page.parentIds.map(id => pageById.get(id)?.label).filter(Boolean).join(" / ")} / `
-          : "";
-        return `<a class="text-link" href="${esc(page.path)}">${esc(prefix + page.label)} ↗</a>`;
-      });
-
-    links.innerHTML = `${pageLinks.join("")}<div data-social-links></div>`;
-    const socialContainer = qs("[data-social-links]", links);
-    if (socialContainer) {
-      socialContainer.innerHTML = data.site.socialLinks
-        .map(link => `<a href="${esc(link.url)}" target="_blank" rel="noreferrer">${esc(link.label)}</a>`)
-        .join("");
-    }
+      .filter((page) => page.id !== "home" && page.footer !== false && isVisible(page))
+      .map((page) => `<a href="${esc(page.path)}">${esc(page.label)}</a>`);
+    const socials = data.site.socialLinks.map((link) => `<a href="${esc(link.url)}" target="_blank" rel="noreferrer">${esc(link.label)}</a>`);
+    links.innerHTML = [...pageLinks, ...socials].join("");
   }
 
   function renderHomeRoutes() {
     const grid = qs("[data-route-grid]");
     if (!grid) return;
-
     const routePages = pages
-      .filter(page => isVisiblePage(page) && page.homeCard?.show)
+      .filter((page) => isVisible(page) && page.homeCard?.show)
       .sort((a, b) => (a.homeCard?.order ?? 999) - (b.homeCard?.order ?? 999));
 
-    grid.innerHTML = routePages.map((page, index) => `
-      <a class="route-card reveal" href="${esc(page.path)}">
-        <span class="route-card__number">${String(index + 1).padStart(2, "0")}</span>
-        <div><p class="eyebrow">${esc(page.homeCard?.eyebrow || page.description || "Open section")}</p><h3>${esc(page.label)}</h3></div>
-        <span class="route-card__arrow">↗</span>
+    grid.innerHTML = routePages.map((page) => `
+      <a class="route-card" href="${esc(page.path)}">
+        <span>${esc(page.homeCard?.eyebrow || page.description || "Open page")}</span>
+        <strong>${esc(page.label)}</strong>
+        <i aria-hidden="true">→</i>
       </a>`).join("");
-
-    grid.style.setProperty("--route-count", String(Math.max(1, routePages.length)));
-
-    const heading = qs("[data-route-heading]");
-    if (heading) {
-      const numberWords = { 1: "One", 2: "Two", 3: "Three", 4: "Four", 5: "Five", 6: "Six" };
-      heading.textContent = routePages.length <= 6
-        ? `${numberWords[routePages.length] || routePages.length} clear ${routePages.length === 1 ? "door" : "doors"}.`
-        : "Choose a drawer.";
-    }
   }
 
   function applyConfiguredLinks() {
-    qsa("[data-page-link]").forEach(link => {
+    qsa("[data-page-link]").forEach((link) => {
       const page = pageById.get(link.dataset.pageLink);
-      if (isVisiblePage(page)) {
-        link.href = page.path;
-        link.hidden = false;
-      } else {
-        link.hidden = true;
-      }
+      link.hidden = !isVisible(page);
+      if (isVisible(page)) link.href = page.path;
     });
 
-    qsa('a[href^="/"]').forEach(link => {
+    qsa('a[href^="/"]').forEach((link) => {
       const target = pageByPath.get(normalizePath(link.getAttribute("href")));
-      if (target && !isVisiblePage(target)) link.hidden = true;
+      if (target && !isVisible(target)) link.hidden = true;
     });
   }
 
@@ -215,7 +157,6 @@
     const toggle = qs("[data-menu-toggle]");
     const nav = qs("[data-site-nav]");
     if (!toggle || !nav) return;
-
     toggle.addEventListener("click", () => {
       const open = toggle.getAttribute("aria-expanded") === "true";
       toggle.setAttribute("aria-expanded", String(!open));
@@ -224,231 +165,181 @@
   }
 
   function renderDisabledPage(page) {
-    const behavior = pageConfig.options?.disabledBehavior || "notice";
-    const redirect = pageConfig.options?.disabledRedirect || "/";
-
-    if (behavior === "redirect") {
-      location.replace(redirect);
-      return false;
-    }
-
-    const robots = qs('meta[name="robots"]') || document.head.appendChild(document.createElement("meta"));
-    robots.name = "robots";
-    robots.content = "noindex, nofollow";
-    document.title = `Closed — ${data.site.name}`;
-    document.body.classList.add("page-is-disabled");
-
     const main = qs("main");
-    if (main) {
-      main.innerHTML = `<section class="disabled-page">
-        <div class="disabled-page__inner reveal is-visible">
-          <p class="eyebrow">Cabinet / Unpublished</p>
-          <span class="disabled-page__label">${esc(page?.label || "Page")}</span>
-          <h1>${esc(pageConfig.options?.disabledTitle || "This drawer is closed.")}</h1>
-          <p>${esc(pageConfig.options?.disabledMessage || "This section is not currently published.")}</p>
-          <div class="hero__actions">
-            <a class="button button--primary" href="/">Return home</a>
-            ${isVisiblePage(pageById.get("gallery")) ? `<a class="button button--ghost" href="${esc(pageById.get("gallery").path)}">Open gallery</a>` : ""}
-          </div>
-        </div>
-      </section>`;
+    if (!main) return;
+    if (pageConfig.options?.disabledBehavior === "redirect") {
+      location.replace(pageConfig.options.disabledRedirect || "/");
+      return;
     }
-    return false;
+    main.innerHTML = `<section class="disabled-page"><p class="eyebrow">Unpublished</p><h1>${esc(pageConfig.options?.disabledTitle || "This page is closed.")}</h1><p>${esc(pageConfig.options?.disabledMessage || "This page is saved but not currently public.")}</p><a class="button" href="/">Back home</a></section>`;
   }
 
   function characterCard(character) {
-    const search = [character.name, character.species, character.role, character.category, ...character.tags].join(" ").toLowerCase();
-    return `<article class="character-card reveal" data-character-category="${esc(character.category)}" data-character-searchable="${esc(search)}"><button class="character-card__button" type="button" data-character-id="${esc(character.id)}" aria-label="Open ${esc(character.name)} details"><span class="character-card__image-wrap"><img class="character-card__image" src="${esc(character.image)}" alt="Portrait of ${esc(character.name)}" loading="lazy"><span class="character-card__role">${esc(character.role)}</span></span><span class="character-card__body"><span class="character-card__species">${esc(character.species)} · ${esc(character.pronouns)}</span><strong>${esc(character.name)}</strong><span>${esc(character.tagline)}</span><span class="mini-tags">${character.tags.slice(0, 3).map(tag => `<i>${esc(tag)}</i>`).join("")}</span><span class="text-link">Open file <span aria-hidden="true">↗</span></span></span></button></article>`;
+    const searchable = [character.name, character.species, character.role, ...(character.tags || [])].join(" ").toLowerCase();
+    return `<article class="character-card" data-character-category="${esc(character.category)}" data-character-searchable="${esc(searchable)}">
+      <button type="button" data-character-id="${esc(character.id)}">
+        <span class="character-card__image"><img src="${esc(character.image)}" alt="${esc(character.name)}" loading="lazy"></span>
+        <span class="character-card__copy"><small>${esc(character.species)} · ${esc(character.pronouns)}</small><strong>${esc(character.name)}</strong><span>${esc(character.tagline)}</span></span>
+      </button>
+    </article>`;
   }
 
   function renderCharacters() {
     const grid = qs("[data-character-grid]");
     if (!grid) return;
-    const limit = Number(grid.dataset.limit || data.characters.length);
-    grid.innerHTML = data.characters.slice(0, limit).map(characterCard).join("");
-    qsa("[data-character-id]", grid).forEach(button => button.addEventListener("click", () => openCharacter(button.dataset.characterId)));
-    qsa("[data-character-count]").forEach(element => { element.textContent = data.characters.length; });
+    grid.innerHTML = data.characters.map(characterCard).join("");
+    const count = qs("[data-character-count]");
+    if (count) count.textContent = String(data.characters.length);
+    qsa("[data-character-id]", grid).forEach((button) => button.addEventListener("click", () => openCharacter(button.dataset.characterId)));
     initCharacterDirectory();
-    observeReveals();
   }
 
   function openCharacter(id) {
-    const character = data.characters.find(item => item.id === id);
+    const character = data.characters.find((item) => item.id === id);
     const dialog = qs("#character-dialog");
-    if (!character || !dialog) return;
-
-    qs("[data-character-dialog-content]", dialog).innerHTML = `<div class="character-dialog__visual"><img src="${esc(character.image)}" alt="Portrait of ${esc(character.name)}"></div><div class="character-dialog__copy"><p class="eyebrow">${esc(character.role)} · ${esc(character.pronouns)}</p><h2>${esc(character.name)}</h2><p class="character-dialog__species">${esc(character.species)}</p><p>${esc(character.bio)}</p><dl class="fact-grid">${(character.facts || []).map(fact => `<div><dt>${esc(fact.label)}</dt><dd>${esc(fact.value)}</dd></div>`).join("")}</dl><div class="palette" aria-label="Character color palette">${character.palette.map(color => `<span title="${esc(color)}" style="--swatch:${esc(color)}"><span class="sr-only">${esc(color)}</span></span>`).join("")}</div><div class="tag-list">${character.tags.map(tag => `<span>${esc(tag)}</span>`).join("")}</div><a class="button button--dark" href="${esc(character.toyhouse)}" target="_blank" rel="noreferrer">View Toyhouse profile</a></div>`;
+    const root = qs("[data-character-dialog-content]", dialog);
+    if (!character || !dialog || !root) return;
+    root.innerHTML = `<div class="character-dialog__visual"><img src="${esc(character.image)}" alt="${esc(character.name)}"></div>
+      <div class="character-dialog__copy"><p class="eyebrow">${esc(character.role)}</p><h2>${esc(character.name)}</h2><p class="character-dialog__species">${esc(character.species)} · ${esc(character.pronouns)}</p><p>${esc(character.bio)}</p>
+      <dl class="fact-grid">${(character.facts || []).map((fact) => `<div><dt>${esc(fact.label)}</dt><dd>${esc(fact.value)}</dd></div>`).join("")}</dl>
+      <div class="palette">${(character.palette || []).map((color) => `<span title="${esc(color)}" style="--swatch:${esc(color)}"></span>`).join("")}</div>
+      <div class="tag-list">${(character.tags || []).map((tag) => `<span>${esc(tag)}</span>`).join("")}</div>
+      <a class="button" href="${esc(character.toyhouse)}" target="_blank" rel="noreferrer">Toyhouse profile</a></div>`;
     dialog.showModal();
   }
 
   function initCharacterDirectory() {
     const buttons = qsa("[data-character-filter]");
     const input = qs("[data-character-search]");
-    const cards = () => qsa(".character-card");
     const empty = qs("[data-character-empty]");
     let filter = "all";
     let term = "";
 
     const apply = () => {
-      let count = 0;
-      cards().forEach(card => {
-        const visible = (filter === "all" || card.dataset.characterCategory === filter)
+      let visible = 0;
+      qsa(".character-card").forEach((card) => {
+        const show = (filter === "all" || card.dataset.characterCategory === filter)
           && (!term || card.dataset.characterSearchable.includes(term));
-        card.hidden = !visible;
-        if (visible) count += 1;
+        card.hidden = !show;
+        if (show) visible += 1;
       });
-      if (empty) empty.hidden = count !== 0;
+      if (empty) empty.hidden = visible !== 0;
     };
 
-    buttons.forEach(button => button.addEventListener("click", () => {
+    buttons.forEach((button) => button.addEventListener("click", () => {
       filter = button.dataset.filter;
-      buttons.forEach(item => item.setAttribute("aria-pressed", String(item === button)));
+      buttons.forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
       apply();
     }));
-
-    if (input) input.addEventListener("input", () => {
-      term = input.value.trim().toLowerCase();
-      apply();
-    });
+    if (input) input.addEventListener("input", () => { term = input.value.trim().toLowerCase(); apply(); });
   }
 
   function artworkCard(artwork) {
-    return `<article class="gallery-card gallery-card--${esc(artwork.size)} reveal" data-gallery-category="${esc(artwork.category)}"><button type="button" data-artwork-id="${esc(artwork.id)}" aria-label="View ${esc(artwork.title)}"><img src="${esc(artwork.image)}" alt="${esc(artwork.alt)}" loading="lazy"><span class="gallery-card__overlay"><span><small>${esc(artwork.category)} · ${esc(artwork.year)}</small><strong>${esc(artwork.title)}</strong></span><span aria-hidden="true">↗</span></span></button></article>`;
+    const mature = artwork.mature === true;
+    return `<article class="gallery-card${mature ? " gallery-card--mature" : ""}" data-gallery-category="${esc(artwork.category)}" data-gallery-mature="${mature}">
+      <button type="button" data-artwork-id="${esc(artwork.id)}" data-mature="${mature}" aria-label="View ${esc(artwork.title)}">
+        <span class="gallery-card__media"><img src="${esc(artwork.image)}" alt="${esc(artwork.alt)}" loading="lazy">${mature ? '<span class="mature-cover"><strong>Mature work</strong><small>Tap once to reveal</small></span>' : ""}</span>
+        <span class="gallery-card__caption"><span><strong>${esc(artwork.title)}</strong><small>${esc(artwork.character)} · ${esc(artwork.year)}</small></span><i>${esc(artwork.category)}</i></span>
+      </button>
+    </article>`;
   }
 
   function renderGallery() {
     const grid = qs("[data-gallery-grid]");
     if (!grid) return;
-    const limit = Number(grid.dataset.limit || data.artworks.length);
-    grid.innerHTML = data.artworks.slice(0, limit).map(artworkCard).join("");
-    qsa("[data-artwork-id]", grid).forEach(button => button.addEventListener("click", () => openArtwork(button.dataset.artworkId)));
+    let artworks = [...data.artworks];
+    if (grid.dataset.featuredOnly === "true") artworks = artworks.filter((artwork) => artwork.featured && !artwork.mature);
+    const limit = Number(grid.dataset.limit || artworks.length);
+    grid.innerHTML = artworks.slice(0, limit).map(artworkCard).join("");
+    qsa("[data-artwork-id]", grid).forEach((button) => {
+      button.addEventListener("click", () => {
+        if (button.dataset.mature === "true" && button.dataset.revealed !== "true") {
+          button.dataset.revealed = "true";
+          return;
+        }
+        openArtwork(button.dataset.artworkId);
+      });
+    });
     initFilters("[data-gallery-filter]", ".gallery-card", "galleryCategory");
-    observeReveals();
   }
 
   function openArtwork(id) {
-    const artwork = data.artworks.find(item => item.id === id);
+    const artwork = data.artworks.find((item) => item.id === id);
     const dialog = qs("#art-dialog");
     if (!artwork || !dialog) return;
     const image = qs("[data-art-dialog-image]", dialog);
-    image.src = artwork.image;
+    image.src = artwork.full || artwork.image;
     image.alt = artwork.alt;
     qs("[data-art-dialog-title]", dialog).textContent = artwork.title;
     qs("[data-art-dialog-meta]", dialog).textContent = `${artwork.category} · ${artwork.character} · ${artwork.year}`;
     dialog.showModal();
   }
 
-  function renderDashboard() {
-    const stats = qs("[data-dashboard-stats]");
-    if (stats) {
-      stats.innerHTML = [
-        { n: data.characters.length, l: "characters" },
-        { n: data.artworks.length, l: "gallery pieces" },
-        { n: data.site.commissionStatus, l: "art queue" },
-        { n: data.site.fursuitStatus, l: "fursuit queue" }
-      ].map(item => `<div><strong>${esc(item.n)}</strong><span>${esc(item.l)}</span></div>`).join("");
-    }
-
-    const cast = qs("[data-featured-cast]");
-    if (cast) {
-      cast.innerHTML = data.characters.filter(character => character.featured).slice(0, 4).map((character, index) => `<button class="cast-tile cast-tile--${index + 1}" type="button" data-character-id="${esc(character.id)}"><img src="${esc(character.image)}" alt="${esc(character.name)}"><span><small>${esc(character.species)}</small><strong>${esc(character.name)}</strong></span></button>`).join("");
-      qsa("[data-character-id]", cast).forEach(button => button.addEventListener("click", () => openCharacter(button.dataset.characterId)));
-    }
-
-    const latest = qs("[data-latest-strip]");
-    if (latest) {
-      latest.innerHTML = data.artworks.slice(0, 3).map(artwork => `<button type="button" data-artwork-id="${esc(artwork.id)}"><img src="${esc(artwork.image)}" alt="${esc(artwork.alt)}"><span>${esc(artwork.title)}</span></button>`).join("");
-      qsa("[data-artwork-id]", latest).forEach(button => button.addEventListener("click", () => openArtwork(button.dataset.artworkId)));
-    }
-
-    const notices = qs("[data-notice-stack]");
-    if (notices) notices.innerHTML = data.site.notices.map(notice => `<div class="notice-row"><span>${esc(notice.label)}</span><strong data-tone="${esc(notice.tone)}">${esc(notice.value)}</strong></div>`).join("");
-  }
-
   function renderFursuits() {
     const builds = qs("[data-build-grid]");
-    if (builds) builds.innerHTML = data.fursuitProjects.map(project => `<article class="build-card reveal"><img src="${esc(project.image)}" alt="${esc(project.title)} placeholder"><div><span class="build-card__status">${esc(project.status)}</span><p class="eyebrow">${esc(project.phase)}</p><h3>${esc(project.title)}</h3><p>${esc(project.description)}</p></div></article>`).join("");
+    if (builds) builds.innerHTML = data.fursuitProjects.map((project) => `<article class="build-card"><img src="${esc(project.image)}" alt="${esc(project.title)}" loading="lazy"><div><small>${esc(project.phase)} · ${esc(project.status)}</small><h3>${esc(project.title)}</h3><p>${esc(project.description)}</p></div></article>`).join("");
 
     const services = qs("[data-fursuit-services]");
-    if (services) services.innerHTML = data.fursuitServices.map((service, index) => `<article class="service-card reveal"><span>0${index + 1}</span><h3>${esc(service.name)}</h3><p>${esc(service.text)}</p><strong>${esc(service.availability)}</strong></article>`).join("");
+    if (services) services.innerHTML = data.fursuitServices.map((service) => `<article class="service-card"><h3>${esc(service.name)}</h3><p>${esc(service.text)}</p><small>${esc(service.availability)}</small></article>`).join("");
 
     const process = qs("[data-fursuit-process]");
-    if (process) process.innerHTML = data.fursuitProcess.map(step => `<article class="process-step reveal"><span>${esc(step.number)}</span><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p></article>`).join("");
-    observeReveals();
+    if (process) process.innerHTML = data.fursuitProcess.map((step) => `<article class="process-step"><span>${esc(step.number)}</span><div><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p></div></article>`).join("");
   }
 
   function renderCommissions() {
     const packages = qs("[data-commission-packages]");
-    if (packages) packages.innerHTML = data.commissions.map((commission, index) => `<article class="price-card reveal ${index === 1 ? "price-card--featured" : ""}"><p class="eyebrow">${esc(commission.eyebrow)}</p><h2>${esc(commission.name)}</h2><p class="price-card__price">${esc(commission.price)}</p><p>${esc(commission.description)}</p><ul>${commission.includes.map(item => `<li>${esc(item)}</li>`).join("")}</ul><a class="text-link" href="mailto:${esc(data.site.email)}?subject=${encodeURIComponent(`${commission.name} commission request`)}">Request this option <span aria-hidden="true">→</span></a></article>`).join("");
+    if (packages) packages.innerHTML = data.commissions.map((commission) => `<article class="price-card"><small>${esc(commission.eyebrow)}</small><h2>${esc(commission.name)}</h2><strong>${esc(commission.price)}</strong><p>${esc(commission.description)}</p><ul>${commission.includes.map((item) => `<li>${esc(item)}</li>`).join("")}</ul><a href="mailto:${esc(data.site.email)}?subject=${encodeURIComponent(`${commission.name} commission request`)}">Request details →</a></article>`).join("");
 
     const process = qs("[data-process-grid]");
-    if (process) process.innerHTML = data.process.map(step => `<article class="process-step reveal"><span>${esc(step.number)}</span><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p></article>`).join("");
-    observeReveals();
+    if (process) process.innerHTML = data.process.map((step) => `<article class="process-step"><span>${esc(step.number)}</span><div><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p></div></article>`).join("");
   }
 
   function renderCustomPage(page) {
     const root = qs("[data-generic-page]");
     if (!root || !page) return;
     const content = customPages[page.id];
-
     if (!content) {
-      root.innerHTML = `<section class="disabled-page"><div class="disabled-page__inner reveal is-visible"><p class="eyebrow">Cabinet / Empty file</p><h1>${esc(page.label)}</h1><p>This page exists in the hierarchy, but no custom content has been added in <code>config/custom-pages.js</code>.</p></div></section>`;
+      root.innerHTML = `<section class="disabled-page"><p class="eyebrow">Empty page</p><h1>${esc(page.label)}</h1><p>Add this page's content in <code>config/custom-pages.js</code>.</p></section>`;
       return;
     }
-
     const hero = content.hero || {};
-    const sections = (content.sections || []).map(section => renderCustomSection(section)).join("");
-    root.innerHTML = `<section class="page-hero"><div class="page-hero__inner"><div class="reveal"><p class="eyebrow">${esc(hero.eyebrow || `Cabinet / ${page.label}`)}</p><h1>${esc(hero.title || page.label)}</h1></div><div class="page-hero__aside reveal"><p>${esc(hero.intro || page.description || "")}</p></div></div></section>${sections}`;
+    root.innerHTML = `<section class="page-hero"><div class="page-hero__inner"><p class="eyebrow">${esc(hero.eyebrow || page.label)}</p><h1>${esc(hero.title || page.label)}</h1><p>${esc(hero.intro || page.description || "")}</p></div></section>${(content.sections || []).map(renderCustomSection).join("")}`;
+  }
+
+  function sectionHeading(section) {
+    return `<header class="section__header"><div><p class="eyebrow">${esc(section.eyebrow || "")}</p><h2>${esc(section.title || "")}</h2></div>${section.intro ? `<p>${esc(section.intro)}</p>` : ""}</header>`;
   }
 
   function renderCustomSection(section) {
-    const heading = `<header class="section__header reveal"><div><p class="eyebrow">${esc(section.eyebrow || "Cabinet file")}</p><h2>${esc(section.title || "")}</h2></div>${section.intro ? `<p>${esc(section.intro)}</p>` : ""}</header>`;
-
-    if (section.type === "text") {
-      return `<section class="section"><div class="section__inner generic-prose">${heading}<div class="generic-prose__body reveal">${(section.paragraphs || []).map(paragraph => `<p>${esc(paragraph)}</p>`).join("")}</div></div></section>`;
-    }
-
-    if (section.type === "cards") {
-      return `<section class="section section--dark"><div class="section__inner">${heading}<div class="generic-card-grid">${(section.items || []).map(item => `<article class="generic-card reveal"><span>${esc(item.meta || "File")}</span><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></article>`).join("")}</div></div></section>`;
-    }
-
-    if (section.type === "gallery") {
-      return `<section class="section"><div class="section__inner">${heading}<div class="generic-gallery">${(section.items || []).map(item => `<figure class="generic-gallery__item reveal"><img src="${esc(item.image)}" alt="${esc(item.alt || item.title)}" loading="lazy"><figcaption><strong>${esc(item.title)}</strong><p>${esc(item.text || "")}</p></figcaption></figure>`).join("")}</div></div></section>`;
-    }
-
-    if (section.type === "timeline") {
-      return `<section class="section section--dark"><div class="section__inner">${heading}<div class="process-grid">${(section.items || []).map(item => `<article class="process-step reveal"><span>${esc(item.number)}</span><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></article>`).join("")}</div></div></section>`;
-    }
-
+    const heading = sectionHeading(section);
+    if (section.type === "text") return `<section class="section"><div class="section__inner generic-prose">${heading}<div class="generic-prose__body">${(section.paragraphs || []).map((paragraph) => `<p>${esc(paragraph)}</p>`).join("")}</div></div></section>`;
+    if (section.type === "cards") return `<section class="section"><div class="section__inner">${heading}<div class="generic-card-grid">${(section.items || []).map((item) => `<article class="generic-card"><small>${esc(item.meta || "")}</small><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></article>`).join("")}</div></div></section>`;
+    if (section.type === "gallery") return `<section class="section"><div class="section__inner">${heading}<div class="generic-gallery">${(section.items || []).map((item) => `<figure><img src="${esc(item.image)}" alt="${esc(item.alt || item.title)}" loading="lazy"><figcaption><strong>${esc(item.title)}</strong><p>${esc(item.text || "")}</p></figcaption></figure>`).join("")}</div></div></section>`;
+    if (section.type === "timeline") return `<section class="section"><div class="section__inner">${heading}<div class="process-grid">${(section.items || []).map((item) => `<article class="process-step"><span>${esc(item.number)}</span><div><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></div></article>`).join("")}</div></div></section>`;
     if (section.type === "links") {
-      const targets = (section.pages || []).map(id => pageById.get(id)).filter(isVisiblePage);
-      return `<section class="section section--dark"><div class="section__inner">${heading}<div class="route-grid">${targets.map((page, index) => `<a class="route-card reveal" href="${esc(page.path)}"><span class="route-card__number">${String(index + 1).padStart(2, "0")}</span><div><p class="eyebrow">${esc(page.description || "Open file")}</p><h3>${esc(page.label)}</h3></div><span class="route-card__arrow">↗</span></a>`).join("")}</div></div></section>`;
+      const targets = (section.pages || []).map((id) => pageById.get(id)).filter(isVisible);
+      return `<section class="section"><div class="section__inner">${heading}<div class="route-grid">${targets.map((page) => `<a class="route-card" href="${esc(page.path)}"><span>${esc(page.description || "Open page")}</span><strong>${esc(page.label)}</strong><i>→</i></a>`).join("")}</div></div></section>`;
     }
-
-    if (section.type === "callout") {
-      const target = pageById.get(section.button?.page);
-      const button = section.button && isVisiblePage(target)
-        ? `<a class="button button--dark" href="${esc(target.path)}">${esc(section.button.label || target.label)}</a>`
-        : "";
-      return `<section class="section section--orange"><div class="section__inner"><div class="commission-banner reveal"><div><p class="eyebrow">${esc(section.eyebrow || "Notice")}</p><strong>${esc(section.title || "")}</strong><p>${esc(section.text || "")}</p></div>${button}</div></div></section>`;
-    }
-
+    if (section.type === "callout") return `<section class="section"><div class="section__inner"><div class="callout"><p class="eyebrow">${esc(section.eyebrow || "")}</p><h2>${esc(section.title || "")}</h2><p>${esc(section.text || "")}</p></div></div></section>`;
     return "";
   }
 
   function initFilters(buttonSelector, cardSelector, key) {
     const buttons = qsa(buttonSelector);
-    buttons.forEach(button => button.addEventListener("click", () => {
+    buttons.forEach((button) => button.addEventListener("click", () => {
       const filter = button.dataset.filter;
-      buttons.forEach(item => item.setAttribute("aria-pressed", String(item === button)));
-      qsa(cardSelector).forEach(card => { card.hidden = filter !== "all" && card.dataset[key] !== filter; });
+      buttons.forEach((item) => item.setAttribute("aria-pressed", String(item === button)));
+      qsa(cardSelector).forEach((card) => {
+        const matches = filter === "all" || (filter === "mature" && card.dataset.galleryMature === "true") || card.dataset[key] === filter;
+        card.hidden = !matches;
+      });
     }));
   }
 
   function initDialogs() {
-    qsa("dialog").forEach(dialog => {
-      qsa("[data-dialog-close]", dialog).forEach(button => button.addEventListener("click", () => dialog.close()));
-      dialog.addEventListener("click", event => { if (event.target === dialog) dialog.close(); });
+    qsa("dialog").forEach((dialog) => {
+      qsa("[data-dialog-close]", dialog).forEach((button) => button.addEventListener("click", () => dialog.close()));
+      dialog.addEventListener("click", (event) => { if (event.target === dialog) dialog.close(); });
     });
   }
 
@@ -458,29 +349,13 @@
     button.addEventListener("click", async () => {
       try {
         await navigator.clipboard.writeText(data.site.email);
-        const original = button.textContent;
+        const old = button.textContent;
         button.textContent = "Copied";
-        setTimeout(() => { button.textContent = original; }, 1400);
+        setTimeout(() => { button.textContent = old; }, 1200);
       } catch {
         location.href = `mailto:${data.site.email}`;
       }
     });
-  }
-
-  function observeReveals() {
-    const items = qsa(".reveal:not(.is-visible)");
-    if (!items.length) return;
-    if (!("IntersectionObserver" in window)) {
-      items.forEach(item => item.classList.add("is-visible"));
-      return;
-    }
-    const observer = new IntersectionObserver(entries => entries.forEach(entry => {
-      if (entry.isIntersecting) {
-        entry.target.classList.add("is-visible");
-        observer.unobserve(entry.target);
-      }
-    }), { threshold: 0.1 });
-    items.forEach(item => observer.observe(item));
   }
 
   document.addEventListener("DOMContentLoaded", () => {
@@ -492,14 +367,12 @@
     applyConfiguredLinks();
     initNavigation();
 
-    if (currentPage && !isVisiblePage(currentPage)) {
+    if (currentPage && !isVisible(currentPage)) {
       renderDisabledPage(currentPage);
-      observeReveals();
       return;
     }
 
     renderCustomPage(currentPage);
-    renderDashboard();
     renderCharacters();
     renderGallery();
     renderFursuits();
@@ -507,6 +380,5 @@
     applyConfiguredLinks();
     initDialogs();
     initCopyEmail();
-    observeReveals();
   });
 })();

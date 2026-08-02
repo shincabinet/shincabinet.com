@@ -1,68 +1,22 @@
 <!doctype html>
 <html lang="en">
 <head>
-<meta charset="utf-8"/>
-<meta content="width=device-width, initial-scale=1" name="viewport"/>
-<meta content="#111017" name="theme-color"/>
-<meta content="Browse furry illustrations, reference sheets, design studies, costume concepts, and commissions." name="description"/>
-<title>Gallery — Shin Cabinet</title>
-<link href="/assets/images/branding/favicon.svg" rel="icon" type="image/svg+xml"/>
-<link href="/site.webmanifest" rel="manifest"/>
-<link href="/assets/css/styles.css" rel="stylesheet"/>
+  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#f5efe6">
+  <meta name="description" content="Furry illustrations, character studies, reference work, and mature art from Shin Cabinet.">
+  <title>Gallery — Shin Cabinet</title>
+  <link rel="icon" href="/assets/images/branding/favicon.png" type="image/png"><link rel="manifest" href="/site.webmanifest"><link rel="stylesheet" href="/assets/css/styles.css">
 </head>
 <body data-page="gallery">
 <a class="skip-link" href="#main-content">Skip to content</a>
-<header class="site-header">
-<div class="site-header__inner">
-<a aria-label="Shin Cabinet home" class="brand" href="/">
-<span class="brand__mark" data-short-name="">S</span>
-<span class="brand__text" data-site-name="">Shin Cabinet</span>
-</a>
-<button aria-expanded="false" aria-label="Toggle navigation" class="menu-toggle" data-menu-toggle="" type="button"><span></span></button>
-<nav aria-label="Primary navigation" class="site-nav" data-site-nav=""></nav>
-</div>
-</header>
+<header class="site-header"><div class="site-header__inner"><a class="brand" href="/" aria-label="Shin Cabinet home"><span class="brand__mark" data-short-name>SC</span><span class="brand__text" data-site-name>Shin Cabinet</span></a><button class="menu-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" data-menu-toggle><span></span></button><nav class="site-nav" aria-label="Primary navigation" data-site-nav></nav></div></header>
 <main id="main-content">
-<section class="page-hero">
-<div class="page-hero__inner">
-<div class="reveal"><p class="eyebrow">Cabinet / Gallery</p><h1>Gallery archive</h1></div>
-<div class="page-hero__aside reveal"><p>A filterable mix of finished illustrations, character references, costume concepts, and design studies. Click any piece for a larger view.</p></div>
-</div>
-</section>
-<section class="section">
-<div class="section__inner">
-<div aria-label="Filter gallery" class="filter-bar">
-<button aria-pressed="true" data-filter="all" data-gallery-filter="" type="button">Everything</button>
-<button aria-pressed="false" data-filter="illustration" data-gallery-filter="" type="button">Illustration</button>
-<button aria-pressed="false" data-filter="reference" data-gallery-filter="" type="button">References</button>
-<button aria-pressed="false" data-filter="design" data-gallery-filter="" type="button">Design</button>
-<button aria-pressed="false" data-filter="costume" data-gallery-filter="" type="button">Costume</button>
-<button aria-pressed="false" data-filter="commission" data-gallery-filter="" type="button">Commissions</button>
-</div>
-<div class="gallery-grid" data-gallery-grid=""></div>
-</div>
-</section>
-<dialog aria-label="Artwork preview" id="art-dialog">
-<button aria-label="Close dialog" class="dialog-close" data-dialog-close="" type="button">×</button>
-<figure class="art-dialog__figure">
-<img alt="" data-art-dialog-image="" src=""/>
-<figcaption class="art-dialog__caption"><strong data-art-dialog-title=""></strong><span data-art-dialog-meta=""></span></figcaption>
-</figure>
-</dialog>
+  <section class="page-hero"><div class="page-hero__inner"><p class="eyebrow">Gallery</p><h1>Art archive</h1><p>Illustrations are shown close to their natural proportions. Mature pieces stay blurred until deliberately revealed.</p></div></section>
+  <section class="section section--tight"><div class="section__inner">
+    <div class="filter-bar" aria-label="Filter gallery"><button type="button" aria-pressed="true" data-gallery-filter data-filter="all">Everything</button><button type="button" aria-pressed="false" data-gallery-filter data-filter="illustration">Illustration</button><button type="button" aria-pressed="false" data-gallery-filter data-filter="chibi">Chibi</button><button type="button" aria-pressed="false" data-gallery-filter data-filter="reference">References</button><button type="button" aria-pressed="false" data-gallery-filter data-filter="mature">Mature</button></div>
+    <div class="gallery-grid" data-gallery-grid></div>
+  </div></section>
+  <dialog id="art-dialog" aria-label="Artwork preview"><button class="dialog-close" type="button" aria-label="Close dialog" data-dialog-close>×</button><figure class="art-dialog__figure"><img src="" alt="" data-art-dialog-image><figcaption class="art-dialog__caption"><strong data-art-dialog-title></strong><span data-art-dialog-meta></span></figcaption></figure></dialog>
 </main>
-<footer class="site-footer">
-<div class="site-footer__inner">
-<div class="site-footer__top">
-<p class="site-footer__title">Pull open the next drawer.</p>
-<div class="site-footer__links" data-footer-links=""></div>
-</div>
-<div class="site-footer__bottom">
-<span>© 2026 <span data-artist-name="">Your Artist Name</span>. All artwork belongs to its respective owner.</span>
-<span>Static HTML · Hosted on Cloudflare Pages</span>
-</div>
-</div>
-</footer>
-
-
-<script defer="" src="/config/pages.js"></script><script defer="" src="/config/custom-pages.js"></script><script defer="" src="/assets/js/content.js"></script><script defer="" src="/assets/js/site.js"></script></body>
-</html>
+<footer class="site-footer"><div class="site-footer__inner"><div class="site-footer__top"><p class="site-footer__title" data-site-name>Shin Cabinet</p><div class="site-footer__links" data-footer-links></div></div><div class="site-footer__bottom"><span>© 2026 <span data-artist-name>Shin</span>. Please do not repost artwork without permission.</span><span>Hosted on Cloudflare Workers</span></div></div></footer>
+<script src="/config/pages.js" defer></script><script src="/config/custom-pages.js" defer></script><script src="/assets/js/content.js" defer></script><script src="/assets/js/site.js" defer></script>
+</body></html>

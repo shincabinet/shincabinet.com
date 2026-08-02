@@ -16,12 +16,12 @@ window.SHIN_PAGES = {
   "options": {
     "disabledBehavior": "notice",
     "disabledRedirect": "/",
-    "disabledTitle": "This drawer is closed.",
-    "disabledMessage": "This section is saved in the cabinet but is not currently published.",
+    "disabledTitle": "This page is not published.",
+    "disabledMessage": "Its files and content are still saved, but visitors cannot open it right now.",
     "navigationLabel": "Primary navigation",
     "siteUrl": "https://shincabinet.com",
     "cta": {
-      "label": "Request a slot",
+      "label": "Commission info",
       "page": "commissions",
       "fallbackToEmail": true
     }
@@ -49,7 +49,7 @@ window.SHIN_PAGES = {
       "homeCard": {
         "show": true,
         "order": 10,
-        "eyebrow": "Profiles + palettes + lore"
+        "eyebrow": "Profiles and references"
       },
       "title": "Characters — Shin Cabinet",
       "description": "Browse original furry characters, profiles, palettes, tags, and reference links.",
@@ -65,7 +65,7 @@ window.SHIN_PAGES = {
       "homeCard": {
         "show": true,
         "order": 20,
-        "eyebrow": "Illustration + design"
+        "eyebrow": "Finished and personal work"
       },
       "title": "Gallery — Shin Cabinet",
       "description": "Browse furry illustrations, character designs, references, commissions, and costume studies.",
@@ -81,7 +81,7 @@ window.SHIN_PAGES = {
       "homeCard": {
         "show": true,
         "order": 30,
-        "eyebrow": "Builds + workshop"
+        "eyebrow": "Builds and process notes"
       },
       "title": "Fursuits — Shin Cabinet",
       "description": "Fursuit projects, fabrication studies, build capabilities, and workshop process.",
@@ -110,7 +110,7 @@ window.SHIN_PAGES = {
       "homeCard": {
         "show": true,
         "order": 40,
-        "eyebrow": "Availability + pricing"
+        "eyebrow": "Availability and terms"
       },
       "title": "Commission Info — Shin Cabinet",
       "description": "Commission prices, process, terms, frequently asked questions, and contact information.",

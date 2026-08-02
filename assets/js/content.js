@@ -1,27 +1,25 @@
 /*
-  EDIT THIS FILE FIRST.
-  Every homepage card, character, artwork, service, notice, and commission option is data-driven.
-  Replace placeholders, save, commit, and push—no build step required.
+  MAIN CONTENT FILE
+  -----------------
+  Edit this file to change your profile text, character records, gallery entries,
+  fursuit projects, commission options, and links. Page visibility still lives in
+  /config/pages.js.
 */
 window.SHIN_SITE = {
   site: {
     name: "Shin Cabinet",
-    shortName: "SHIN",
-    artistName: "Your Artist Name",
+    shortName: "SC",
+    artistName: "Shin",
     handle: "@shincabinet",
-    intro: "Expressive furry illustration, character design, and fursuit work—kept in one carefully curated cabinet.",
-    profileBlurb: "Character-focused illustration, design, and physical costume craft. Digital ideas are developed with real-world silhouettes, materials, and movement in mind.",
+    intro: "Furry illustration, character design, and a growing fursuit workshop.",
+    profileBlurb: "A personal archive for expressive character art, reference work, experiments, and costume-making progress.",
     email: "commissions@example.com",
-    commissionStatus: "Open",
-    commissionNote: "Booking a small art queue",
-    fursuitStatus: "Portfolio builds",
-    fursuitNote: "Not accepting full public fursuit commissions yet.",
-    specialties: ["Furry art", "Character design", "Fursuit development", "3D fabrication"],
-    notices: [
-      { label: "Art queue", value: "Open", tone: "open" },
-      { label: "Fursuit queue", value: "Portfolio only", tone: "limited" },
-      { label: "Current focus", value: "Building the first mini partial", tone: "neutral" }
-    ],
+    commissionStatus: "Closed while the site is being set up",
+    commissionNote: "Update this status in assets/js/content.js before publishing.",
+    fursuitStatus: "Portfolio work",
+    fursuitNote: "Personal builds and process studies; public suit commissions are not open yet.",
+    specialties: ["Character art", "Reference sheets", "Furry illustration", "Fursuit development"],
+    notices: [],
     socialLinks: [
       { label: "Toyhouse", url: "https://toyhou.se/" },
       { label: "Bluesky", url: "https://bsky.app/" },
@@ -31,72 +29,208 @@ window.SHIN_SITE = {
 
   characters: [
     {
-      id: "ember", name: "Ember", pronouns: "he / him", species: "Marbled fox", role: "Primary sona", category: "primary", featured: true,
-      image: "/assets/images/characters/ember.svg", tagline: "Bright energy, sharp silhouettes, organized chaos.",
-      bio: "Ember is the face of the cabinet: expressive, ambitious, and built around high-contrast marbling that reads clearly in illustration and costume work.",
-      palette: ["#F47A24", "#FFB55A", "#1B1720", "#F7EADC"], tags: ["Fox", "Marbled", "Main sona", "Fursuit planned"],
-      facts: [{label:"Height",value:"6′0″"},{label:"Demeanor",value:"Bold / playful"},{label:"Design use",value:"Primary brand character"}], toyhouse: "https://toyhou.se/"
-    },
-    {
-      id: "violet", name: "Violet", pronouns: "she / her", species: "Canine spirit", role: "Story character", category: "supporting", featured: true,
-      image: "/assets/images/characters/violet.svg", tagline: "Soft colors, loud opinions, immaculate accessories.",
-      bio: "Violet balances cozy shapes with theatrical details. Her design showcases fashion-forward character art and polished reference sheets.",
-      palette: ["#A387FF", "#E8DFFF", "#30263E", "#FFB7D5"], tags: ["Canine", "Fashion", "Pastel"],
-      facts: [{label:"Story role",value:"Lead support"},{label:"Demeanor",value:"Dramatic / warm"},{label:"Design focus",value:"Wardrobe"}], toyhouse: "https://toyhou.se/"
-    },
-    {
-      id: "moss", name: "Moss", pronouns: "they / them", species: "Highland ox", role: "Design study", category: "guest", featured: true,
-      image: "/assets/images/characters/moss.svg", tagline: "Chunky shapes and graphic natural patterns.",
-      bio: "Moss explores how complex fur markings can become simple, deliberate shapes that translate cleanly into physical fabrication.",
-      palette: ["#B9D36A", "#ECE2C4", "#4A3B30", "#E8794E"], tags: ["Ox", "Natural", "Fursuit-ready"],
-      facts: [{label:"Build type",value:"Mini partial concept"},{label:"Demeanor",value:"Grounded / gentle"},{label:"Design focus",value:"Pattern readability"}], toyhouse: "https://toyhou.se/"
-    },
-    {
-      id: "nova", name: "Nova", pronouns: "any pronouns", species: "Cyber jackal", role: "Experimental character", category: "supporting", featured: true,
-      image: "/assets/images/characters/nova.svg", tagline: "Synthetic glow with a handmade heart.",
-      bio: "Nova creates space for angular forms, emissive accents, and technology-inspired costume concepts without losing an expressive face.",
-      palette: ["#50E6FF", "#8C74FF", "#151826", "#F6F1E8"], tags: ["Jackal", "Cyber", "Glow"],
-      facts: [{label:"Era",value:"Near-future"},{label:"Demeanor",value:"Curious / restless"},{label:"Design focus",value:"Lighting"}], toyhouse: "https://toyhou.se/"
+      id: "shin",
+      name: "Shin",
+      pronouns: "he / him",
+      species: "Fox / wolf",
+      role: "Primary character",
+      category: "primary",
+      featured: true,
+      image: "/assets/images/characters/shin.webp",
+      tagline: "Warm rust, dark fur, gold eyes, and deliberately irregular markings.",
+      bio: "Shin is the central character and visual anchor for the site. His design mixes clean graphic shapes with rougher marbled markings, expressive hair, and details intended to translate into both drawings and a future fursuit.",
+      palette: ["#C94B2B", "#F2DDAE", "#342027", "#E7A31A", "#177E80"],
+      tags: ["Main character", "Fox", "Wolf", "Fursuit planned"],
+      facts: [
+        { label: "Design mood", value: "Warm / expressive" },
+        { label: "Primary colors", value: "Rust + cream" },
+        { label: "Physical build", value: "Planned" }
+      ],
+      toyhouse: "https://toyhou.se/"
     }
   ],
 
   artworks: [
-    { id:"marbled-reference", title:"Marbled Reference", category:"reference", character:"Ember", year:"2026", image:"/assets/images/gallery/art-01.svg", alt:"Placeholder artwork for a marbled fox character reference sheet", size:"wide" },
-    { id:"late-shift", title:"Late Shift", category:"illustration", character:"Ember", year:"2026", image:"/assets/images/gallery/art-02.svg", alt:"Placeholder illustration with orange and violet lighting", size:"tall" },
-    { id:"violet-lookbook", title:"Violet Lookbook", category:"reference", character:"Violet", year:"2026", image:"/assets/images/gallery/art-03.svg", alt:"Placeholder fashion reference sheet for a purple canine", size:"standard" },
-    { id:"moss-pattern", title:"Pattern Language", category:"design", character:"Moss", year:"2026", image:"/assets/images/gallery/art-04.svg", alt:"Placeholder graphic fur-pattern design study", size:"standard" },
-    { id:"neon-jackal", title:"Neon Jackal", category:"illustration", character:"Nova", year:"2026", image:"/assets/images/gallery/art-05.svg", alt:"Placeholder cyber jackal portrait", size:"tall" },
-    { id:"paw-study", title:"Paw Construction Study", category:"costume", character:"Workshop", year:"2026", image:"/assets/images/gallery/art-06.svg", alt:"Placeholder costume paw construction sheet", size:"wide" },
-    { id:"expressions", title:"Expression Sprint", category:"design", character:"Mixed cast", year:"2026", image:"/assets/images/gallery/art-07.svg", alt:"Placeholder character expression study", size:"standard" },
-    { id:"commission-sample", title:"Commission Sample", category:"commission", character:"Client character", year:"2026", image:"/assets/images/gallery/art-08.svg", alt:"Placeholder finished furry art commission", size:"standard" }
+    {
+      id: "michiru-speed",
+      title: "Cheetah Speed",
+      category: "illustration",
+      character: "Michiru study",
+      year: "2026",
+      image: "/assets/images/gallery/thumbs/michiru-cheetah-speed.webp",
+      full: "/assets/images/gallery/full/michiru-cheetah-speed.webp",
+      alt: "Colorful furry character running with long sweeping tails",
+      featured: true,
+      mature: false
+    },
+    {
+      id: "shin-chibi-pose",
+      title: "Shin Chibi Pose",
+      category: "chibi",
+      character: "Shin",
+      year: "2026",
+      image: "/assets/images/gallery/thumbs/shin-chibi-pose.webp",
+      full: "/assets/images/gallery/full/shin-chibi-pose.webp",
+      alt: "Chibi illustration of Shin standing with arms open",
+      featured: true,
+      mature: false
+    },
+    {
+      id: "shin-lounge",
+      title: "Shin Lounge",
+      category: "illustration",
+      character: "Shin",
+      year: "2026",
+      image: "/assets/images/gallery/thumbs/shin-lounge.webp",
+      full: "/assets/images/gallery/full/shin-lounge.webp",
+      alt: "Shin reclining in a relaxed pose",
+      featured: true,
+      mature: false
+    },
+    {
+      id: "shin-icon",
+      title: "Shin Icon",
+      category: "chibi",
+      character: "Shin",
+      year: "2026",
+      image: "/assets/images/gallery/thumbs/shin-chibi-icon-card.webp",
+      full: "/assets/images/gallery/full/shin-chibi-icon-card.webp",
+      alt: "Front-facing chibi icon of Shin on a lightly gridded background",
+      featured: true,
+      mature: false
+    },
+    {
+      id: "shin-icon-transparent",
+      title: "Shin Icon Cutout",
+      category: "chibi",
+      character: "Shin",
+      year: "2026",
+      image: "/assets/images/gallery/thumbs/shin-chibi-icon-transparent.webp",
+      full: "/assets/images/gallery/full/shin-chibi-icon-transparent.webp",
+      alt: "Transparent front-facing chibi icon of Shin",
+      featured: true,
+      mature: false
+    },
+    {
+      id: "shin-character-card",
+      title: "Shin Character Card",
+      category: "reference",
+      character: "Shin",
+      year: "2026",
+      image: "/assets/images/gallery/thumbs/shin-character-card.webp",
+      full: "/assets/images/gallery/full/shin-character-card.webp",
+      alt: "Character card showing multiple drawings and details for Shin",
+      featured: false,
+      mature: true
+    },
+    {
+      id: "kaizer-one-more-time",
+      title: "One More Time?",
+      category: "mature",
+      character: "Kaizer",
+      year: "2026",
+      image: "/assets/images/gallery/thumbs/kaizer-one-more-time.webp",
+      full: "/assets/images/gallery/full/kaizer-one-more-time.webp",
+      alt: "Suggestive furry character illustration with a speech bubble",
+      featured: false,
+      mature: true
+    },
+    {
+      id: "shin-crazy",
+      title: "Crazy",
+      category: "mature",
+      character: "Shin",
+      year: "2026",
+      image: "/assets/images/gallery/thumbs/shin-crazy.webp",
+      full: "/assets/images/gallery/full/shin-crazy.webp",
+      alt: "Adult-humor two-panel furry character comic",
+      featured: false,
+      mature: true
+    },
+    {
+      id: "shin-pet-play",
+      title: "Pet Play",
+      category: "mature",
+      character: "Shin",
+      year: "2026",
+      image: "/assets/images/gallery/thumbs/shin-pet-play.webp",
+      full: "/assets/images/gallery/full/shin-pet-play.webp",
+      alt: "Adult-themed furry character illustration with harness and leash",
+      featured: false,
+      mature: true
+    }
   ],
 
   fursuitProjects: [
-    { title:"Marbled Fox Mini Partial", status:"In development", phase:"Digital sculpt", image:"/assets/images/gallery/art-06.svg", description:"A first complete pipeline test covering head-base modeling, printing, sewing, finishing, and photography." },
-    { title:"Handpaw Pattern Study", status:"Prototype", phase:"Pattern refinement", image:"/assets/images/gallery/art-04.svg", description:"Testing finger shape, lining access, seam durability, and readable paw-pad silhouettes." },
-    { title:"Expression System", status:"Research", phase:"Concept design", image:"/assets/images/gallery/art-07.svg", description:"Exploring interchangeable or mechanically assisted expressions without sacrificing comfort." }
+    {
+      title: "Shin Mini Partial",
+      status: "Planning",
+      phase: "Head-base development",
+      image: "/assets/images/characters/shin.webp",
+      description: "Translating Shin's face shape, hair silhouette, markings, and expression language into a wearable head, handpaws, and tail."
+    },
+    {
+      title: "Workshop Setup",
+      status: "In progress",
+      phase: "Tools + workflow",
+      image: "/assets/images/gallery/thumbs/shin-character-card.webp",
+      description: "Organizing printing, sewing, trimming, storage, and photography into a repeatable build process."
+    }
   ],
+
   fursuitServices: [
-    { name:"Character-to-suit design", text:"Translate a 2D character into markings, shapes, and materials that remain readable in motion.", availability:"Available for art commissions" },
-    { name:"3D head-base development", text:"Digital sculpting and print-oriented development with airflow, vision, assembly, and repair in mind.", availability:"Portfolio development" },
-    { name:"Mini partial fabrication", text:"Head, handpaws, and tail developed as one visually consistent character package.", availability:"Not publicly open yet" }
+    {
+      name: "Character translation",
+      text: "Working out which shapes and markings must be simplified, enlarged, or moved so the design reads in costume form.",
+      availability: "Design studies"
+    },
+    {
+      name: "3D head-base work",
+      text: "Sculpting and printing bases with attention to vision, airflow, assembly, durability, and future repairs.",
+      availability: "Portfolio development"
+    },
+    {
+      name: "Mini partial construction",
+      text: "Developing heads, paws, and tails as one consistent character rather than unrelated components.",
+      availability: "Not open publicly"
+    }
   ],
+
   fursuitProcess: [
-    { number:"01", title:"Translate", text:"Resolve the character into a buildable silhouette, marking plan, and material list." },
-    { number:"02", title:"Prototype", text:"Model or pattern the structural pieces and test fit before expensive finish work." },
-    { number:"03", title:"Fabricate", text:"Print, sew, assemble, shave, line, and reinforce with maintenance in mind." },
-    { number:"04", title:"Finish", text:"Fit-test, photograph, document care, and archive the build for future repairs." }
+    { number: "01", title: "Design", text: "Resolve the silhouette, markings, materials, and practical constraints." },
+    { number: "02", title: "Prototype", text: "Test the sculpt, fit, patterns, vision, and movement before finish work." },
+    { number: "03", title: "Build", text: "Print, sew, assemble, shave, line, and reinforce the components." },
+    { number: "04", title: "Document", text: "Photograph the result and keep material and repair notes for later." }
   ],
 
   commissions: [
-    { name:"Portrait", eyebrow:"Head + shoulders", price:"From $75", description:"A polished character portrait with expressive posing and a simple graphic background.", includes:["One character","Clean linework + color","Web-size and full-size files"] },
-    { name:"Full Illustration", eyebrow:"Most popular", price:"From $165", description:"A complete character piece with a deliberate pose, lighting pass, and designed backdrop.", includes:["One full-body character","Rendered lighting","Simple or abstract scene"] },
-    { name:"Reference Sheet", eyebrow:"Design-focused", price:"From $240", description:"A readable character reference prepared for artists, makers, and future commissions.", includes:["Front + back views","Palette and details","One expression or accessory callout"] }
+    {
+      name: "Portrait",
+      eyebrow: "Head or bust",
+      price: "Set your price",
+      description: "An expressive portrait with clean color and either a transparent or lightly designed background.",
+      includes: ["One character", "Sketch approval", "Full-resolution file"]
+    },
+    {
+      name: "Full-body illustration",
+      eyebrow: "Character-focused",
+      price: "Set your price",
+      description: "A complete pose with finished color, shading, and a simple environmental or graphic backdrop.",
+      includes: ["One full-body character", "Sketch approval", "Full-resolution file"]
+    },
+    {
+      name: "Reference sheet",
+      eyebrow: "Design utility",
+      price: "Set your price",
+      description: "A readable character sheet for future artists, makers, and costume construction.",
+      includes: ["Required views", "Palette", "Detail callouts"]
+    }
   ],
+
   process: [
-    { number:"01", title:"Request", text:"Send your character, desired format, deadline, and any must-have details." },
-    { number:"02", title:"Quote", text:"You receive a written scope, price, queue position, and payment schedule." },
-    { number:"03", title:"Sketch", text:"Composition and design decisions are locked before final rendering begins." },
-    { number:"04", title:"Delivery", text:"Final files are delivered after approval and the remaining balance is paid." }
+    { number: "01", title: "Request", text: "Send the character, format, intended use, and important details." },
+    { number: "02", title: "Quote", text: "You receive the scope, price, queue position, and payment terms." },
+    { number: "03", title: "Sketch", text: "The pose and major design decisions are approved before finishing." },
+    { number: "04", title: "Delivery", text: "Final files are sent after approval and payment completion." }
   ]
 };
