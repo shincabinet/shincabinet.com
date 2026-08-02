@@ -14,8 +14,8 @@ window.SHIN_SITE = {
     intro: "Furry illustration, character design, and a growing fursuit workshop.",
     profileBlurb: "A personal archive for expressive character art, reference work, experiments, and costume-making progress.",
     email: "commissions@example.com",
-    commissionStatus: "Closed while the site is being set up",
-    commissionNote: "Update this status in assets/js/content.js before publishing.",
+    commissionStatus: "Closed — price guide available",
+    commissionNote: "Preparing a limited opening. Prices below are starting rates in USD for personal-use artwork.",
     fursuitStatus: "Portfolio work",
     fursuitNote: "Personal builds and process studies; public suit commissions are not open yet.",
     specialties: ["Character art", "Reference sheets", "Furry illustration", "Fursuit development"],
@@ -112,6 +112,30 @@ window.SHIN_SITE = {
       mature: false
     },
     {
+      id: "michiru-chibi-icon",
+      title: "Michiru Chibi Icon",
+      category: "chibi",
+      character: "Michiru study",
+      year: "2026",
+      image: "/assets/images/gallery/thumbs/michiru-chibi-icon.webp",
+      full: "/assets/images/gallery/full/michiru-chibi-icon.webp",
+      alt: "Front-facing chibi icon of a blue-haired furry character",
+      featured: false,
+      mature: false
+    },
+    {
+      id: "faputa-test",
+      title: "Faputa Study",
+      category: "illustration",
+      character: "Faputa study",
+      year: "2026",
+      image: "/assets/images/gallery/thumbs/faputa-test.webp",
+      full: "/assets/images/gallery/full/faputa-test.webp",
+      alt: "Detailed white and red creature character posed against a transparent background",
+      featured: false,
+      mature: false
+    },
+    {
       id: "shin-character-card",
       title: "Shin Character Card",
       category: "reference",
@@ -205,32 +229,61 @@ window.SHIN_SITE = {
 
   commissions: [
     {
-      name: "Portrait",
-      eyebrow: "Head or bust",
-      price: "Set your price",
-      description: "An expressive portrait with clean color and either a transparent or lightly designed background.",
-      includes: ["One character", "Sketch approval", "Full-resolution file"]
+      name: "Chibi icon",
+      eyebrow: "Profile image",
+      price: "$35+",
+      image: "/assets/images/commissions/chibi-icon.webp",
+      description: "A compact, expressive head icon with clean color and a transparent or simple graphic background.",
+      includes: ["One character", "One sketch revision round", "Transparent PNG + display-ready file"]
     },
     {
-      name: "Full-body illustration",
-      eyebrow: "Character-focused",
-      price: "Set your price",
-      description: "A complete pose with finished color, shading, and a simple environmental or graphic backdrop.",
-      includes: ["One full-body character", "Sketch approval", "Full-resolution file"]
+      name: "Chibi full body",
+      eyebrow: "Small character art",
+      price: "$50+",
+      image: "/assets/images/commissions/chibi-fullbody.webp",
+      description: "A simplified full-body pose built around clear expression, silhouette, and character markings.",
+      includes: ["One character", "Simple pose or prop", "Transparent PNG"]
     },
     {
-      name: "Reference sheet",
-      eyebrow: "Design utility",
-      price: "Set your price",
-      description: "A readable character sheet for future artists, makers, and costume construction.",
-      includes: ["Required views", "Palette", "Detail callouts"]
+      name: "Full-body character",
+      eyebrow: "Finished character art",
+      price: "$80+",
+      image: "/assets/images/gallery/full/faputa-test.webp",
+      description: "A polished full-body drawing with clean linework, finished color, and light shading.",
+      includes: ["One character", "Pose approval", "Transparent or plain background"]
+    },
+    {
+      name: "Dynamic illustration",
+      eyebrow: "Pose + graphic backdrop",
+      price: "$110+",
+      image: "/assets/images/commissions/illustration.webp",
+      description: "A more involved composition with stronger movement, effects, props, or a designed background.",
+      includes: ["One character", "Composition sketch", "Simple graphic background"]
+    },
+    {
+      name: "Character card",
+      eyebrow: "Design showcase",
+      price: "$175+",
+      image: "/assets/images/commissions/character-card.webp",
+      mature: true,
+      description: "A presentation sheet combining a main pose with supporting expressions, details, or alternate drawings.",
+      includes: ["One main full body", "Two to four supporting details", "Custom layout"]
+    },
+    {
+      name: "Comic or two-character scene",
+      eyebrow: "Narrative work",
+      price: "$190+",
+      image: "/assets/images/commissions/comic.webp",
+      mature: true,
+      description: "A short sequential piece or interaction-focused scene. Final pricing depends heavily on panel and character count.",
+      includes: ["Up to two characters", "One to two panels", "Simple background treatment"]
     }
   ],
 
   process: [
-    { number: "01", title: "Request", text: "Send the character, format, intended use, and important details." },
-    { number: "02", title: "Quote", text: "You receive the scope, price, queue position, and payment terms." },
-    { number: "03", title: "Sketch", text: "The pose and major design decisions are approved before finishing." },
-    { number: "04", title: "Delivery", text: "Final files are sent after approval and payment completion." }
+    { number: "01", title: "Request", text: "Send references, the commission type, pose or mood, intended use, and any hard requirements." },
+    { number: "02", title: "Quote + deposit", text: "I confirm the scope, final price, estimated queue window, and collect a 50% deposit." },
+    { number: "03", title: "Sketch approval", text: "You receive the composition sketch and one focused revision round before rendering begins." },
+    { number: "04", title: "Finish + delivery", text: "The remaining balance is paid before the unwatermarked full-resolution files are delivered." }
   ]
 };

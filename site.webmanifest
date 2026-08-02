@@ -3,8 +3,8 @@
   "short_name": "Shin",
   "start_url": "/",
   "display": "standalone",
-  "background_color": "#f2f0ed",
-  "theme_color": "#f2f0ed",
+  "background_color": "#21201C",
+  "theme_color": "#21201C",
   "icons": [
     { "src": "/assets/images/branding/favicon.png", "sizes": "256x256", "type": "image/png" }
   ]
