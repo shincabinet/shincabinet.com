@@ -4,111 +4,46 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <meta name="theme-color" content="#21201C">
-  <meta name="description" content="Shin Cabinet is a furry art, character design, and fursuit-making studio archive.">
-  <title>Shin Cabinet — Characters, Art &amp; Fursuits</title>
+  <meta name="description" content="Shin Cabinet is a personal archive of furry character art and fursuit work.">
+  <title>Shin Cabinet — Art &amp; Characters</title>
   <link rel="icon" href="/assets/images/branding/favicon.png" type="image/png">
   <link rel="manifest" href="/site.webmanifest">
-  <link rel="stylesheet" href="/assets/css/styles.css">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=4">
 </head>
 <body data-page="home">
 <a class="skip-link" href="#main-content">Skip to content</a>
-
 <header class="site-header">
   <div class="site-header__inner">
-    <a class="brand" href="/" aria-label="Shin Cabinet home">
-      <span class="brand__mark" data-short-name>SC</span>
-      <span class="brand__text" data-site-name>Shin Cabinet</span>
-    </a>
+    <a class="brand" href="/" aria-label="Shin Cabinet home"><span class="brand__mark" data-short-name>SC</span><span class="brand__text" data-site-name>Shin Cabinet</span></a>
     <button class="menu-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" data-menu-toggle><span></span></button>
     <nav class="site-nav" aria-label="Primary navigation" data-site-nav></nav>
   </div>
 </header>
-
 <main id="main-content">
   <section class="home-hero">
     <div class="home-hero__copy">
-      <p class="eyebrow">Personal art archive</p>
-      <h1>Characters, artwork, and a workshop in progress.</h1>
-      <p data-site-intro>Furry illustration, character design, and a growing fursuit workshop.</p>
+      <p class="eyebrow">Art &amp; character archive</p>
+      <h1>Furry art with strong shapes and personality.</h1>
+      <p data-site-intro>Character illustration, reference work, and fursuit development.</p>
       <div class="home-hero__links">
-        <a class="button button--primary" href="/gallery/" data-page-link="gallery">Browse the gallery</a>
-        <a class="button button--ghost" href="/characters/" data-page-link="characters">Meet the characters</a>
+        <a class="button button--primary" href="/gallery/" data-page-link="gallery">View gallery</a>
+        <a class="button button--ghost" href="/commissions/" data-page-link="commissions">Commission prices</a>
       </div>
-      <div class="home-hero__status">
-        <span><strong>Art commissions:</strong> <span data-commission-status>Closed while the site is being set up</span></span>
-        <span><strong>Fursuits:</strong> <span data-fursuit-status>Portfolio work</span></span>
-      </div>
+      <p class="home-hero__status"><strong>Commissions:</strong> <span data-commission-status>Closed</span></p>
     </div>
-    <figure class="home-hero__art">
-      <img src="/assets/images/characters/shin.webp" alt="Shin, the primary character of Shin Cabinet">
-    </figure>
+    <figure class="home-hero__art"><img src="/assets/images/characters/shin.webp" alt="Shin, the primary character of Shin Cabinet"></figure>
   </section>
 
-  <section class="section">
+  <section class="section section--tight">
     <div class="section__inner">
-      <header class="section__header">
-        <div>
-          <p class="eyebrow">Explore</p>
-          <h2>Inside the cabinet</h2>
-        </div>
-        <p data-profile-blurb>A personal archive for expressive character art, reference work, experiments, and costume-making progress.</p>
-      </header>
-      <div class="route-grid" data-route-grid></div>
-    </div>
-  </section>
-
-  <section class="section">
-    <div class="section__inner">
-      <header class="section__header">
-        <div>
-          <p class="eyebrow">Selected work</p>
-          <h2>Recent artwork</h2>
-        </div>
-        <p>A small selection from the gallery. Open an image to see it at a larger size.</p>
-      </header>
+      <header class="section__header"><div><p class="eyebrow">Selected work</p><h2>Recent artwork</h2></div><a class="text-link" href="/gallery/" data-page-link="gallery">Full gallery →</a></header>
       <div class="gallery-grid" data-gallery-grid data-featured-only="true" data-limit="5"></div>
-      <div class="hero__actions">
-        <a class="text-link" href="/gallery/" data-page-link="gallery">View the full gallery →</a>
-      </div>
     </div>
   </section>
 
-  <section class="section">
-    <div class="section__inner">
-      <div class="commission-banner">
-        <p class="eyebrow">Commission status</p>
-        <strong data-commission-status>Closed while the site is being set up</strong>
-        <p data-commission-note>Preparing a limited opening. Prices below are starting rates in USD for personal-use artwork.</p>
-        <a class="button" href="/commissions/" data-page-link="commissions">Commission information</a>
-      </div>
-    </div>
-  </section>
-
-  <dialog id="art-dialog" aria-label="Artwork preview">
-    <button class="dialog-close" type="button" aria-label="Close dialog" data-dialog-close>×</button>
-    <figure class="art-dialog__figure">
-      <img src="" alt="" data-art-dialog-image>
-      <figcaption class="art-dialog__caption"><strong data-art-dialog-title></strong><span data-art-dialog-meta></span></figcaption>
-    </figure>
-  </dialog>
+  <dialog id="art-dialog" aria-label="Artwork preview"><button class="dialog-close" type="button" aria-label="Close dialog" data-dialog-close>×</button><figure class="art-dialog__figure"><img src="" alt="" data-art-dialog-image><figcaption class="art-dialog__caption"><strong data-art-dialog-title></strong><span data-art-dialog-meta></span></figcaption></figure></dialog>
 </main>
-
-<footer class="site-footer">
-  <div class="site-footer__inner">
-    <div class="site-footer__top">
-      <p class="site-footer__title" data-site-name>Shin Cabinet</p>
-      <div class="site-footer__links" data-footer-links></div>
-    </div>
-    <div class="site-footer__bottom">
-      <span>© 2026 <span data-artist-name>Shin</span>. Please do not repost artwork without permission.</span>
-      <span>Hosted on Cloudflare Workers</span>
-    </div>
-  </div>
-</footer>
-
-<script src="/config/pages.js" defer></script>
-<script src="/config/custom-pages.js" defer></script>
-<script src="/assets/js/content.js" defer></script>
-<script src="/assets/js/site.js" defer></script>
+<footer class="site-footer"><div class="site-footer__inner"><span>© 2026 <span data-artist-name>Shin</span>. Please do not repost without permission.</span><div class="site-footer__links" data-footer-links></div></div></footer>
+<script src="/config/pages.js?v=4" defer></script><script src="/config/custom-pages.js?v=4" defer></script><script src="/assets/js/content.js?v=4" defer></script><script src="/assets/js/site.js?v=4" defer></script>
 </body>
 </html>

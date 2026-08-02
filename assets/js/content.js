@@ -11,20 +11,16 @@ window.SHIN_SITE = {
     shortName: "SC",
     artistName: "Shin",
     handle: "@shincabinet",
-    intro: "Furry illustration, character design, and a growing fursuit workshop.",
-    profileBlurb: "A personal archive for expressive character art, reference work, experiments, and costume-making progress.",
-    email: "commissions@example.com",
-    commissionStatus: "Closed — price guide available",
-    commissionNote: "Preparing a limited opening. Prices below are starting rates in USD for personal-use artwork.",
+    intro: "Character illustration, reference work, and fursuit development.",
+    profileBlurb: "A personal archive of character art and build work.",
+    email: "",
+    commissionStatus: "Closed",
+    commissionNote: "Price guide for future openings. All prices are starting rates in USD.",
     fursuitStatus: "Portfolio work",
     fursuitNote: "Personal builds and process studies; public suit commissions are not open yet.",
     specialties: ["Character art", "Reference sheets", "Furry illustration", "Fursuit development"],
     notices: [],
-    socialLinks: [
-      { label: "Toyhouse", url: "https://toyhou.se/" },
-      { label: "Bluesky", url: "https://bsky.app/" },
-      { label: "X / Twitter", url: "https://x.com/" }
-    ]
+    socialLinks: []
   },
 
   characters: [
@@ -230,60 +226,32 @@ window.SHIN_SITE = {
   commissions: [
     {
       name: "Chibi icon",
-      eyebrow: "Profile image",
-      price: "$35+",
+      price: "$25+",
       image: "/assets/images/commissions/chibi-icon.webp",
-      description: "A compact, expressive head icon with clean color and a transparent or simple graphic background.",
-      includes: ["One character", "One sketch revision round", "Transparent PNG + display-ready file"]
+      description: "An expressive head icon with clean color and a transparent or simple background.",
+      includes: ["One character", "Transparent PNG"]
     },
     {
       name: "Chibi full body",
-      eyebrow: "Small character art",
-      price: "$50+",
+      price: "$40+",
       image: "/assets/images/commissions/chibi-fullbody.webp",
-      description: "A simplified full-body pose built around clear expression, silhouette, and character markings.",
-      includes: ["One character", "Simple pose or prop", "Transparent PNG"]
+      description: "A simplified full-body pose focused on expression, silhouette, and markings.",
+      includes: ["One character", "Transparent PNG"]
     },
     {
       name: "Full-body character",
-      eyebrow: "Finished character art",
-      price: "$80+",
+      price: "$65+",
       image: "/assets/images/gallery/full/faputa-test.webp",
-      description: "A polished full-body drawing with clean linework, finished color, and light shading.",
-      includes: ["One character", "Pose approval", "Transparent or plain background"]
-    },
-    {
-      name: "Dynamic illustration",
-      eyebrow: "Pose + graphic backdrop",
-      price: "$110+",
-      image: "/assets/images/commissions/illustration.webp",
-      description: "A more involved composition with stronger movement, effects, props, or a designed background.",
-      includes: ["One character", "Composition sketch", "Simple graphic background"]
+      description: "A finished full-body drawing with clean lines, color, and light shading.",
+      includes: ["One character", "Plain or transparent background"]
     },
     {
       name: "Character card",
-      eyebrow: "Design showcase",
-      price: "$175+",
+      price: "$125+",
       image: "/assets/images/commissions/character-card.webp",
       mature: true,
-      description: "A presentation sheet combining a main pose with supporting expressions, details, or alternate drawings.",
-      includes: ["One main full body", "Two to four supporting details", "Custom layout"]
-    },
-    {
-      name: "Comic or two-character scene",
-      eyebrow: "Narrative work",
-      price: "$190+",
-      image: "/assets/images/commissions/comic.webp",
-      mature: true,
-      description: "A short sequential piece or interaction-focused scene. Final pricing depends heavily on panel and character count.",
-      includes: ["Up to two characters", "One to two panels", "Simple background treatment"]
+      description: "A main pose with supporting expressions, details, or alternate drawings.",
+      includes: ["One main full body", "Two to four supporting details"]
     }
-  ],
-
-  process: [
-    { number: "01", title: "Request", text: "Send references, the commission type, pose or mood, intended use, and any hard requirements." },
-    { number: "02", title: "Quote + deposit", text: "I confirm the scope, final price, estimated queue window, and collect a 50% deposit." },
-    { number: "03", title: "Sketch approval", text: "You receive the composition sketch and one focused revision round before rendering begins." },
-    { number: "04", title: "Finish + delivery", text: "The remaining balance is paid before the unwatermarked full-resolution files are delivered." }
   ]
 };

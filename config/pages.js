@@ -20,11 +20,7 @@ window.SHIN_PAGES = {
     "disabledMessage": "Its files and content are still saved, but visitors cannot open it right now.",
     "navigationLabel": "Primary navigation",
     "siteUrl": "https://shincabinet.com",
-    "cta": {
-      "label": "Commission info",
-      "page": "commissions",
-      "fallbackToEmail": true
-    }
+    "cta": {}
   },
   "items": [
     {
