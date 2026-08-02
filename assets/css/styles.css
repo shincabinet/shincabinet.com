@@ -1,16 +1,16 @@
 :root {
-  --paper: #f5efe6;
-  --paper-deep: #eadfd2;
-  --paper-light: #fffaf2;
-  --ink: #2d1d24;
-  --ink-soft: #5d4c51;
-  --rust: #c94b2b;
-  --rust-dark: #9e361f;
-  --gold: #e3a11b;
-  --teal: #177e80;
-  --line: rgba(45, 29, 36, .22);
-  --line-soft: rgba(45, 29, 36, .11);
-  --shadow: 0 16px 40px rgba(45, 29, 36, .10);
+  --paper: #f2f0ed;
+  --paper-deep: #e3ded9;
+  --paper-light: #fbfaf8;
+  --ink: #241b21;
+  --ink-soft: #655b61;
+  --rust: #b94a32;
+  --rust-dark: #843325;
+  --gold: #c48845;
+  --teal: #2f7773;
+  --line: rgba(36, 27, 33, .22);
+  --line-soft: rgba(36, 27, 33, .10);
+  --shadow: 0 16px 40px rgba(36, 27, 33, .11);
   --container: min(1120px, calc(100% - 40px));
   --reading: min(760px, 100%);
   --radius: 12px;
@@ -46,7 +46,7 @@ button, a { -webkit-tap-highlight-color: transparent; }
 a { color: inherit; text-decoration-thickness: 1px; text-underline-offset: .22em; }
 button { color: inherit; }
 :focus-visible { outline: 2px solid var(--teal); outline-offset: 4px; }
-::selection { background: rgba(227, 161, 27, .35); }
+::selection { background: rgba(185, 74, 50, .22); }
 [hidden] { display: none !important; }
 
 h1, h2, h3 {
@@ -77,7 +77,7 @@ main { min-height: 70vh; }
   position: sticky;
   top: 0;
   z-index: 50;
-  background: rgba(245, 239, 230, .92);
+  background: rgba(242, 240, 237, .92);
   border-bottom: 1px solid var(--line-soft);
   backdrop-filter: blur(10px);
 }
@@ -211,9 +211,9 @@ main { min-height: 70vh; }
   display: grid;
   place-items: end center;
   border-bottom: 1px solid var(--line);
-  background: linear-gradient(to bottom, transparent 92%, rgba(201,75,43,.08));
+  background: linear-gradient(to bottom, transparent 92%, rgba(185,74,50,.07));
 }
-.home-hero__art img { max-height: 620px; object-fit: contain; filter: drop-shadow(0 16px 20px rgba(45,29,36,.12)); }
+.home-hero__art img { max-height: 620px; object-fit: contain; filter: drop-shadow(0 16px 20px rgba(36,27,33,.13)); }
 
 .eyebrow {
   color: var(--rust-dark);
@@ -339,7 +339,7 @@ main { min-height: 70vh; }
   place-content: center;
   text-align: center;
   color: var(--paper-light);
-  background: rgba(45,29,36,.50);
+  background: rgba(36,27,33,.52);
 }
 .mature-cover strong { font-family: var(--font-serif); font-size: 1.35rem; }
 .mature-cover small { font-size: .72rem; }
@@ -434,9 +434,9 @@ dialog {
   background: var(--paper);
   border: 1px solid var(--ink);
   border-radius: 10px;
-  box-shadow: 0 30px 90px rgba(45,29,36,.3);
+  box-shadow: 0 30px 90px rgba(36,27,33,.30);
 }
-dialog::backdrop { background: rgba(45,29,36,.72); }
+dialog::backdrop { background: rgba(36,27,33,.74); }
 .dialog-close {
   position: sticky;
   top: .7rem;
