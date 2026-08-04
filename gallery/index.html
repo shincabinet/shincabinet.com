@@ -1,18 +1,60 @@
 <!doctype html>
 <html lang="en">
 <head>
-  <meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1"><meta name="theme-color" content="#21201C">
-  <meta name="description" content="Furry illustrations, character studies, references, and mature art from Shin Cabinet."><title>Gallery — Shin Cabinet</title>
-  <link rel="icon" href="/assets/images/branding/favicon.png" type="image/png"><link rel="manifest" href="/site.webmanifest"><link rel="stylesheet" href="/assets/css/styles.css?v=4">
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta name="theme-color" content="#21201C">
+  <meta name="description" content="Furry illustrations, character studies, references, and mature art from Shin Cabinet.">
+  <title>Gallery — Shin Cabinet</title>
+  <link rel="icon" href="/assets/images/branding/favicon.png" type="image/png">
+  <link rel="manifest" href="/site.webmanifest">
+  <link rel="stylesheet" href="/assets/css/styles.css?v=5">
 </head>
 <body data-page="gallery">
 <a class="skip-link" href="#main-content">Skip to content</a>
-<header class="site-header"><div class="site-header__inner"><a class="brand" href="/" aria-label="Shin Cabinet home"><span class="brand__mark" data-short-name>SC</span><span class="brand__text" data-site-name>Shin Cabinet</span></a><button class="menu-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" data-menu-toggle><span></span></button><nav class="site-nav" aria-label="Primary navigation" data-site-nav></nav></div></header>
+<header class="site-header">
+  <div class="site-header__inner">
+    <a class="brand" href="/" aria-label="Shin Cabinet home"><span class="brand__text" data-site-name>Shin Cabinet</span></a>
+    <button class="menu-toggle" type="button" aria-label="Toggle navigation" aria-expanded="false" data-menu-toggle><span></span></button>
+    <nav class="site-nav" aria-label="Primary navigation" data-site-nav></nav>
+  </div>
+</header>
 <main id="main-content">
-  <section class="page-hero"><div class="page-hero__inner"><p class="eyebrow">Gallery</p><h1>Art archive</h1><p>Mature work is hidden until selected.</p></div></section>
-  <section class="section section--tight"><div class="section__inner"><div class="filter-bar" aria-label="Filter gallery"><button type="button" aria-pressed="true" data-gallery-filter data-filter="all">All</button><button type="button" aria-pressed="false" data-gallery-filter data-filter="illustration">Illustration</button><button type="button" aria-pressed="false" data-gallery-filter data-filter="chibi">Chibi</button><button type="button" aria-pressed="false" data-gallery-filter data-filter="reference">Reference</button><button type="button" aria-pressed="false" data-gallery-filter data-filter="mature">Mature</button></div><div class="gallery-grid" data-gallery-grid></div></div></section>
-  <dialog id="art-dialog" aria-label="Artwork preview"><button class="dialog-close" type="button" aria-label="Close dialog" data-dialog-close>×</button><figure class="art-dialog__figure"><img src="" alt="" data-art-dialog-image><figcaption class="art-dialog__caption"><strong data-art-dialog-title></strong><span data-art-dialog-meta></span></figcaption></figure></dialog>
+  <section class="page-title">
+    <div class="page-title__inner">
+      <h1>Gallery</h1>
+      <p>Artwork, character studies, and reference pieces. Mature work is blurred until opened.</p>
+    </div>
+  </section>
+  <section class="section section--compact">
+    <div class="section__inner">
+      <div class="filter-bar" aria-label="Filter gallery">
+        <button type="button" aria-pressed="true" data-gallery-filter data-filter="all">All</button>
+        <button type="button" aria-pressed="false" data-gallery-filter data-filter="illustration">Illustration</button>
+        <button type="button" aria-pressed="false" data-gallery-filter data-filter="chibi">Chibi</button>
+        <button type="button" aria-pressed="false" data-gallery-filter data-filter="reference">Reference</button>
+        <button type="button" aria-pressed="false" data-gallery-filter data-filter="mature">Mature</button>
+      </div>
+      <div class="gallery-grid" data-gallery-grid></div>
+    </div>
+  </section>
+  <dialog id="art-dialog" aria-label="Artwork preview">
+    <button class="dialog-close" type="button" aria-label="Close dialog" data-dialog-close>×</button>
+    <figure class="art-dialog__figure">
+      <img src="" alt="" data-art-dialog-image>
+      <figcaption class="art-dialog__caption"><strong data-art-dialog-title></strong><span data-art-dialog-meta></span></figcaption>
+    </figure>
+  </dialog>
 </main>
-<footer class="site-footer"><div class="site-footer__inner"><span>© 2026 <span data-artist-name>Shin</span>. Please do not repost without permission.</span><div class="site-footer__links" data-footer-links></div></div></footer>
-<script src="/config/pages.js?v=4" defer></script><script src="/config/custom-pages.js?v=4" defer></script><script src="/assets/js/content.js?v=4" defer></script><script src="/assets/js/site.js?v=4" defer></script>
-</body></html>
+<footer class="site-footer">
+  <div class="site-footer__inner">
+    <span>© 2026 <span data-artist-name>Shin</span>. Please do not repost without permission.</span>
+    <div class="site-footer__links" data-footer-links></div>
+  </div>
+</footer>
+<script src="/config/pages.js?v=5" defer></script>
+<script src="/config/custom-pages.js?v=5" defer></script>
+<script src="/assets/js/content.js?v=5" defer></script>
+<script src="/assets/js/site.js?v=5" defer></script>
+</body>
+</html>

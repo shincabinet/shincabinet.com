@@ -11,14 +11,14 @@ window.SHIN_SITE = {
     shortName: "SC",
     artistName: "Shin",
     handle: "@shincabinet",
-    intro: "Character illustration, reference work, and fursuit development.",
-    profileBlurb: "A personal archive of character art and build work.",
+    intro: "Furry art, character design, and commission information.",
+    profileBlurb: "A personal archive of character art.",
     email: "",
     commissionStatus: "Closed",
-    commissionNote: "Price guide for future openings. All prices are starting rates in USD.",
-    fursuitStatus: "Portfolio work",
-    fursuitNote: "Personal builds and process studies; public suit commissions are not open yet.",
-    specialties: ["Character art", "Reference sheets", "Furry illustration", "Fursuit development"],
+    commissionNote: "Prices are starting rates in USD.",
+    fursuitStatus: "Not published",
+    fursuitNote: "This page is not published yet.",
+    specialties: ["Character art", "Reference sheets", "Furry illustration"],
     notices: [],
     socialLinks: []
   },
@@ -181,47 +181,10 @@ window.SHIN_SITE = {
     }
   ],
 
-  fursuitProjects: [
-    {
-      title: "Shin Mini Partial",
-      status: "Planning",
-      phase: "Head-base development",
-      image: "/assets/images/characters/shin.webp",
-      description: "Translating Shin's face shape, hair silhouette, markings, and expression language into a wearable head, handpaws, and tail."
-    },
-    {
-      title: "Workshop Setup",
-      status: "In progress",
-      phase: "Tools + workflow",
-      image: "/assets/images/gallery/thumbs/shin-character-card.webp",
-      description: "Organizing printing, sewing, trimming, storage, and photography into a repeatable build process."
-    }
-  ],
-
-  fursuitServices: [
-    {
-      name: "Character translation",
-      text: "Working out which shapes and markings must be simplified, enlarged, or moved so the design reads in costume form.",
-      availability: "Design studies"
-    },
-    {
-      name: "3D head-base work",
-      text: "Sculpting and printing bases with attention to vision, airflow, assembly, durability, and future repairs.",
-      availability: "Portfolio development"
-    },
-    {
-      name: "Mini partial construction",
-      text: "Developing heads, paws, and tails as one consistent character rather than unrelated components.",
-      availability: "Not open publicly"
-    }
-  ],
-
-  fursuitProcess: [
-    { number: "01", title: "Design", text: "Resolve the silhouette, markings, materials, and practical constraints." },
-    { number: "02", title: "Prototype", text: "Test the sculpt, fit, patterns, vision, and movement before finish work." },
-    { number: "03", title: "Build", text: "Print, sew, assemble, shave, line, and reinforce the components." },
-    { number: "04", title: "Document", text: "Photograph the result and keep material and repair notes for later." }
-  ],
+  // Kept empty until there is real fursuit portfolio work to publish.
+  fursuitProjects: [],
+  fursuitServices: [],
+  fursuitProcess: [],
 
   commissions: [
     {

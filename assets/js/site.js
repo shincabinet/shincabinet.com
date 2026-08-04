@@ -171,7 +171,7 @@
       location.replace(pageConfig.options.disabledRedirect || "/");
       return;
     }
-    main.innerHTML = `<section class="disabled-page"><p class="eyebrow">Unpublished</p><h1>${esc(pageConfig.options?.disabledTitle || "This page is closed.")}</h1><p>${esc(pageConfig.options?.disabledMessage || "This page is saved but not currently public.")}</p><a class="button" href="/">Back home</a></section>`;
+    main.innerHTML = `<section class="disabled-page"><h1>${esc(pageConfig.options?.disabledTitle || "This page is not published yet.")}</h1><p>${esc(pageConfig.options?.disabledMessage || "The content is saved, but it is currently hidden.")}</p><a class="button" href="/">Back home</a></section>`;
   }
 
   function characterCard(character) {
@@ -179,7 +179,7 @@
     return `<article class="character-card" data-character-category="${esc(character.category)}" data-character-searchable="${esc(searchable)}">
       <button type="button" data-character-id="${esc(character.id)}">
         <span class="character-card__image"><img src="${esc(character.image)}" alt="${esc(character.name)}" loading="lazy"></span>
-        <span class="character-card__copy"><small>${esc(character.species)} · ${esc(character.pronouns)}</small><strong>${esc(character.name)}</strong><span>${esc(character.tagline)}</span></span>
+        <span class="character-card__copy"><strong>${esc(character.name)}</strong><small>${esc(character.species)} · ${esc(character.pronouns)}</small></span>
       </button>
     </article>`;
   }
@@ -199,12 +199,14 @@
     const dialog = qs("#character-dialog");
     const root = qs("[data-character-dialog-content]", dialog);
     if (!character || !dialog || !root) return;
+    const toyhouseLink = character.toyhouse
+      ? `<a class="text-link" href="${esc(character.toyhouse)}" target="_blank" rel="noreferrer">Toyhouse profile</a>`
+      : "";
     root.innerHTML = `<div class="character-dialog__visual"><img src="${esc(character.image)}" alt="${esc(character.name)}"></div>
-      <div class="character-dialog__copy"><p class="eyebrow">${esc(character.role)}</p><h2>${esc(character.name)}</h2><p class="character-dialog__species">${esc(character.species)} · ${esc(character.pronouns)}</p><p>${esc(character.bio)}</p>
+      <div class="character-dialog__copy"><h2>${esc(character.name)}</h2><p class="character-dialog__species">${esc(character.species)} · ${esc(character.pronouns)}</p><p>${esc(character.bio)}</p>
       <dl class="fact-grid">${(character.facts || []).map((fact) => `<div><dt>${esc(fact.label)}</dt><dd>${esc(fact.value)}</dd></div>`).join("")}</dl>
       <div class="palette">${(character.palette || []).map((color) => `<span title="${esc(color)}" style="--swatch:${esc(color)}"></span>`).join("")}</div>
-      <div class="tag-list">${(character.tags || []).map((tag) => `<span>${esc(tag)}</span>`).join("")}</div>
-      <a class="button" href="${esc(character.toyhouse)}" target="_blank" rel="noreferrer">Toyhouse profile</a></div>`;
+      ${toyhouseLink}</div>`;
     dialog.showModal();
   }
 
@@ -238,8 +240,8 @@
     const mature = artwork.mature === true;
     return `<article class="gallery-card${mature ? " gallery-card--mature" : ""}" data-gallery-category="${esc(artwork.category)}" data-gallery-mature="${mature}">
       <button type="button" data-artwork-id="${esc(artwork.id)}" data-mature="${mature}" aria-label="View ${esc(artwork.title)}">
-        <span class="gallery-card__media"><img src="${esc(artwork.image)}" alt="${esc(artwork.alt)}" loading="lazy">${mature ? '<span class="mature-cover"><strong>Mature work</strong><small>Tap once to reveal</small></span>' : ""}</span>
-        <span class="gallery-card__caption"><span><strong>${esc(artwork.title)}</strong><small>${esc(artwork.character)} · ${esc(artwork.year)}</small></span><i>${esc(artwork.category)}</i></span>
+        <span class="gallery-card__media"><img src="${esc(artwork.image)}" alt="${esc(artwork.alt)}" loading="lazy">${mature ? '<span class="mature-cover"><strong>Mature</strong><small>Tap to reveal</small></span>' : ""}</span>
+        <span class="gallery-card__caption"><strong>${esc(artwork.title)}</strong><small>${esc(artwork.character)} · ${esc(artwork.year)}</small></span>
       </button>
     </article>`;
   }
@@ -277,21 +279,17 @@
 
   function renderFursuits() {
     const builds = qs("[data-build-grid]");
-    if (builds) builds.innerHTML = data.fursuitProjects.map((project) => `<article class="build-card"><img src="${esc(project.image)}" alt="${esc(project.title)}" loading="lazy"><div><small>${esc(project.phase)} · ${esc(project.status)}</small><h3>${esc(project.title)}</h3><p>${esc(project.description)}</p></div></article>`).join("");
-
-    const services = qs("[data-fursuit-services]");
-    if (services) services.innerHTML = data.fursuitServices.map((service) => `<article class="service-card"><h3>${esc(service.name)}</h3><p>${esc(service.text)}</p><small>${esc(service.availability)}</small></article>`).join("");
-
-    const process = qs("[data-fursuit-process]");
-    if (process) process.innerHTML = data.fursuitProcess.map((step) => `<article class="process-step"><span>${esc(step.number)}</span><div><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p></div></article>`).join("");
+    if (builds) {
+      builds.innerHTML = (data.fursuitProjects || []).map((project) => `<article class="build-card"><img src="${esc(project.image)}" alt="${esc(project.title)}" loading="lazy"><div><small>${esc(project.phase)} · ${esc(project.status)}</small><h3>${esc(project.title)}</h3><p>${esc(project.description)}</p></div></article>`).join("");
+    }
   }
 
   function renderCommissions() {
     const packages = qs("[data-commission-packages]");
-    if (packages) packages.innerHTML = data.commissions.map((commission) => `<article class="price-card">${commission.image ? (commission.mature ? `<details class="price-card__mature"><summary>Mature example — reveal</summary><img class="price-card__image" src="${esc(commission.image)}" alt="Mature example of ${esc(commission.name)}" loading="lazy"></details>` : `<img class="price-card__image" src="${esc(commission.image)}" alt="Example of ${esc(commission.name)}" loading="lazy">`) : ""}<h2>${esc(commission.name)}</h2><strong>${esc(commission.price)}</strong><p>${esc(commission.description)}</p><ul>${(commission.includes || []).map((item) => `<li>${esc(item)}</li>`).join("")}</ul></article>`).join("");
-
-    const process = qs("[data-process-grid]");
-    if (process) process.innerHTML = data.process.map((step) => `<article class="process-step"><span>${esc(step.number)}</span><div><h3>${esc(step.title)}</h3><p>${esc(step.text)}</p></div></article>`).join("");
+    if (packages) packages.innerHTML = data.commissions.map((commission) => `<article class="price-card">
+      ${commission.image ? (commission.mature ? `<details class="price-card__mature"><summary>Mature example</summary><img class="price-card__image" src="${esc(commission.image)}" alt="Mature example of ${esc(commission.name)}" loading="lazy"></details>` : `<img class="price-card__image" src="${esc(commission.image)}" alt="Example of ${esc(commission.name)}" loading="lazy">`) : ""}
+      <div class="price-card__body"><div class="price-card__heading"><h2>${esc(commission.name)}</h2><strong>${esc(commission.price)}</strong></div><p>${esc(commission.description)}</p><ul>${(commission.includes || []).map((item) => `<li>${esc(item)}</li>`).join("")}</ul></div>
+    </article>`).join("");
   }
 
   function renderCustomPage(page) {
