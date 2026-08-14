@@ -11,7 +11,7 @@ window.SHIN_SITE = {
     shortName: "SC",
     artistName: "Shin",
     handle: "@shincabinet",
-    intro: "Furry art, character design, and commission information.",
+    intro: "Furry art, characters, and whatever else I’m working on.",
     profileBlurb: "A personal archive of character art.",
     email: "",
     commissionStatus: "Closed",

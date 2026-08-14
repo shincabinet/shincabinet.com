@@ -1,19 +1,22 @@
-# Shin Cabinet — Simple Portfolio V5
+# Shin Cabinet — Minimal Personal Portfolio V6
 
 A static Cloudflare Workers website for furry art, original characters, and commission information.
 
 ## Design direction
 
-This version removes most promotional and dashboard-style UI. It uses one consistent layout across the site:
+V6 moves the site away from a modern startup/portfolio landing page and toward a much plainer personal artist site:
 
-- plain navigation
-- a short homepage introduction
-- artwork-led gallery cards
-- simple character profiles
-- straightforward commission pricing and terms
-- dark neutral background with restrained rust accents and light grain
+- warm off-white background
+- mascot icon + wordmark in the header
+- simple gray navigation
+- large conversational homepage introduction
+- character art as the main homepage visual
+- no homepage feature cards, sales blocks, gradients, or decorative hero shapes
+- gallery and character pages led by images with very little surrounding UI
+- commissions presented as a catalogue rather than promotional pricing cards
+- one consistent visual language across every page
 
-The Fursuits page and build log are disabled because there is no finished fursuit portfolio yet. Their files remain available for later.
+The Fursuits page and build log remain disabled because there is no finished fursuit portfolio yet.
 
 ## Edit the site
 
@@ -21,6 +24,8 @@ The Fursuits page and build log are disabled because there is no finished fursui
 - Main text, characters, artwork, pricing, and links: `assets/js/content.js`
 - Draft content for generic pages: `config/custom-pages.js`
 - Visual design: `assets/css/styles.css`
+
+A copy of the previous V5 stylesheet is kept at `assets/css/styles.v5-backup.css`.
 
 ## Enable or disable pages
 
@@ -37,33 +42,9 @@ python3 tools/manage_pages.py enable fursuits
 python3 tools/manage_pages.py set fursuits --menu on --footer on
 ```
 
-Add real portfolio entries to the empty `fursuitProjects`, `fursuitServices`, and `fursuitProcess` arrays in `assets/js/content.js` before publishing that page.
-
-## Add a page
-
-```bash
-python3 tools/manage_pages.py create page-id /page-path/ "Page Name"
-```
-
-Add `--parent parent-id` to nest it below another page. The new page uses `tools/page-template.html` and its content can be added in `config/custom-pages.js`.
-
 ## Cloudflare Workers deployment
-
-The repository includes `wrangler.jsonc` and `.assetsignore`.
 
 - Production branch: `main`
 - Root directory: blank
 - Build command: blank
 - Deploy command: `npx wrangler deploy`
-
-## Before publishing
-
-Update `assets/js/content.js` with the final:
-
-- commission email
-- Toyhouse and social links
-- commission status
-- prices and terms
-- character biography and Toyhouse URL
-
-Mature gallery thumbnails are blurred by default, but their source files are still publicly hosted. Remove any image you do not want publicly accessible.
