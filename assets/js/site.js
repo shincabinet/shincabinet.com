@@ -290,6 +290,43 @@
     }
   }
 
+  function renderAdoptables() {
+    const grid = qs("[data-adoptable-grid]");
+    const empty = qs("[data-adoptable-empty]");
+    if (!grid) return;
+
+    const adoptables = data.adoptables || [];
+    if (!adoptables.length) {
+      grid.innerHTML = "";
+      if (empty) empty.hidden = false;
+      return;
+    }
+
+    if (empty) empty.hidden = true;
+    grid.innerHTML = adoptables.map((adoptable) => {
+      const status = adoptable.status || "Available";
+      const statusKey = String(status).toLowerCase().replace(/[^a-z0-9]+/g, "-");
+      const image = `<img src="${esc(adoptable.image)}" alt="${esc(adoptable.alt || adoptable.name)}" loading="lazy">`;
+      const visual = adoptable.url
+        ? `<a class="adoptable-card__visual" href="${esc(adoptable.url)}" target="_blank" rel="noreferrer">${image}</a>`
+        : `<div class="adoptable-card__visual">${image}</div>`;
+      const action = adoptable.url
+        ? `<a class="text-link adoptable-card__link" href="${esc(adoptable.url)}" target="_blank" rel="noreferrer">View / purchase →</a>`
+        : "";
+
+      return `<article class="adoptable-card" data-adoptable-status="${esc(statusKey)}">
+        ${visual}
+        <div class="adoptable-card__info">
+          <div class="adoptable-card__heading">
+            <div><h2>${esc(adoptable.name)}</h2>${adoptable.description ? `<p>${esc(adoptable.description)}</p>` : ""}</div>
+            <div class="adoptable-card__meta">${adoptable.price ? `<strong>${esc(adoptable.price)}</strong>` : ""}<span class="adoptable-status adoptable-status--${esc(statusKey)}">${esc(status)}</span></div>
+          </div>
+          ${action}
+        </div>
+      </article>`;
+    }).join("");
+  }
+
   function renderCommissions() {
     const packages = qs("[data-commission-packages]");
     if (packages) packages.innerHTML = data.commissions.map((commission) => `<article class="price-card">
@@ -389,6 +426,7 @@
     renderCustomPage(currentPage);
     renderCharacters();
     renderGallery();
+    renderAdoptables();
     renderFursuits();
     renderCommissions();
     applyConfiguredLinks();

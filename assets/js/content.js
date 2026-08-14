@@ -67,7 +67,7 @@ window.SHIN_SITE = {
       role: "Primary character",
       category: "primary",
       featured: true,
-      image: "assets/images/gallery/thumbs/shin-chibi-pose.web",
+      image: "/assets/images/gallery/thumbs/shin-chibi-pose.webp",
       tagline: "Warm rust, dark fur, gold eyes, and deliberately irregular markings.",
       bio: "My Sona <3",
       palette: ["#C94B2B", "#F2DDAE", "#342027", "#E7A31A", "#177E80"],
@@ -191,6 +191,24 @@ window.SHIN_SITE = {
       mature: true
     }
   ],
+
+  /*
+    ADOPTABLES
+    ----------
+    Add character designs here and they will appear automatically on /adoptable/.
+
+    Example entry:
+    {
+      id: "design-name",
+      name: "Design Name",
+      price: "$60",
+      status: "Available", // Available, Pending, or Sold
+      image: "/assets/images/adoptables/design-name.webp",
+      description: "A short note about the design.",
+      url: "https://example.com/purchase-page"
+    }
+  */
+  adoptables: [],
 
   // Kept empty until there is real fursuit portfolio work to publish.
   fursuitProjects: [],

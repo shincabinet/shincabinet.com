@@ -70,6 +70,18 @@ window.SHIN_PAGES = {
       "children": []
     },
     {
+      "id": "adoptable",
+      "label": "Adoptable",
+      "path": "/adoptable/",
+      "enabled": true,
+      "menu": true,
+      "footer": true,
+      "homeCard": { "show": false },
+      "title": "Adoptables — Shin Cabinet",
+      "description": "Character designs currently available for adoption from Shin Cabinet.",
+      "children": []
+    },
+    {
       "id": "additional-info",
       "label": "Additional Info",
       "path": "/additional-info/",

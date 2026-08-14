@@ -1,10 +1,10 @@
-# Shin Cabinet — Minimal Personal Portfolio V7
+# Shin Cabinet — Minimal Personal Portfolio V8
 
 A static Cloudflare Workers website for furry art, original characters, and commission information.
 
 ## Design direction
 
-V7 keeps the V6 direction and adds a small Additional Info dropdown. V6 moved the site away from a modern startup/portfolio landing page and toward a much plainer personal artist site:
+V8 keeps the same minimal direction and adds a dedicated Adoptable page in the main navigation. V6 moved the site away from a modern startup/portfolio landing page and toward a much plainer personal artist site:
 
 - warm off-white background
 - mascot icon + wordmark in the header
@@ -15,6 +15,7 @@ V7 keeps the V6 direction and adds a small Additional Info dropdown. V6 moved th
 - gallery and character pages led by images with very little surrounding UI
 - commissions presented as a catalogue rather than promotional pricing cards
 - one consistent visual language across every page
+- Adoptable page for available character designs
 - Additional Info → TOS / Contacts dropdown
 - transparent Shin chibi face in the header/favicon
 
@@ -23,12 +24,30 @@ The Fursuits page and build log remain disabled because there is no finished fur
 ## Edit the site
 
 - Page visibility and hierarchy: `config/pages.js`
-- Main text, characters, artwork, pricing, and links: `assets/js/content.js`
+- Main text, characters, artwork, adoptables, pricing, and links: `assets/js/content.js`
 - Contact/social directory: `assets/js/content.js` → `site.contacts`
 - Draft content for generic pages: `config/custom-pages.js`
 - Visual design: `assets/css/styles.css`
 
 A copy of the previous V5 stylesheet is kept at `assets/css/styles.v5-backup.css`.
+
+## Add an adoptable
+
+Put the design image in `assets/images/adoptables/`, then add an entry to the `adoptables` array in `assets/js/content.js`:
+
+```js
+{
+  id: "design-name",
+  name: "Design Name",
+  price: "$60",
+  status: "Available",
+  image: "/assets/images/adoptables/design-name.webp",
+  description: "Short description.",
+  url: "https://your-sale-page.example"
+}
+```
+
+Leave the array empty and the page will simply show that no adoptables are currently available.
 
 ## Enable or disable pages
 

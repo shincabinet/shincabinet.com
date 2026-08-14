@@ -375,6 +375,77 @@ button { color: inherit; }
 .character-card__copy strong { font-size: 1rem; }
 .character-card__copy small { color: var(--muted); }
 
+/* Adoptables: image-led listings with only the information needed to buy a design. */
+.adoptable-grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 3.2rem 2rem;
+}
+.adoptable-card { min-width: 0; }
+.adoptable-card__visual {
+  min-height: 360px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+  background: transparent;
+  border-bottom: 1px solid var(--line);
+  text-decoration: none;
+}
+.adoptable-card__visual img {
+  width: 100%;
+  height: 390px;
+  object-fit: contain;
+  transition: opacity 0.16s ease;
+}
+a.adoptable-card__visual:hover img { opacity: 0.8; }
+.adoptable-card__info { padding-top: 0.8rem; }
+.adoptable-card__heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 1rem;
+}
+.adoptable-card__heading h2 {
+  font-size: 1.05rem;
+  font-weight: 700;
+  letter-spacing: -0.025em;
+}
+.adoptable-card__heading p {
+  max-width: 34rem;
+  margin-top: 0.3rem;
+  color: var(--muted);
+  font-size: 0.86rem;
+}
+.adoptable-card__meta {
+  display: grid;
+  justify-items: end;
+  gap: 0.15rem;
+  flex: 0 0 auto;
+  text-align: right;
+}
+.adoptable-card__meta strong { font-size: 0.95rem; }
+.adoptable-status {
+  color: var(--muted);
+  font-size: 0.76rem;
+}
+.adoptable-status--available { color: var(--text); }
+.adoptable-status--sold { text-decoration: line-through; }
+.adoptable-card__link {
+  width: fit-content;
+  margin-top: 0.7rem;
+  display: inline-block;
+  font-size: 0.86rem;
+}
+.adoptable-empty {
+  max-width: 620px;
+  padding: 1.15rem 0;
+  border-top: 1px solid var(--line);
+  border-bottom: 1px solid var(--line);
+}
+.adoptable-empty p { color: var(--muted); }
+.adoptable-empty p + p { margin-top: 0.25rem; }
+
 /* Commissions: a simple catalogue, no bright price badges or CTA blocks. */
 .price-grid {
   display: grid;
@@ -677,7 +748,8 @@ dialog::backdrop { background: rgba(22, 22, 22, 0.42); }
   .home-intro__art { min-height: 430px; }
   .home-intro__art img { width: 100%; max-height: 470px; }
   .price-grid { grid-template-columns: 1fr; }
-  .character-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .character-grid,
+  .adoptable-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
 
 @media (max-width: 680px) {
@@ -702,8 +774,11 @@ dialog::backdrop { background: rgba(22, 22, 22, 0.42); }
   .gallery-card { margin-bottom: 1.2rem; }
   .gallery-card__caption { display: grid; gap: 0.15rem; }
   .gallery-card__caption small { text-align: left; }
-  .character-grid { grid-template-columns: 1fr; gap: 2.3rem; }
+  .character-grid,
+  .adoptable-grid { grid-template-columns: 1fr; gap: 2.3rem; }
   .character-card__image { min-height: 320px; }
+  .adoptable-card__visual { min-height: 300px; }
+  .adoptable-card__visual img { height: 330px; }
   .price-card { grid-template-columns: 120px minmax(0, 1fr); gap: 1rem; }
   .price-card__image { height: 170px; }
   .commission-details,
