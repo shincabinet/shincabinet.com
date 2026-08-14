@@ -51,8 +51,7 @@ window.SHIN_SITE = {
           label: "Other",
           links: [
             { label: "Toyhou.se", url: "https://toyhou.se/shincabinet" },
-            { label: "Telegram", url: "https://t.me/shincabinet" },
-            { label: "Carrd", url: "https://shincabinet.carrd.co" }
+            { label: "Telegram", url: "https://t.me/shincabinet" }
           ]
         }
       ]
@@ -68,9 +67,9 @@ window.SHIN_SITE = {
       role: "Primary character",
       category: "primary",
       featured: true,
-      image: "/assets/images/characters/shin.webp",
+      image: "/assets/images/characters/shin-chibi-pose.webp",
       tagline: "Warm rust, dark fur, gold eyes, and deliberately irregular markings.",
-      bio: "Shin is the central character and visual anchor for the site. His design mixes clean graphic shapes with rougher marbled markings, expressive hair, and details intended to translate into both drawings and a future fursuit.",
+      bio: "My Sona <3",
       palette: ["#C94B2B", "#F2DDAE", "#342027", "#E7A31A", "#177E80"],
       tags: ["Main character", "Fox", "Wolf", "Fursuit planned"],
       facts: [
@@ -78,7 +77,7 @@ window.SHIN_SITE = {
         { label: "Primary colors", value: "Rust + cream" },
         { label: "Physical build", value: "Planned" }
       ],
-      toyhouse: "https://toyhou.se/"
+      toyhouse: "https://toyhou.se/40388355.shin-shinji"
     }
   ],
 
