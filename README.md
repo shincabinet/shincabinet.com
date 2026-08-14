@@ -70,3 +70,6 @@ python3 tools/manage_pages.py set fursuits --menu on --footer on
 - Root directory: blank
 - Build command: blank
 - Deploy command: `npx wrangler deploy`
+
+### Header icon
+The header uses `assets/images/branding/shin-chibi-header.png` separately from the browser favicon. This prevents an older cached favicon asset from showing in the header. Transparent pixels are explicitly backed by the site's `--bg` color in `styles.css`.

@@ -68,6 +68,7 @@ button { color: inherit; }
   flex: 0 0 auto;
   object-fit: contain;
   object-position: center;
+  background: var(--bg);
 }
 .brand__text {
   font-size: clamp(1.45rem, 2vw, 2rem);
