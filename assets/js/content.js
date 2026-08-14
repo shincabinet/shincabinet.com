@@ -119,18 +119,6 @@ window.SHIN_SITE = {
       mature: false
     },
     {
-      id: "shin-icon",
-      title: "Shin Icon",
-      category: "chibi",
-      character: "Shin",
-      year: "2026",
-      image: "/assets/images/gallery/thumbs/shin-chibi-icon-card.webp",
-      full: "/assets/images/gallery/full/shin-chibi-icon-card.webp",
-      alt: "Front-facing chibi icon of Shin on a lightly gridded background",
-      featured: true,
-      mature: false
-    },
-    {
       id: "shin-icon-transparent",
       title: "Shin Icon Cutout",
       category: "chibi",
