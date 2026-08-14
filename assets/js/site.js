@@ -105,6 +105,12 @@
     const renderNode = (page) => {
       const children = configuredChildren(page).filter((child) => child.menu !== false && isVisible(child));
       if (!children.length) return navLink(page);
+
+      if (page.navOnly) {
+        const active = currentPage && currentPage.parentIds.includes(page.id);
+        return `<details class="site-nav__group site-nav__details"${active ? ' data-active="true"' : ""}><summary class="site-nav__parent">${esc(page.label)}</summary><div class="site-nav__submenu">${children.map(renderNode).join("")}</div></details>`;
+      }
+
       return `<div class="site-nav__group">${navLink(page, "site-nav__parent")}<div class="site-nav__submenu">${children.map(renderNode).join("")}</div></div>`;
     };
 
@@ -317,6 +323,16 @@
     if (section.type === "links") {
       const targets = (section.pages || []).map((id) => pageById.get(id)).filter(isVisible);
       return `<section class="section"><div class="section__inner">${heading}<div class="route-grid">${targets.map((page) => `<a class="route-card" href="${esc(page.path)}"><span>${esc(page.description || "Open page")}</span><strong>${esc(page.label)}</strong><i>→</i></a>`).join("")}</div></div></section>`;
+    }
+    if (section.type === "terms") {
+      return `<section class="section section--compact"><div class="section__inner"><div class="terms-page">${(section.items || []).map((item) => `<article class="terms-page__row"><h2>${esc(item.title)}</h2><p>${esc(item.text)}</p></article>`).join("")}</div></div></section>`;
+    }
+    if (section.type === "contacts") {
+      const contacts = data.site.contacts || {};
+      const email = contacts.email || data.site.email || "";
+      const emailRow = email ? `<div class="contact-directory__row"><span>Email</span><a href="mailto:${esc(email)}">${esc(email)}</a></div>` : "";
+      const groups = (contacts.groups || []).map((group) => `<section class="contact-directory__group"><h3>${esc(group.label)}</h3>${(group.links || []).map((link) => `<div class="contact-directory__row"><span>${esc(link.label)}</span><a href="${esc(link.url)}" target="_blank" rel="noreferrer">${esc(link.url.replace(/^https?:\/\/(www\.)?/, ""))}</a></div>`).join("")}</section>`).join("");
+      return `<section class="section section--compact"><div class="section__inner">${heading}<div class="contact-directory">${emailRow}${groups}</div></div></section>`;
     }
     if (section.type === "callout") return `<section class="section"><div class="section__inner"><div class="callout"><p class="eyebrow">${esc(section.eyebrow || "")}</p><h2>${esc(section.title || "")}</h2><p>${esc(section.text || "")}</p></div></div></section>`;
     return "";

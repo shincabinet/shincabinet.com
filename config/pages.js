@@ -5,10 +5,12 @@
   menu: show it in the main navigation
   footer: show it in the footer
 
+  navOnly: use the item only as a dropdown label; it does not need its own page.
+
   Disabled pages keep their files and content but are hidden from visitors.
 */
 window.SHIN_PAGES = {
-  "version": 1,
+  "version": 2,
   "options": {
     "disabledBehavior": "notice",
     "disabledRedirect": "/",
@@ -26,9 +28,7 @@ window.SHIN_PAGES = {
       "enabled": true,
       "menu": false,
       "footer": false,
-      "homeCard": {
-        "show": false
-      },
+      "homeCard": { "show": false },
       "title": "Shin Cabinet — Furry Art & Characters",
       "description": "Furry art, original characters, gallery, and commission information by Shin.",
       "children": []
@@ -40,9 +40,7 @@ window.SHIN_PAGES = {
       "enabled": true,
       "menu": true,
       "footer": true,
-      "homeCard": {
-        "show": false
-      },
+      "homeCard": { "show": false },
       "title": "Characters — Shin Cabinet",
       "description": "Original furry characters and reference information from Shin Cabinet.",
       "children": []
@@ -54,9 +52,7 @@ window.SHIN_PAGES = {
       "enabled": true,
       "menu": true,
       "footer": true,
-      "homeCard": {
-        "show": false
-      },
+      "homeCard": { "show": false },
       "title": "Gallery — Shin Cabinet",
       "description": "Furry illustrations, character studies, references, and mature art from Shin Cabinet.",
       "children": []
@@ -68,12 +64,46 @@ window.SHIN_PAGES = {
       "enabled": true,
       "menu": true,
       "footer": true,
-      "homeCard": {
-        "show": false
-      },
+      "homeCard": { "show": false },
       "title": "Commission Info — Shin Cabinet",
       "description": "Commission prices and terms for Shin Cabinet.",
       "children": []
+    },
+    {
+      "id": "additional-info",
+      "label": "Additional Info",
+      "path": "/additional-info/",
+      "navOnly": true,
+      "enabled": true,
+      "menu": true,
+      "footer": false,
+      "homeCard": { "show": false },
+      "children": [
+        {
+          "id": "tos",
+          "label": "TOS",
+          "path": "/tos/",
+          "enabled": true,
+          "menu": true,
+          "footer": false,
+          "homeCard": { "show": false },
+          "title": "Terms of Service — Shin Cabinet",
+          "description": "Commission terms of service for Shin Cabinet.",
+          "children": []
+        },
+        {
+          "id": "contacts",
+          "label": "Contacts",
+          "path": "/contacts/",
+          "enabled": true,
+          "menu": true,
+          "footer": false,
+          "homeCard": { "show": false },
+          "title": "Contacts — Shin Cabinet",
+          "description": "Contact information and social profiles for Shin Cabinet.",
+          "children": []
+        }
+      ]
     },
     {
       "id": "fursuits",
@@ -82,9 +112,7 @@ window.SHIN_PAGES = {
       "enabled": false,
       "menu": false,
       "footer": false,
-      "homeCard": {
-        "show": false
-      },
+      "homeCard": { "show": false },
       "title": "Fursuits — Shin Cabinet",
       "description": "Fursuit work from Shin Cabinet.",
       "children": [
@@ -95,9 +123,7 @@ window.SHIN_PAGES = {
           "enabled": false,
           "menu": false,
           "footer": false,
-          "homeCard": {
-            "show": false
-          },
+          "homeCard": { "show": false },
           "title": "Fursuit Build Log — Shin Cabinet",
           "description": "Fursuit build notes from Shin Cabinet.",
           "children": []
@@ -111,9 +137,7 @@ window.SHIN_PAGES = {
       "enabled": false,
       "menu": false,
       "footer": false,
-      "homeCard": {
-        "show": false
-      },
+      "homeCard": { "show": false },
       "title": "About — Shin Cabinet",
       "description": "About Shin Cabinet.",
       "children": []

@@ -69,4 +69,44 @@ window.SHIN_CUSTOM_PAGES = {
       }
     ]
   }
+,
+  "tos": {
+    "hero": {
+      "eyebrow": "Additional Info / TOS",
+      "title": "Terms of Service",
+      "intro": "The short version of how art commissions are handled."
+    },
+    "sections": [
+      {
+        "type": "terms",
+        "items": [
+          { "title": "Usage", "text": "Commissions are for personal use unless commercial rights are specifically quoted." },
+          { "title": "Deposit", "text": "A 50% deposit is required to reserve a commission slot." },
+          { "title": "Revisions", "text": "One sketch revision round is included. Large changes after approval cost extra." },
+          { "title": "Turnaround", "text": "Typical turnaround is 3–8 weeks after work begins." },
+          { "title": "Adult work", "text": "Adult work is limited to adult clients and adult characters." }
+        ]
+      },
+      {
+        "type": "callout",
+        "eyebrow": "Questions",
+        "title": "Need something clarified?",
+        "text": "Use the Contacts page before commissioning if you need to check whether a request fits these terms."
+      }
+    ]
+  },
+  "contacts": {
+    "hero": {
+      "eyebrow": "Additional Info / Contacts",
+      "title": "Contacts",
+      "intro": "Socials, galleries, support pages, and direct contact in one place."
+    },
+    "sections": [
+      {
+        "type": "contacts",
+        "eyebrow": "Find me online",
+        "title": "Shin Cabinet"
+      }
+    ]
+  }
 };

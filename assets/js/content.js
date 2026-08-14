@@ -13,14 +13,50 @@ window.SHIN_SITE = {
     handle: "@shincabinet",
     intro: "Furry art, characters, and whatever else I’m working on.",
     profileBlurb: "A personal archive of character art.",
-    email: "",
+    email: "shincabinet@gmail.com",
     commissionStatus: "Closed",
     commissionNote: "Prices are starting rates in USD.",
     fursuitStatus: "Not published",
     fursuitNote: "This page is not published yet.",
     specialties: ["Character art", "Reference sheets", "Furry illustration"],
     notices: [],
-    socialLinks: []
+    socialLinks: [],
+    contacts: {
+      email: "shincabinet@gmail.com",
+      groups: [
+        {
+          label: "Support / Commissions / Adopts",
+          links: [
+            { label: "Patreon", url: "https://www.patreon.com/shincabinet" },
+            { label: "YCH.art", url: "https://ych.art/user/shincabinet" },
+            { label: "Ko-fi", url: "https://ko-fi.com/shincabinet" }
+          ]
+        },
+        {
+          label: "NSFW",
+          links: [
+            { label: "Twitter 18+", url: "https://x.com/shincabinet" },
+            { label: "e621", url: "https://e621.net/posts?tags=shincabinet" },
+            { label: "FurAffinity", url: "https://www.furaffinity.net/user/shincabinet" }
+          ]
+        },
+        {
+          label: "SFW",
+          links: [
+            { label: "Twitter", url: "https://x.com/shindresser" },
+            { label: "DeviantArt", url: "https://www.deviantart.com/shincabinet" }
+          ]
+        },
+        {
+          label: "Other",
+          links: [
+            { label: "Toyhou.se", url: "https://toyhou.se/shincabinet" },
+            { label: "Telegram", url: "https://t.me/shincabinet" },
+            { label: "Carrd", url: "https://shincabinet.carrd.co" }
+          ]
+        }
+      ]
+    }
   },
 
   characters: [
