@@ -231,11 +231,15 @@
     main.innerHTML = `<section class="disabled-page"><h1>${esc(pageConfig.options?.disabledTitle || "This page is not published yet.")}</h1><p>${esc(pageConfig.options?.disabledMessage || "The content is saved, but it is currently hidden.")}</p><a class="button" href="/">Back home</a></section>`;
   }
 
+  function characterPath(character) {
+    return character.path || `/characters/${encodeURIComponent(character.id)}/`;
+  }
+
   function characterCard(character) {
     const searchable = [character.name, character.species, character.role, ...(character.tags || [])].join(" ").toLowerCase();
     return `<article class="character-card" data-character-category="${esc(character.category)}" data-character-searchable="${esc(searchable)}">
-      <button type="button" data-character-id="${esc(character.id)}">
-        <span class="character-card__image"><img src="${esc(character.image)}" alt="${esc(character.name)}" loading="lazy"></span>
+      <button type="button" data-character-id="${esc(character.id)}" aria-label="Open ${esc(character.name)} profile">
+        <span class="character-card__image"><img src="${esc(character.image)}" alt="${esc(character.alt || character.name)}" loading="lazy"></span>
         <span class="character-card__copy"><strong>${esc(character.name)}</strong><small>${esc(character.species)} · ${esc(character.pronouns)}</small></span>
       </button>
     </article>`;
@@ -247,24 +251,11 @@
     grid.innerHTML = data.characters.map(characterCard).join("");
     const count = qs("[data-character-count]");
     if (count) count.textContent = String(data.characters.length);
-    qsa("[data-character-id]", grid).forEach((button) => button.addEventListener("click", () => openCharacter(button.dataset.characterId)));
+    qsa("[data-character-id]", grid).forEach((button) => button.addEventListener("click", () => {
+      const character = data.characters.find((item) => item.id === button.dataset.characterId);
+      if (character) location.href = characterPath(character);
+    }));
     initCharacterDirectory();
-  }
-
-  function openCharacter(id) {
-    const character = data.characters.find((item) => item.id === id);
-    const dialog = qs("#character-dialog");
-    const root = qs("[data-character-dialog-content]", dialog);
-    if (!character || !dialog || !root) return;
-    const toyhouseLink = character.toyhouse
-      ? `<a class="text-link" href="${esc(character.toyhouse)}" target="_blank" rel="noreferrer">Toyhouse profile</a>`
-      : "";
-    root.innerHTML = `<div class="character-dialog__visual"><img src="${esc(character.image)}" alt="${esc(character.name)}"></div>
-      <div class="character-dialog__copy"><h2>${esc(character.name)}</h2><p class="character-dialog__species">${esc(character.species)} · ${esc(character.pronouns)}</p><p>${esc(character.bio)}</p>
-      <dl class="fact-grid">${(character.facts || []).map((fact) => `<div><dt>${esc(fact.label)}</dt><dd>${esc(fact.value)}</dd></div>`).join("")}</dl>
-      <div class="palette">${(character.palette || []).map((color) => `<span title="${esc(color)}" style="--swatch:${esc(color)}"></span>`).join("")}</div>
-      ${toyhouseLink}</div>`;
-    dialog.showModal();
   }
 
   function initCharacterDirectory() {
@@ -291,6 +282,145 @@
       apply();
     }));
     if (input) input.addEventListener("input", () => { term = input.value.trim().toLowerCase(); apply(); });
+  }
+
+  function normalizePalette(palette = []) {
+    return palette.map((item, index) => {
+      if (typeof item === "string") return { name: `Color ${index + 1}`, hex: item };
+      return { name: item.name || `Color ${index + 1}`, hex: item.hex || item.value || "" };
+    }).filter((item) => item.hex);
+  }
+
+  function textItems(items = []) {
+    return items.length ? `<ul class="character-profile__text-list">${items.map((item) => `<li>${esc(item)}</li>`).join("")}</ul>` : "";
+  }
+
+  function profileSection(id, eyebrow, title, content, className = "") {
+    if (!content) return "";
+    return `<section class="character-profile__section ${className}" id="${esc(id)}"><header><p class="eyebrow">${esc(eyebrow)}</p><h2>${esc(title)}</h2></header>${content}</section>`;
+  }
+
+  function referenceCard(reference, index) {
+    const mature = reference.mature === true;
+    return `<article class="reference-card${mature ? " reference-card--mature" : ""}">
+      <button type="button" data-reference-index="${index}" data-mature="${mature}" aria-label="View ${esc(reference.title || "reference image")}">
+        <span class="reference-card__media"><img src="${esc(reference.image)}" alt="${esc(reference.alt || reference.title || "Character reference")}" loading="lazy">${mature ? '<span class="mature-cover"><strong>Mature</strong><small>Tap to reveal</small></span>' : ""}</span>
+        <span class="reference-card__caption">${esc(reference.title || "Reference")}</span>
+      </button>
+    </article>`;
+  }
+
+  function openReferenceImage(character, index) {
+    const reference = (character.references || [])[Number(index)];
+    const dialog = qs("#art-dialog");
+    if (!reference || !dialog) return;
+    const image = qs("[data-art-dialog-image]", dialog);
+    image.src = reference.full || reference.image;
+    image.alt = reference.alt || reference.title || `${character.name} reference`;
+    qs("[data-art-dialog-title]", dialog).textContent = reference.title || `${character.name} reference`;
+    qs("[data-art-dialog-meta]", dialog).textContent = `${character.name} · Reference`;
+    dialog.showModal();
+  }
+
+  function renderCharacterProfile() {
+    const root = qs("[data-character-profile]");
+    if (!root) return;
+
+    const id = root.dataset.characterProfile || document.body.dataset.characterId || "";
+    const character = (data.characters || []).find((item) => item.id === id);
+    if (!character) {
+      root.innerHTML = `<section class="disabled-page"><p class="eyebrow">Character not found</p><h1>Unknown character</h1><p>This profile does not match a character in <code>assets/js/content.js</code>.</p><a class="button" href="/characters/">Back to Characters</a></section>`;
+      return;
+    }
+
+    document.title = `${character.name} — Characters — ${data.site.name}`;
+    const metaDescription = qs('meta[name="description"]');
+    if (metaDescription) metaDescription.content = character.tagline || `${character.name}, ${character.species || "original character"} by ${data.site.artistName}.`;
+
+    const bio = Array.isArray(character.bio) ? character.bio : (character.bio ? [character.bio] : []);
+    const palette = normalizePalette(character.palette || []);
+    const artwork = (data.artworks || []).filter((item) => item.character === character.name);
+    const references = character.references || [];
+    const facts = character.facts || [];
+    const links = character.links || [];
+
+    const bioHtml = bio.map((paragraph) => `<p>${esc(paragraph)}</p>`).join("");
+    const factsHtml = facts.length ? `<dl class="character-profile__facts">${facts.map((fact) => `<div><dt>${esc(fact.label)}</dt><dd>${esc(fact.value)}</dd></div>`).join("")}</dl>` : "";
+    const paletteHtml = palette.length ? `<div class="character-palette">${palette.map((color) => `<button type="button" class="character-palette__swatch" data-copy-color="${esc(color.hex)}" title="Copy ${esc(color.hex)}"><span style="--swatch:${esc(color.hex)}"></span><strong>${esc(color.name)}</strong><small>${esc(color.hex)}</small></button>`).join("")}</div>` : "";
+    const designHtml = [paletteHtml, textItems(character.designNotes || [])].filter(Boolean).join("");
+    const refsHtml = references.length ? `<div class="reference-grid">${references.map(referenceCard).join("")}</div>` : "";
+    const artworkHtml = artwork.length ? `<div class="gallery-grid character-profile__gallery">${artwork.map(artworkCard).join("")}</div>` : "";
+    const linksHtml = links.length ? `<div class="character-profile__links">${links.map((link) => `<a class="text-link" href="${esc(link.url)}" target="_blank" rel="noreferrer">${esc(link.display || link.label || link.url)} →</a>`).join("")}</div>` : "";
+    const tagsHtml = (character.tags || []).length ? `<div class="character-profile__tags">${character.tags.map((tag) => `<span>${esc(tag)}</span>`).join("")}</div>` : "";
+
+    const sectionNav = [
+      bioHtml && ["about", "About"],
+      factsHtml && ["details", "Details"],
+      (designHtml || refsHtml) && ["design", "Design & references"],
+      (character.personality || []).length && ["personality", "Personality"],
+      ((character.likes || []).length || (character.dislikes || []).length) && ["preferences", "Likes / dislikes"],
+      artworkHtml && ["artwork", "Artwork"]
+    ].filter(Boolean);
+
+    const prefHtml = ((character.likes || []).length || (character.dislikes || []).length)
+      ? `<div class="character-profile__split">${(character.likes || []).length ? `<div><h3>Likes</h3>${textItems(character.likes)}</div>` : ""}${(character.dislikes || []).length ? `<div><h3>Dislikes</h3>${textItems(character.dislikes)}</div>` : ""}</div>`
+      : "";
+
+    root.innerHTML = `
+      <section class="character-profile__hero">
+        <div class="character-profile__hero-inner">
+          <div class="character-profile__visual"><img src="${esc(character.profileImage || character.image || character.icon)}" alt="${esc(character.alt || character.name)}"></div>
+          <div class="character-profile__intro">
+            <a class="character-profile__back" href="/characters/">← Characters</a>
+            <p class="eyebrow">${esc(character.role || "Character")}</p>
+            <div class="character-profile__identity">${character.icon ? `<img src="${esc(character.icon)}" alt="" aria-hidden="true">` : ""}<div><h1>${esc(character.name)}</h1><p>${esc(character.species || "")}${character.pronouns ? ` · ${esc(character.pronouns)}` : ""}</p></div></div>
+            ${character.tagline ? `<p class="character-profile__tagline">${esc(character.tagline)}</p>` : ""}
+            ${tagsHtml}
+            ${linksHtml}
+          </div>
+        </div>
+      </section>
+      <section class="character-profile__body">
+        <div class="character-profile__body-inner">
+          <nav class="character-profile__index" aria-label="Character profile sections">${sectionNav.map(([href, label]) => `<a href="#${esc(href)}">${esc(label)}</a>`).join("")}</nav>
+          <div class="character-profile__content">
+            ${profileSection("about", "Profile", "About", bioHtml)}
+            ${profileSection("details", "Information", "Details", factsHtml)}
+            ${profileSection("design", "Reference", "Design & references", `${designHtml}${refsHtml}`)}
+            ${profileSection("personality", "Character", "Personality", textItems(character.personality || []))}
+            ${profileSection("preferences", "Character", "Likes / dislikes", prefHtml)}
+            ${profileSection("artwork", "Archive", `Artwork featuring ${character.name}`, artworkHtml, "character-profile__section--wide")}
+          </div>
+        </div>
+      </section>`;
+
+    qsa("[data-copy-color]", root).forEach((button) => button.addEventListener("click", async () => {
+      const value = button.dataset.copyColor;
+      try {
+        await navigator.clipboard.writeText(value);
+        const label = qs("small", button);
+        if (!label) return;
+        const old = label.textContent;
+        label.textContent = "Copied";
+        setTimeout(() => { label.textContent = old; }, 1000);
+      } catch {}
+    }));
+
+    qsa("[data-reference-index]", root).forEach((button) => button.addEventListener("click", () => {
+      if (button.dataset.mature === "true" && button.dataset.revealed !== "true") {
+        button.dataset.revealed = "true";
+        return;
+      }
+      openReferenceImage(character, button.dataset.referenceIndex);
+    }));
+
+    qsa("[data-artwork-id]", root).forEach((button) => button.addEventListener("click", () => {
+      if (button.dataset.mature === "true" && button.dataset.revealed !== "true") {
+        button.dataset.revealed = "true";
+        return;
+      }
+      openArtwork(button.dataset.artworkId);
+    }));
   }
 
   function artworkCard(artwork) {
@@ -481,6 +611,7 @@
 
     renderCustomPage(currentPage);
     renderCharacters();
+    renderCharacterProfile();
     renderGallery();
     renderAdoptables();
     renderFursuits();

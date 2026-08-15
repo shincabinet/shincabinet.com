@@ -70,23 +70,60 @@ window.SHIN_SITE = {
   characters: [
     {
       id: "shin",
+      path: "/characters/shin/",
       name: "Shin",
       pronouns: "he / him",
       species: "Fox / wolf",
       role: "Primary character",
       category: "primary",
       featured: true,
+
+      // The Characters directory keeps using the same image setup as before.
+      // `profileImage` may point at any existing site image for the larger profile header.
       image: "/assets/images/gallery/thumbs/shin-chibi-pose.webp",
+      profileImage: "/assets/images/gallery/full/shin-chibi-pose.webp",
+      alt: "Chibi illustration of Shin standing with arms open",
+
       tagline: "Warm rust, dark fur, gold eyes, and deliberately irregular markings.",
-      bio: "My Sona <3",
-      palette: ["#C94B2B", "#F2DDAE", "#342027", "#E7A31A", "#177E80"],
+      bio: [
+        "My Sona <3"
+      ],
       tags: ["Main character", "Fox", "Wolf", "Fursuit planned"],
+
       facts: [
         { label: "Design mood", value: "Warm / expressive" },
         { label: "Primary colors", value: "Rust + cream" },
         { label: "Physical build", value: "Planned" }
       ],
-      toyhouse: "https://toyhou.se/40388355.shin-shinji"
+
+      // Palette entries may be plain hex strings or named swatches.
+      palette: [
+        { name: "Rust", hex: "#C94B2B" },
+        { name: "Cream", hex: "#F2DDAE" },
+        { name: "Dark fur", hex: "#342027" },
+        { name: "Gold", hex: "#E7A31A" },
+        { name: "Teal accent", hex: "#177E80" }
+      ],
+
+      // Optional profile sections. Leave an array empty and that section disappears.
+      personality: [],
+      designNotes: [],
+      likes: [],
+      dislikes: [],
+
+      // References can reuse the same files already used elsewhere on the website.
+      references: [
+        {
+          title: "Character card",
+          image: "/assets/images/gallery/thumbs/shin-character-card.webp",
+          full: "/assets/images/gallery/full/shin-character-card.webp",
+          alt: "Character card showing multiple drawings and details for Shin",
+          mature: true
+        }
+      ],
+
+      // Optional outside links. The internal profile is now the primary character page.
+      links: []
     }
   ],
 

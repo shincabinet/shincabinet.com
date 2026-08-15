@@ -86,3 +86,40 @@ Theme colors live at the top of `assets/css/styles.css`:
 - The dark background currently uses `#21201C`.
 
 Change those variables if you want to adjust either theme; no individual page edits are needed.
+
+## Dedicated character pages
+
+The Characters directory still uses the same image/gallery setup as before, but clicking a character now opens an internal profile page instead of using Toyhou.se as the main profile.
+
+Character information remains in:
+
+```text
+assets/js/content.js
+```
+
+A character can now include these optional profile fields:
+
+- `path` — internal URL, such as `/characters/shin/`
+- `profileImage` — larger header image; it can reuse any existing site image
+- `tagline` and multi-paragraph `bio`
+- `facts`
+- named `palette` swatches; clicking a swatch copies its hex value
+- `designNotes`
+- `personality`
+- `likes` / `dislikes`
+- `references`
+- optional external `links`
+
+Empty sections are hidden automatically.
+
+The profile also automatically shows existing Gallery entries whose `character` field exactly matches the character name, so you do **not** need a second artwork list or a new image workflow.
+
+### Add another character profile
+
+1. Add the character to the existing `characters` array in `assets/js/content.js`.
+2. Give it a unique `id` and `path`, for example `id: "nova"` and `path: "/characters/nova/"`.
+3. Copy `characters/shin/index.html` to `characters/nova/index.html`.
+4. Change both `data-character-id="shin"` and `data-character-profile="shin"` to `nova`.
+5. Optionally add the new URL to `sitemap.xml`.
+
+No changes to the Gallery's thumbnail/full-size setup are required for character profiles.
