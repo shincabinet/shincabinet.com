@@ -25,6 +25,12 @@ window.SHIN_SITE = {
       email: "shincabinet@gmail.com",
       groups: [
         {
+          label: "Preferred Contact",
+          links: [
+            { label: "Discord", url: "shincabinet" }
+          ]
+        },
+        {
           label: "Support / Commissions / Adopts",
           links: [
             { label: "Patreon", url: "https://www.patreon.com/shincabinet" },
