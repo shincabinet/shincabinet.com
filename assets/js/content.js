@@ -23,6 +23,9 @@ window.SHIN_SITE = {
     socialLinks: [],
     contacts: {
       email: "shincabinet@gmail.com",
+      // Each link can have an optional `display` value. `display` is the text
+      // visitors see; `url` is the actual destination when they click it.
+      // Example: { label: "Discord", display: "@username", url: "https://discord.com/users/123..." }
       groups: [
         {
           label: "Preferred Contact",

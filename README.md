@@ -26,6 +26,7 @@ The Fursuits page and build log remain disabled because there is no finished fur
 - Page visibility and hierarchy: `config/pages.js`
 - Main text, characters, artwork, adoptables, pricing, and links: `assets/js/content.js`
 - Contact/social directory: `assets/js/content.js` → `site.contacts`
+  - Contact links may set `display` separately from `url`, e.g. `{ label: "Discord", display: "@username", url: "https://discord.com/users/123..." }`.
 - Draft content for generic pages: `config/custom-pages.js`
 - Visual design: `assets/css/styles.css`
 
@@ -73,3 +74,15 @@ python3 tools/manage_pages.py set fursuits --menu on --footer on
 
 ### Header icon
 The header uses `assets/images/branding/shin-chibi-header.png` separately from the browser favicon. This prevents an older cached favicon asset from showing in the header. Transparent pixels are explicitly backed by the site's `--bg` color in `styles.css`.
+
+## Light / dark mode
+
+The header includes a **Dark / Light** theme toggle. The visitor's choice is saved in `localStorage` under `shin-theme`. If they have never chosen a theme, the site starts from their operating-system/browser color preference.
+
+Theme colors live at the top of `assets/css/styles.css`:
+
+- `:root` contains the light palette.
+- `html[data-theme="dark"]` contains the dark palette.
+- The dark background currently uses `#21201C`.
+
+Change those variables if you want to adjust either theme; no individual page edits are needed.

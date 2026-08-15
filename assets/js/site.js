@@ -94,6 +94,41 @@
     return `<a class="${className}" href="${esc(page.path)}"${active ? ' aria-current="page"' : ""}>${esc(page.label)}</a>`;
   }
 
+  const THEME_KEY = "shin-theme";
+
+  function getTheme() {
+    return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
+  }
+
+  function applyTheme(theme, persist = false) {
+    const nextTheme = theme === "dark" ? "dark" : "light";
+    document.documentElement.dataset.theme = nextTheme;
+    document.documentElement.style.colorScheme = nextTheme;
+    if (persist) {
+      try { localStorage.setItem(THEME_KEY, nextTheme); } catch {}
+    }
+
+    const themeMeta = qs('meta[name="theme-color"]');
+    if (themeMeta) themeMeta.content = nextTheme === "dark" ? "#21201c" : "#fbfaf6";
+
+    qsa("[data-theme-toggle]").forEach((button) => {
+      const dark = nextTheme === "dark";
+      button.textContent = dark ? "Light" : "Dark";
+      button.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
+      button.setAttribute("title", dark ? "Switch to light mode" : "Switch to dark mode");
+      button.setAttribute("aria-pressed", String(dark));
+    });
+  }
+
+  function initThemeToggle() {
+    applyTheme(getTheme());
+    qsa("[data-theme-toggle]").forEach((button) => {
+      button.addEventListener("click", () => {
+        applyTheme(getTheme() === "dark" ? "light" : "dark", true);
+      });
+    });
+  }
+
   function renderNavigation() {
     const nav = qs("[data-site-nav]");
     if (!nav) return;
@@ -118,6 +153,7 @@
     const cta = pageConfig.options?.cta || {};
     const ctaPage = pageById.get(cta.page);
     if (isVisible(ctaPage)) links.push(`<a class="nav-cta" href="${esc(ctaPage.path)}">${esc(cta.label || ctaPage.label)}</a>`);
+    links.push(`<button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">Dark</button>`);
     nav.innerHTML = links.join("");
   }
 
@@ -368,7 +404,10 @@
       const contacts = data.site.contacts || {};
       const email = contacts.email || data.site.email || "";
       const emailRow = email ? `<div class="contact-directory__row"><span>Email</span><a href="mailto:${esc(email)}">${esc(email)}</a></div>` : "";
-      const groups = (contacts.groups || []).map((group) => `<section class="contact-directory__group"><h3>${esc(group.label)}</h3>${(group.links || []).map((link) => `<div class="contact-directory__row"><span>${esc(link.label)}</span><a href="${esc(link.url)}" target="_blank" rel="noreferrer">${esc(link.url.replace(/^https?:\/\/(www\.)?/, ""))}</a></div>`).join("")}</section>`).join("");
+      const groups = (contacts.groups || []).map((group) => `<section class="contact-directory__group"><h3>${esc(group.label)}</h3>${(group.links || []).map((link) => {
+        const display = link.display || link.url.replace(/^https?:\/\/(www\.)?/, "");
+        return `<div class="contact-directory__row"><span>${esc(link.label)}</span><a href="${esc(link.url)}" target="_blank" rel="noreferrer">${esc(display)}</a></div>`;
+      }).join("")}</section>`).join("");
       return `<section class="section section--compact"><div class="section__inner">${heading}<div class="contact-directory">${emailRow}${groups}</div></div></section>`;
     }
     if (section.type === "callout") return `<section class="section"><div class="section__inner"><div class="callout"><p class="eyebrow">${esc(section.eyebrow || "")}</p><h2>${esc(section.title || "")}</h2><p>${esc(section.text || "")}</p></div></div></section>`;
@@ -413,6 +452,7 @@
     setMetadata(currentPage);
     applySiteContent();
     renderNavigation();
+    initThemeToggle();
     renderFooter();
     renderHomeRoutes();
     applyConfiguredLinks();
