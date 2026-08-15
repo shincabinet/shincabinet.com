@@ -94,22 +94,31 @@
     return `<a class="${className}" href="${esc(page.path)}"${active ? ' aria-current="page"' : ""}>${esc(page.label)}</a>`;
   }
 
-  const THEME_KEY = "shin-theme";
-
   function getTheme() {
+    if (window.SHIN_THEME?.getTheme) return window.SHIN_THEME.getTheme();
+
+    let saved = null;
+    try { saved = localStorage.getItem("shin-theme"); } catch {}
+    if (saved === "dark" || saved === "light") return saved;
+
     return document.documentElement.dataset.theme === "dark" ? "dark" : "light";
   }
 
   function applyTheme(theme, persist = false) {
     const nextTheme = theme === "dark" ? "dark" : "light";
-    document.documentElement.dataset.theme = nextTheme;
-    document.documentElement.style.colorScheme = nextTheme;
-    if (persist) {
-      try { localStorage.setItem(THEME_KEY, nextTheme); } catch {}
-    }
 
-    const themeMeta = qs('meta[name="theme-color"]');
-    if (themeMeta) themeMeta.content = nextTheme === "dark" ? "#21201c" : "#fbfaf6";
+    if (window.SHIN_THEME?.applyTheme) {
+      window.SHIN_THEME.applyTheme(nextTheme, { persist });
+    } else {
+      document.documentElement.dataset.theme = nextTheme;
+      document.documentElement.style.colorScheme = nextTheme;
+      if (persist) {
+        try { localStorage.setItem("shin-theme", nextTheme); } catch {}
+      }
+
+      const themeMeta = qs('meta[name="theme-color"]');
+      if (themeMeta) themeMeta.content = nextTheme === "dark" ? "#21201c" : "#fbfaf6";
+    }
 
     qsa("[data-theme-toggle]").forEach((button) => {
       const dark = nextTheme === "dark";

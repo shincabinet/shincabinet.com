@@ -22,3 +22,6 @@
 
 /*.html
   Cache-Control: public, max-age=0, must-revalidate
+
+/assets/js/theme.js
+  Cache-Control: public, max-age=0, must-revalidate
