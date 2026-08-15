@@ -169,20 +169,69 @@ button { color: inherit; }
 .menu-toggle { display: none; }
 
 .theme-toggle {
-  padding: 0.4rem 0;
-  color: var(--nav-muted);
-  background: transparent;
-  border: 0;
-  border-bottom: 1px solid transparent;
+  position: fixed;
+  right: 22px;
+  bottom: 22px;
+  z-index: 100;
+  width: 76px;
+  height: 40px;
+  padding: 4px;
+  overflow: hidden;
+  color: var(--muted);
+  background: var(--surface);
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  box-shadow: 0 8px 24px var(--dialog-shadow);
   cursor: pointer;
-  font-size: 0.92rem;
-  font-weight: 450;
+  transition: background 160ms ease, border-color 160ms ease, box-shadow 160ms ease;
 }
-.theme-toggle:hover,
-.theme-toggle:focus-visible { color: var(--text); }
+.theme-toggle::before,
+.theme-toggle::after {
+  position: absolute;
+  top: 50%;
+  z-index: 1;
+  width: 30px;
+  line-height: 1;
+  text-align: center;
+  transform: translateY(-50%);
+  pointer-events: none;
+}
+.theme-toggle::before {
+  left: 5px;
+  content: "☀";
+  font-size: 15px;
+}
+.theme-toggle::after {
+  right: 5px;
+  content: "☾";
+  font-size: 17px;
+}
+.theme-toggle__thumb {
+  position: absolute;
+  top: 4px;
+  left: 4px;
+  z-index: 2;
+  width: 30px;
+  height: 30px;
+  background: var(--bg);
+  border: 1px solid var(--line);
+  border-radius: 50%;
+  box-shadow: 0 2px 7px var(--dialog-shadow);
+  transition: transform 180ms ease, background 160ms ease, border-color 160ms ease;
+}
+.theme-toggle[aria-pressed="true"] .theme-toggle__thumb {
+  transform: translateX(36px);
+}
+.theme-toggle:hover {
+  border-color: var(--muted);
+}
 .theme-toggle:focus-visible {
-  outline: 1px solid var(--line);
-  outline-offset: 5px;
+  outline: 2px solid var(--accent);
+  outline-offset: 3px;
+}
+@media (prefers-reduced-motion: reduce) {
+  .theme-toggle,
+  .theme-toggle__thumb { transition: none; }
 }
 
 /* Home: sparse two-column introduction, with the art doing most of the work. */
@@ -776,11 +825,6 @@ dialog::backdrop { background: var(--dialog-backdrop); }
   .site-nav[data-open="true"] { display: flex; }
   .site-nav > a,
   .site-nav__parent { padding: 0.7rem 0; }
-  .theme-toggle {
-    width: fit-content;
-    padding: 0.7rem 0;
-    text-align: left;
-  }
   .site-nav a[aria-current="page"]::after { display: none; }
   .site-nav__submenu { position: static; display: block; padding: 0 0 0 1rem; border: 0; }
   .site-nav__details:not([open]) .site-nav__submenu { display: none; }
@@ -800,6 +844,7 @@ dialog::backdrop { background: var(--dialog-backdrop); }
 
 @media (max-width: 680px) {
   :root { --container: min(100% - 30px, 1220px); }
+  .theme-toggle { right: 15px; bottom: 15px; }
   .site-header__inner { min-height: 78px; }
   .site-nav { top: 78px; }
   .brand__mark { width: 50px; height: 50px; }

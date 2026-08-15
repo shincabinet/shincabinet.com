@@ -113,11 +113,18 @@
 
     qsa("[data-theme-toggle]").forEach((button) => {
       const dark = nextTheme === "dark";
-      button.textContent = dark ? "Light" : "Dark";
       button.setAttribute("aria-label", dark ? "Switch to light mode" : "Switch to dark mode");
       button.setAttribute("title", dark ? "Switch to light mode" : "Switch to dark mode");
       button.setAttribute("aria-pressed", String(dark));
     });
+  }
+
+  function renderThemeToggle() {
+    if (qs("[data-theme-toggle]")) return;
+    document.body.insertAdjacentHTML("beforeend", `
+      <button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false" aria-label="Switch to dark mode" title="Switch to dark mode">
+        <span class="theme-toggle__thumb" aria-hidden="true"></span>
+      </button>`);
   }
 
   function initThemeToggle() {
@@ -153,7 +160,6 @@
     const cta = pageConfig.options?.cta || {};
     const ctaPage = pageById.get(cta.page);
     if (isVisible(ctaPage)) links.push(`<a class="nav-cta" href="${esc(ctaPage.path)}">${esc(cta.label || ctaPage.label)}</a>`);
-    links.push(`<button class="theme-toggle" type="button" data-theme-toggle aria-pressed="false">Dark</button>`);
     nav.innerHTML = links.join("");
   }
 
@@ -452,6 +458,7 @@
     setMetadata(currentPage);
     applySiteContent();
     renderNavigation();
+    renderThemeToggle();
     initThemeToggle();
     renderFooter();
     renderHomeRoutes();

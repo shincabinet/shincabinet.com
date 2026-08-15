@@ -77,7 +77,7 @@ The header uses `assets/images/branding/shin-chibi-header.png` separately from t
 
 ## Light / dark mode
 
-The header includes a **Dark / Light** theme toggle. The visitor's choice is saved in `localStorage` under `shin-theme`. If they have never chosen a theme, the site starts from their operating-system/browser color preference.
+A **floating pill theme toggle** stays fixed in the bottom-right corner of the site. The visitor's choice is saved in `localStorage` under `shin-theme`. If they have never chosen a theme, the site starts from their operating-system/browser color preference.
 
 Theme colors live at the top of `assets/css/styles.css`:
 
