@@ -27,7 +27,7 @@ window.SHIN_SITE = {
         {
           label: "Preferred Contact",
           links: [
-            { label: "Discord", url: "shincabinet" }
+            { label: "Discord", url: "https://discord.com/users/1441935642539069490" }
           ]
         },
         {
