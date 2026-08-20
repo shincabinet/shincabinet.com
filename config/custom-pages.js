@@ -63,8 +63,8 @@ window.SHIN_CUSTOM_PAGES = {
         "eyebrow": "Bench photos",
         "title": "Progress snapshots",
         "items": [
-          { "title": "Character target", "image": "/assets/images/gallery/thumbs/shin-character-card.webp", "alt": "Shin character card", "text": "Replace this with the latest build photo when the physical work begins." },
-          { "title": "Silhouette reference", "image": "/assets/images/gallery/thumbs/shin-chibi-pose.webp", "alt": "Shin chibi pose", "text": "Use visual references to keep proportions and expression consistent." }
+          { "title": "Character target", "image": "/assets/images/gallery/full/shin-character-card.webp?v=1", "alt": "Shin character card", "text": "Replace this with the latest build photo when the physical work begins." },
+          { "title": "Silhouette reference", "image": "/assets/images/gallery/full/shin-chibi-pose.webp?v=1", "alt": "Shin chibi pose", "text": "Use visual references to keep proportions and expression consistent." }
         ]
       }
     ]

@@ -72,8 +72,22 @@ python3 tools/manage_pages.py set fursuits --menu on --footer on
 - Build command: blank
 - Deploy command: `npx wrangler deploy`
 
-### Header icon
-The header uses `assets/images/branding/shin-chibi-header.png` separately from the browser favicon. This prevents an older cached favicon asset from showing in the header. Transparent pixels are explicitly backed by the site's `--bg` color in `styles.css`.
+## Image asset workflow
+
+The site now uses **one canonical file per piece of artwork whenever possible**. Do not make separate thumbnail, profile, homepage, or commission copies of the same image. The browser scales the canonical file for each use.
+
+Important shared files:
+
+- `assets/images/branding/shin-chibi-header.png` — header mark **and** browser/manifest icon. Replace this one file to update the site branding everywhere.
+- `assets/images/gallery/full/shin-chibi-pose.webp` — Shin homepage art, character directory/profile art, Gallery entry, build-log reference, and chibi full-body commission example.
+- `assets/images/gallery/full/shin-character-card.webp` — Gallery entry, Shin reference image, build-log target, and character-card commission example.
+- `assets/images/gallery/full/michiru-chibi-icon.webp` — Gallery entry and chibi-icon commission example.
+
+The old `gallery/thumbs/` copies and duplicated commission/character copies were removed. For new Gallery entries, set only `image`. The site already uses `image` as the dialog/full-size fallback. Add a separate `full` property only when you deliberately want two different files.
+
+Image responses are set to `max-age=0, must-revalidate` in `_headers`, so replacing a canonical file at the same path will be picked up without renaming the file or editing every reference. The current references include a one-time `?v=1` cache bust to escape the site’s previous one-year immutable image cache.
+
+Transparent pixels in the header mark are backed by the site's `--bg` color in `styles.css`.
 
 ## Light / dark mode
 
@@ -100,7 +114,7 @@ assets/js/content.js
 A character can now include these optional profile fields:
 
 - `path` — internal URL, such as `/characters/shin/`
-- `profileImage` — larger header image; it can reuse any existing site image
+- `profileImage` — optional larger header image; omit it to reuse `image` automatically
 - `tagline` and multi-paragraph `bio`
 - `facts`
 - named `palette` swatches; clicking a swatch copies its hex value
@@ -122,4 +136,4 @@ The profile also automatically shows existing Gallery entries whose `character` 
 4. Change both `data-character-id="shin"` and `data-character-profile="shin"` to `nova`.
 5. Optionally add the new URL to `sitemap.xml`.
 
-No changes to the Gallery's thumbnail/full-size setup are required for character profiles.
+Character profiles reuse the same canonical Gallery image by default, so no duplicate character image is required.

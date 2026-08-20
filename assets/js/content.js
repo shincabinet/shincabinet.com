@@ -78,10 +78,10 @@ window.SHIN_SITE = {
       category: "primary",
       featured: true,
 
-      // The Characters directory keeps using the same image setup as before.
-      // `profileImage` may point at any existing site image for the larger profile header.
-      image: "/assets/images/gallery/thumbs/shin-chibi-pose.webp",
-      profileImage: "/assets/images/gallery/full/shin-chibi-pose.webp",
+      // Reuse one canonical source wherever the same artwork appears.
+      // The profile automatically falls back to `image`, so one file replacement updates
+      // the directory card, profile header, gallery, homepage, and commission example.
+      image: "/assets/images/gallery/full/shin-chibi-pose.webp?v=1",
       alt: "Chibi illustration of Shin standing with arms open",
 
       tagline: "Warm rust, dark fur, gold eyes, and deliberately irregular markings.",
@@ -111,12 +111,12 @@ window.SHIN_SITE = {
       likes: [],
       dislikes: [],
 
-      // References can reuse the same files already used elsewhere on the website.
+      // References reuse canonical gallery files; `full` is optional and only needed if you
+      // intentionally want a different preview image and full-size image.
       references: [
         {
           title: "Character card",
-          image: "/assets/images/gallery/thumbs/shin-character-card.webp",
-          full: "/assets/images/gallery/full/shin-character-card.webp",
+          image: "/assets/images/gallery/full/shin-character-card.webp?v=1",
           alt: "Character card showing multiple drawings and details for Shin",
           mature: true
         }
@@ -134,8 +134,7 @@ window.SHIN_SITE = {
       category: "illustration",
       character: "Michiru study",
       year: "2026",
-      image: "/assets/images/gallery/thumbs/michiru-cheetah-speed.webp",
-      full: "/assets/images/gallery/full/michiru-cheetah-speed.webp",
+      image: "/assets/images/gallery/full/michiru-cheetah-speed.webp?v=1",
       alt: "Colorful furry character running with long sweeping tails",
       featured: true,
       mature: false
@@ -146,8 +145,7 @@ window.SHIN_SITE = {
       category: "chibi",
       character: "Shin",
       year: "2026",
-      image: "/assets/images/gallery/thumbs/shin-chibi-pose.webp",
-      full: "/assets/images/gallery/full/shin-chibi-pose.webp",
+      image: "/assets/images/gallery/full/shin-chibi-pose.webp?v=1",
       alt: "Chibi illustration of Shin standing with arms open",
       featured: true,
       mature: false
@@ -158,8 +156,7 @@ window.SHIN_SITE = {
       category: "illustration",
       character: "Shin",
       year: "2026",
-      image: "/assets/images/gallery/thumbs/shin-lounge.webp",
-      full: "/assets/images/gallery/full/shin-lounge.webp",
+      image: "/assets/images/gallery/full/shin-lounge.webp?v=1",
       alt: "Shin reclining in a relaxed pose",
       featured: true,
       mature: false
@@ -170,8 +167,7 @@ window.SHIN_SITE = {
       category: "chibi",
       character: "Shin",
       year: "2026",
-      image: "/assets/images/gallery/thumbs/shin-chibi-icon-transparent.webp",
-      full: "/assets/images/gallery/full/shin-chibi-icon-transparent.webp",
+      image: "/assets/images/gallery/full/shin-chibi-icon-transparent.webp?v=1",
       alt: "Transparent front-facing chibi icon of Shin",
       featured: true,
       mature: false
@@ -182,8 +178,7 @@ window.SHIN_SITE = {
       category: "chibi",
       character: "Michiru study",
       year: "2026",
-      image: "/assets/images/gallery/thumbs/michiru-chibi-icon.webp",
-      full: "/assets/images/gallery/full/michiru-chibi-icon.webp",
+      image: "/assets/images/gallery/full/michiru-chibi-icon.webp?v=1",
       alt: "Front-facing chibi icon of a blue-haired furry character",
       featured: false,
       mature: false
@@ -194,8 +189,7 @@ window.SHIN_SITE = {
       category: "illustration",
       character: "Faputa study",
       year: "2026",
-      image: "/assets/images/gallery/thumbs/faputa-test.webp",
-      full: "/assets/images/gallery/full/faputa-test.webp",
+      image: "/assets/images/gallery/full/faputa-test.webp?v=1",
       alt: "Detailed white and red creature character posed against a transparent background",
       featured: false,
       mature: false
@@ -206,8 +200,7 @@ window.SHIN_SITE = {
       category: "reference",
       character: "Shin",
       year: "2026",
-      image: "/assets/images/gallery/thumbs/shin-character-card.webp",
-      full: "/assets/images/gallery/full/shin-character-card.webp",
+      image: "/assets/images/gallery/full/shin-character-card.webp?v=1",
       alt: "Character card showing multiple drawings and details for Shin",
       featured: false,
       mature: true
@@ -218,8 +211,7 @@ window.SHIN_SITE = {
       category: "mature",
       character: "Shin",
       year: "2026",
-      image: "/assets/images/gallery/thumbs/shin-pet-play.webp",
-      full: "/assets/images/gallery/full/shin-pet-play.webp",
+      image: "/assets/images/gallery/full/shin-pet-play.webp?v=1",
       alt: "Adult-themed furry character illustration with harness and leash",
       featured: false,
       mature: true
@@ -253,28 +245,28 @@ window.SHIN_SITE = {
     {
       name: "Chibi icon",
       price: "$25+",
-      image: "/assets/images/commissions/chibi-icon.webp",
+      image: "/assets/images/gallery/full/michiru-chibi-icon.webp?v=1",
       description: "An expressive head icon with clean color and a transparent or simple background.",
       includes: ["One character", "Transparent PNG"]
     },
     {
       name: "Chibi full body",
       price: "$40+",
-      image: "/assets/images/commissions/chibi-fullbody.webp",
+      image: "/assets/images/gallery/full/shin-chibi-pose.webp?v=1",
       description: "A simplified full-body pose focused on expression, silhouette, and markings.",
       includes: ["One character", "Transparent PNG"]
     },
     {
       name: "Full-body character",
       price: "$65+",
-      image: "/assets/images/gallery/full/faputa-test.webp",
+      image: "/assets/images/gallery/full/faputa-test.webp?v=1",
       description: "A finished full-body drawing with clean lines, color, and light shading.",
       includes: ["One character", "Plain or transparent background"]
     },
     {
       name: "Character card",
       price: "$125+",
-      image: "/assets/images/commissions/character-card.webp",
+      image: "/assets/images/gallery/full/shin-character-card.webp?v=1",
       mature: true,
       description: "A main pose with supporting expressions, details, or alternate drawings.",
       includes: ["One main full body", "Two to four supporting details"]
