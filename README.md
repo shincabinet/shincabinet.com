@@ -85,7 +85,7 @@ Important shared files:
 
 The old `gallery/thumbs/` copies and duplicated commission/character copies were removed. For new Gallery entries, set only `image`. The site already uses `image` as the dialog/full-size fallback. Add a separate `full` property only when you deliberately want two different files.
 
-Image responses are set to `max-age=0, must-revalidate` in `_headers`, so replacing a canonical file at the same path will be picked up without renaming the file or editing every reference. The current references include a one-time `?v=1` cache bust to escape the site’s previous one-year immutable image cache.
+Image responses are set to `max-age=0, must-revalidate` in `_headers`. The Site Manager can replace canonical files directly and automatically bumps existing `?v=N` cache-bust values so a replacement appears immediately. If a replacement changes file format, the manager updates every matching image path across the site to the new extension.
 
 Transparent pixels in the header mark are backed by the site's `--bg` color in `styles.css`.
 
@@ -130,10 +130,44 @@ The profile also automatically shows existing Gallery entries whose `character` 
 
 ### Add another character profile
 
-1. Add the character to the existing `characters` array in `assets/js/content.js`.
-2. Give it a unique `id` and `path`, for example `id: "nova"` and `path: "/characters/nova/"`.
-3. Copy `characters/shin/index.html` to `characters/nova/index.html`.
-4. Change both `data-character-id="shin"` and `data-character-profile="shin"` to `nova`.
-5. Optionally add the new URL to `sitemap.xml`.
+Use **Characters → New character** in the Local Site Manager. Saving a new character automatically creates `characters/<id>/index.html`, updates the content configuration, and regenerates the sitemap. You can keep the character unpublished until it is ready.
 
 Character profiles reuse the same canonical Gallery image by default, so no duplicate character image is required.
+
+## Local Site Manager GUI
+
+For normal content changes, use the local GUI instead of editing the JavaScript files by hand.
+
+```bash
+./tools/site-manager.sh
+```
+
+or:
+
+```bash
+python3 tools/site_manager.py
+```
+
+The manager opens at `http://127.0.0.1:8765/__manager__/` and also serves a live local preview at `http://127.0.0.1:8765/`.
+
+The GUI can:
+
+- add and edit character profiles;
+- publish or hide individual characters;
+- automatically create each character's `/characters/<id>/` profile page;
+- enable or disable existing site pages;
+- control whether pages appear in the navigation, footer, or home cards;
+- upload and browse image assets;
+- show how many site references use each image and which files contain them;
+- replace an image in place while preserving its canonical filename when possible;
+- automatically update all references when a replacement changes image format/path;
+- repoint every reference from one image to another existing canonical asset;
+- safely delete unused images, or replace references before deleting an in-use image;
+- edit common site-wide text and status values;
+- regenerate `sitemap.xml` after page/character visibility changes.
+
+The manager binds to `127.0.0.1` only and uses Python's standard library, so it does not require pip packages. The entire `tools/` directory is excluded by `.assetsignore`, so the manager itself is not published with the website.
+
+### Character visibility
+
+Characters now support an `enabled` field. `enabled: false` keeps the character data and generated profile on disk but removes it from the public character directory and shows an unpublished notice if its direct URL is visited.

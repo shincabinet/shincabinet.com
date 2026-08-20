@@ -248,11 +248,12 @@
   function renderCharacters() {
     const grid = qs("[data-character-grid]");
     if (!grid) return;
-    grid.innerHTML = data.characters.map(characterCard).join("");
+    const visibleCharacters = (data.characters || []).filter((character) => character.enabled !== false);
+    grid.innerHTML = visibleCharacters.map(characterCard).join("");
     const count = qs("[data-character-count]");
-    if (count) count.textContent = String(data.characters.length);
+    if (count) count.textContent = String(visibleCharacters.length);
     qsa("[data-character-id]", grid).forEach((button) => button.addEventListener("click", () => {
-      const character = data.characters.find((item) => item.id === button.dataset.characterId);
+      const character = (data.characters || []).find((item) => item.id === button.dataset.characterId && item.enabled !== false);
       if (character) location.href = characterPath(character);
     }));
     initCharacterDirectory();
@@ -330,6 +331,10 @@
     const character = (data.characters || []).find((item) => item.id === id);
     if (!character) {
       root.innerHTML = `<section class="disabled-page"><p class="eyebrow">Character not found</p><h1>Unknown character</h1><p>This profile does not match a character in <code>assets/js/content.js</code>.</p><a class="button" href="/characters/">Back to Characters</a></section>`;
+      return;
+    }
+    if (character.enabled === false) {
+      root.innerHTML = `<section class="disabled-page"><p class="eyebrow">Character profile</p><h1>This character is not published yet.</h1><p>The profile is saved, but it is currently hidden.</p><a class="button" href="/characters/">Back to Characters</a></section>`;
       return;
     }
 
