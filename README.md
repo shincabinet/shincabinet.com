@@ -158,6 +158,7 @@ The GUI can:
 - enable or disable existing site pages;
 - control whether pages appear in the navigation, footer, or home cards;
 - upload and browse image assets;
+- change individual image assignments in Gallery entries, commission cards, character fields, and custom-page config without globally repointing the old asset;
 - show how many site references use each image and which files contain them;
 - replace an image in place while preserving its canonical filename when possible;
 - automatically update all references when a replacement changes image format/path;

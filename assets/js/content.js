@@ -103,8 +103,8 @@ window.SHIN_SITE = {
   "characters": [
     {
       "enabled": true,
-      "id": "shin",
-      "name": "Shin",
+      "id": "shinji",
+      "name": "Shinji",
       "pronouns": "He / Him",
       "species": "Fox",
       "role": "Primary character",
@@ -148,14 +148,44 @@ window.SHIN_SITE = {
       "dislikes": [],
       "references": [
         {
-          "title": "Character card",
-          "image": "/assets/images/gallery/full/shin-character-card.webp",
+          "title": "Shinji Chibi Icon",
+          "image": "/assets/images/characters/shin/shin-chibi-icon-t.png",
+          "mature": false,
+          "alt": ""
+        },
+        {
+          "title": "Shinji Chibi Pose",
+          "image": "/assets/images/gallery/full/shin-chibi-pose.webp",
+          "mature": false,
+          "alt": ""
+        },
+        {
+          "title": "Shinji Relaxed",
+          "image": "/assets/images/gallery/full/shin-lounge.webp",
+          "mature": false,
+          "alt": ""
+        },
+        {
+          "title": "Shinji Petplay",
+          "image": "/assets/images/gallery/full/shin-pet-play.webp",
+          "mature": false,
+          "alt": ""
+        },
+        {
+          "title": "Shinji Crazy Comic",
+          "image": "/assets/images/gallery/full/shin-crazy.webp",
           "mature": true,
-          "alt": "Character card showing multiple drawings and details for Shin"
+          "alt": ""
+        },
+        {
+          "title": "Shinji Character Card",
+          "image": "/assets/images/gallery/full/shin-character-card.webp",
+          "mature": false,
+          "alt": ""
         }
       ],
       "links": [],
-      "path": "/characters/shin/"
+      "path": "/characters/shinji/"
     },
     {
       "enabled": true,
@@ -233,7 +263,7 @@ window.SHIN_SITE = {
       "category": "illustration",
       "character": "Michiru study",
       "year": "2026",
-      "image": "/assets/images/gallery/full/michiru-cheetah-speed.webp?v=1",
+      "image": "/assets/images/library/michiru-cheetah-speed-w-ws.webp?v=1",
       "alt": "Colorful furry character running with long sweeping tails",
       "featured": true,
       "mature": false
@@ -266,7 +296,7 @@ window.SHIN_SITE = {
       "category": "chibi",
       "character": "Shin",
       "year": "2026",
-      "image": "/assets/images/characters/shin/shin-chibi-icon-t.png?v=2",
+      "image": "/assets/images/characters/shin/shin-chibi-icon-t.png",
       "alt": "Transparent front-facing chibi icon of Shin",
       "featured": true,
       "mature": false

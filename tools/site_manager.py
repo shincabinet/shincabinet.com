@@ -28,6 +28,7 @@ from urllib.parse import unquote, urlparse
 ROOT = Path(__file__).resolve().parents[1]
 CONTENT_FILE = ROOT / "assets" / "js" / "content.js"
 PAGES_FILE = ROOT / "config" / "pages.js"
+CUSTOM_PAGES_FILE = ROOT / "config" / "custom-pages.js"
 TEMPLATE_FILE = ROOT / "tools" / "character-template.html"
 MANAGER_FILE = ROOT / "tools" / "site-manager.html"
 SITEMAP_FILE = ROOT / "sitemap.xml"
@@ -40,6 +41,14 @@ CONTENT_HEADER = """/*
   This file is valid JSON wrapped in a browser assignment so it can be edited
   safely by tools/site_manager.py. You may still edit it by hand if needed.
   Page visibility lives in /config/pages.js.
+*/
+"""
+CUSTOM_PAGES_HEADER = """/*
+  CONTENT FOR GENERIC PAGES
+  -------------------------
+  These drafts stay saved even when their matching page is disabled in
+  config/pages.js. Supported section types: text, cards, gallery, timeline,
+  links, and callout.
 */
 """
 PAGES_HEADER = """/*
@@ -262,6 +271,89 @@ def list_images() -> list[dict[str, Any]]:
     return result
 
 
+
+def _assignment_label(source: str, path: list[Any], parent: dict[str, Any] | None = None) -> tuple[str, str]:
+    """Return a friendly group/label for an image-bearing config field."""
+    top = str(path[0]) if path else source
+    groups = {
+        "artworks": "Gallery",
+        "characters": "Characters",
+        "commissions": "Commissions",
+        "adoptables": "Adoptables",
+        "fursuitProjects": "Fursuits",
+        "fursuitServices": "Fursuits",
+        "site": "Site",
+    }
+    if source == "custom":
+        group = "Custom pages"
+    elif source == "pages":
+        group = "Pages"
+    else:
+        group = groups.get(top, top.replace("_", " ").title())
+
+    obj = parent or {}
+    title = obj.get("title") or obj.get("name") or obj.get("label") or obj.get("id")
+    if not title and top == "characters" and len(path) >= 2:
+        title = f"Character {path[1]}"
+    if not title:
+        bits = [str(x) for x in path[:-1] if not isinstance(x, int)]
+        title = " / ".join(bits[-2:]) or "Image"
+    return group, str(title)
+
+
+def collect_image_assignments() -> list[dict[str, Any]]:
+    """Enumerate individual config image fields that can be repointed independently."""
+    sources: list[tuple[str, Path]] = [("content", CONTENT_FILE), ("custom", CUSTOM_PAGES_FILE), ("pages", PAGES_FILE)]
+    results: list[dict[str, Any]] = []
+    for source, file_path in sources:
+        if not file_path.exists():
+            continue
+        _, data = read_assignment(file_path)
+
+        def walk(value: Any, path: list[Any], parent: dict[str, Any] | None = None) -> None:
+            if isinstance(value, dict):
+                for key, child in value.items():
+                    child_path = path + [key]
+                    if key == "image" and isinstance(child, str) and child.startswith("/assets/images/"):
+                        group, label = _assignment_label(source, child_path, value)
+                        results.append({
+                            "source": source,
+                            "path": child_path,
+                            "group": group,
+                            "label": label,
+                            "image": child,
+                            "cleanImage": child.split("#", 1)[0].split("?", 1)[0],
+                            "configFile": file_path.relative_to(ROOT).as_posix(),
+                        })
+                    else:
+                        walk(child, child_path, value)
+            elif isinstance(value, list):
+                for index, child in enumerate(value):
+                    walk(child, path + [index], parent)
+
+        walk(data, [])
+    return results
+
+
+def set_config_image_value(data: Any, path: list[Any], image_url: str) -> None:
+    if not path or path[-1] != "image":
+        raise ValueError("Invalid image assignment path.")
+    current = data
+    for part in path[:-1]:
+        if isinstance(part, int):
+            if not isinstance(current, list) or part < 0 or part >= len(current):
+                raise ValueError("Image assignment no longer exists. Reload the manager.")
+            current = current[part]
+        elif isinstance(part, str):
+            if not isinstance(current, dict) or part not in current:
+                raise ValueError("Image assignment no longer exists. Reload the manager.")
+            current = current[part]
+        else:
+            raise ValueError("Invalid image assignment path.")
+    if not isinstance(current, dict) or "image" not in current:
+        raise ValueError("Image assignment no longer exists. Reload the manager.")
+    current["image"] = image_url
+
 def walk_pages(items: list[dict[str, Any]], parent_enabled: bool = True):
     for item in items:
         enabled = parent_enabled and item.get("enabled", True)
@@ -332,7 +424,7 @@ class Handler(SimpleHTTPRequestHandler):
             try:
                 _, content = read_assignment(CONTENT_FILE)
                 _, pages = read_assignment(PAGES_FILE)
-                json_response(self, 200, {"content": content, "pages": pages, "images": list_images()})
+                json_response(self, 200, {"content": content, "pages": pages, "images": list_images(), "imageAssignments": collect_image_assignments()})
             except Exception as exc:
                 json_response(self, 500, {"error": str(exc)})
             return
@@ -362,6 +454,10 @@ class Handler(SimpleHTTPRequestHandler):
                 return self.repoint_image(payload)
             if parsed.path == "/api/image/delete":
                 return self.delete_image(payload)
+            if parsed.path == "/api/image-assignment/save":
+                return self.save_image_assignment(payload)
+            if parsed.path == "/api/image-assignments/save":
+                return self.save_image_assignments(payload)
             json_response(self, 404, {"error": "Unknown API endpoint."})
         except Exception as exc:
             json_response(self, 400, {"error": str(exc)})
@@ -421,6 +517,62 @@ class Handler(SimpleHTTPRequestHandler):
                 existing[key] = site[key]
         write_assignment(CONTENT_FILE, variable, content, CONTENT_HEADER)
         json_response(self, 200, {"ok": True})
+
+
+    def save_image_assignment(self, payload: dict[str, Any]) -> None:
+        item = payload.get("assignment") or {}
+        self._save_image_assignment_items([item])
+
+    def save_image_assignments(self, payload: dict[str, Any]) -> None:
+        items = payload.get("assignments")
+        if not isinstance(items, list) or not items:
+            raise ValueError("No image assignments were supplied.")
+        self._save_image_assignment_items(items)
+
+    def _save_image_assignment_items(self, items: list[dict[str, Any]]) -> None:
+        file_map = {
+            "content": (CONTENT_FILE, CONTENT_HEADER),
+            "custom": (CUSTOM_PAGES_FILE, CUSTOM_PAGES_HEADER),
+            "pages": (PAGES_FILE, PAGES_HEADER),
+        }
+        loaded: dict[str, tuple[str, dict[str, Any], Path, str]] = {}
+        changed_sources: set[str] = set()
+        changed_count = 0
+        for item in items:
+            if not isinstance(item, dict):
+                raise ValueError("Invalid image assignment.")
+            source = str(item.get("source") or "")
+            if source not in file_map:
+                raise ValueError("Unknown image assignment source.")
+            path = item.get("path")
+            if not isinstance(path, list):
+                raise ValueError("Invalid image assignment path.")
+            image_url = normalize_image_url(str(item.get("image") or ""))
+            image_file_from_url(image_url)
+            if source not in loaded:
+                file_path, header = file_map[source]
+                variable, data = read_assignment(file_path)
+                loaded[source] = (variable, data, file_path, header)
+            variable, data, file_path, header = loaded[source]
+            # Only permit paths currently exposed by the manager. This prevents a
+            # stale/custom request from editing unrelated config values.
+            valid = any(a["source"] == source and a["path"] == path for a in collect_image_assignments())
+            if not valid:
+                raise ValueError("Image assignment no longer exists. Reload the manager.")
+            set_config_image_value(data, path, image_url)
+            changed_sources.add(source)
+            changed_count += 1
+
+        for source in changed_sources:
+            variable, data, file_path, header = loaded[source]
+            write_assignment(file_path, variable, data, header)
+
+        json_response(self, 200, {
+            "ok": True,
+            "updated": changed_count,
+            "imageAssignments": collect_image_assignments(),
+            "images": list_images(),
+        })
 
     def upload_image(self, payload: dict[str, Any]) -> None:
         filename = Path(str(payload.get("filename") or "image")).name
