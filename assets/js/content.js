@@ -182,6 +182,14 @@ window.SHIN_SITE = {
           "image": "/assets/images/gallery/full/shin-character-card.webp",
           "mature": false,
           "alt": ""
+        },
+        {
+          "title": "Bound Shinji",
+          "image": "/assets/images/characters/shinji/bound-shinji.png",
+          "mature": false,
+          "alt": "",
+          "artist": "0nibite",
+          "artistUrl": "https://toyhou.se/0nibite"
         }
       ],
       "links": [],
