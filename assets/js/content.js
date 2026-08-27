@@ -254,6 +254,62 @@ window.SHIN_SITE = {
       ],
       "links": [],
       "path": "/characters/tav/"
+    },
+    {
+      "enabled": true,
+      "id": "kite",
+      "name": "Kite",
+      "pronouns": "She / Her",
+      "species": "Avian / White Tail Kite",
+      "role": "Character",
+      "category": "secondary",
+      "featured": false,
+      "image": "/assets/images/characters/kite/kite-chibi-icon-t.png",
+      "alt": "",
+      "tagline": "",
+      "bio": [],
+      "tags": [],
+      "facts": [],
+      "palette": [
+        {
+          "name": "White Feathers",
+          "hex": "#d8d8d8"
+        },
+        {
+          "name": "Gray Feathers",
+          "hex": "#9999a6"
+        },
+        {
+          "name": "Dark Feathers",
+          "hex": "#2f2f38"
+        },
+        {
+          "name": "Eye 1",
+          "hex": "#d8410d"
+        },
+        {
+          "name": "Eye 2",
+          "hex": "#d8410d"
+        },
+        {
+          "name": "Jewerly",
+          "hex": "#d87e16"
+        }
+      ],
+      "personality": [],
+      "designNotes": [],
+      "likes": [],
+      "dislikes": [],
+      "references": [
+        {
+          "title": "Kite Chibi Icon",
+          "image": "/assets/images/characters/kite/kite-chibi-icon-t-ws.png",
+          "mature": false,
+          "alt": ""
+        }
+      ],
+      "links": [],
+      "path": "/characters/kite/"
     }
   ],
   "artworks": [
