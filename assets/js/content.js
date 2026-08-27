@@ -289,7 +289,7 @@ window.SHIN_SITE = {
         },
         {
           "name": "Eye 2",
-          "hex": "#d8410d"
+          "hex": "#ffaa1c"
         },
         {
           "name": "Jewerly",
