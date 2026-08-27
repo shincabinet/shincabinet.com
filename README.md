@@ -159,6 +159,7 @@ The GUI can:
 - control whether pages appear in the navigation, footer, or home cards;
 - upload and browse image assets;
 - change individual image assignments in Gallery entries, commission cards, character fields, and custom-page config without globally repointing the old asset;
+- group alternate versions under Gallery and character reference images;
 - show how many site references use each image and which files contain them;
 - replace an image in place while preserving its canonical filename when possible;
 - automatically update all references when a replacement changes image format/path;
@@ -172,3 +173,27 @@ The manager binds to `127.0.0.1` only and uses Python's standard library, so it 
 ### Character visibility
 
 Characters now support an `enabled` field. `enabled: false` keeps the character data and generated profile on disk but removes it from the public character directory and shows an unpublished notice if its direct URL is visited.
+
+## Alternate image versions
+
+Gallery artwork and character reference images can optionally have alternate versions (for example clothing on/off, accessories, censored/uncensored, or expression changes). The Gallery/reference grid still shows only the primary image. When the image is opened, the primary version and its alternates appear in a thumbnail strip below the large preview.
+
+Use **Site Manager → Artwork details** to add, remove, or reorder alternatives. Upload the image files first from **Images**, then assign them to the primary Gallery/reference entry. Alternative image paths are also exposed in **Image assignments**, so they participate in the same replace/repoint/reference tracking as every other managed image.
+
+### Artist credits
+
+Gallery artwork and character reference images can optionally include an artist credit. In **Artwork details**, set **Artist credit** to the artist name/handle and optionally provide **Artist link**. Character reference credits can also be edited directly from **Characters → Reference images**. When a credit exists the public site shows `Art by <artist>` beneath the thumbnail and inside the enlarged artwork viewer; the artist name becomes a link when a URL is supplied. Leave both fields blank for your own work and no credit UI is rendered.
+
+Credits apply to the primary image and all alternate versions in that image set. The content fields are `artist` and `artistUrl` on either a Gallery artwork entry or character reference entry.
+
+The stored shape is optional and backward-compatible:
+
+```json
+"alternatives": [
+  {
+    "title": "Jacket off",
+    "image": "/assets/images/library/example-jacket-off.webp",
+    "alt": "Character without the jacket"
+  }
+]
+```

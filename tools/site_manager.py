@@ -380,6 +380,23 @@ def write_sitemap(pages: dict[str, Any], content: dict[str, Any] | None = None) 
     SITEMAP_FILE.write_text(xml, encoding="utf-8")
 
 
+def normalize_artist_url(value: Any) -> str:
+    url = str(value or "").strip()[:500]
+    if not url:
+        return ""
+    explicit_scheme = re.match(r"^[A-Za-z][A-Za-z0-9+.-]*:", url)
+    if explicit_scheme and not re.match(r"^https?:\/\/", url, re.IGNORECASE):
+        raise ValueError("Artist credit links must use http:// or https://.")
+    if url.startswith("//"):
+        url = "https:" + url
+    elif not re.match(r"^https?://", url, re.IGNORECASE):
+        url = "https://" + url
+    parsed = urlparse(url)
+    if parsed.scheme not in {"http", "https"} or not parsed.netloc:
+        raise ValueError("Artist credit links must be valid http:// or https:// URLs.")
+    return url
+
+
 def normalize_character(raw: dict[str, Any]) -> dict[str, Any]:
     character = dict(raw)
     character["id"] = safe_slug(str(character.get("id") or character.get("name") or ""))
@@ -390,6 +407,24 @@ def normalize_character(raw: dict[str, Any]) -> dict[str, Any]:
     for key in ("bio", "tags", "personality", "designNotes", "likes", "dislikes", "references", "facts", "palette", "links"):
         if not isinstance(character.get(key), list):
             character[key] = []
+    normalized_references: list[dict[str, Any]] = []
+    for raw_reference in character["references"]:
+        if not isinstance(raw_reference, dict):
+            continue
+        reference = dict(raw_reference)
+        artist = str(reference.get("artist") or "").strip()[:120]
+        artist_url = normalize_artist_url(reference.get("artistUrl")) if reference.get("artistUrl") else ""
+        if artist:
+            reference["artist"] = artist
+            if artist_url:
+                reference["artistUrl"] = artist_url
+            else:
+                reference.pop("artistUrl", None)
+        else:
+            reference.pop("artist", None)
+            reference.pop("artistUrl", None)
+        normalized_references.append(reference)
+    character["references"] = normalized_references
     return character
 
 
@@ -458,6 +493,8 @@ class Handler(SimpleHTTPRequestHandler):
                 return self.save_image_assignment(payload)
             if parsed.path == "/api/image-assignments/save":
                 return self.save_image_assignments(payload)
+            if parsed.path == "/api/image-variants/save":
+                return self.save_image_variants(payload)
             json_response(self, 404, {"error": "Unknown API endpoint."})
         except Exception as exc:
             json_response(self, 400, {"error": str(exc)})
@@ -517,6 +554,77 @@ class Handler(SimpleHTTPRequestHandler):
                 existing[key] = site[key]
         write_assignment(CONTENT_FILE, variable, content, CONTENT_HEADER)
         json_response(self, 200, {"ok": True})
+
+
+    def save_image_variants(self, payload: dict[str, Any]) -> None:
+        kind = str(payload.get("kind") or "")
+        raw_alternatives = payload.get("alternatives")
+        artist = str(payload.get("artist") or "").strip()[:120]
+        artist_url = normalize_artist_url(payload.get("artistUrl")) if payload.get("artistUrl") else ""
+        if not isinstance(raw_alternatives, list):
+            raise ValueError("Alternatives must be a list.")
+        if len(raw_alternatives) > 40:
+            raise ValueError("A single image can have at most 40 alternatives.")
+
+        alternatives: list[dict[str, str]] = []
+        for index, raw in enumerate(raw_alternatives):
+            if not isinstance(raw, dict):
+                raise ValueError("Invalid alternative image entry.")
+            image_url = normalize_image_url(str(raw.get("image") or ""))
+            image_file_from_url(image_url)
+            title = str(raw.get("title") or f"Alternative {index + 1}").strip()[:120]
+            alt = str(raw.get("alt") or "").strip()[:500]
+            alternatives.append({"title": title or f"Alternative {index + 1}", "image": image_url, "alt": alt})
+
+        variable, content = read_assignment(CONTENT_FILE)
+        target: dict[str, Any] | None = None
+
+        if kind == "artwork":
+            artwork_id = str(payload.get("id") or "")
+            target = next((item for item in content.get("artworks", []) if str(item.get("id")) == artwork_id), None)
+            if target is None:
+                raise ValueError("Gallery artwork no longer exists. Reload the manager.")
+        elif kind == "reference":
+            character_id = str(payload.get("characterId") or "")
+            reference_index = payload.get("referenceIndex")
+            if not isinstance(reference_index, int):
+                raise ValueError("Invalid reference image index.")
+            character = next((item for item in content.get("characters", []) if str(item.get("id")) == character_id), None)
+            if character is None:
+                raise ValueError("Character no longer exists. Reload the manager.")
+            references = character.get("references", [])
+            if reference_index < 0 or reference_index >= len(references):
+                raise ValueError("Reference image no longer exists. Reload the manager.")
+            target = references[reference_index]
+            primary = str(payload.get("primaryImage") or "")
+            if primary and normalize_image_url(str(target.get("image") or "")) != normalize_image_url(primary):
+                raise ValueError("Reference image changed since this page loaded. Reload the manager.")
+        else:
+            raise ValueError("Unknown image variant source.")
+
+        if alternatives:
+            target["alternatives"] = alternatives
+        else:
+            target.pop("alternatives", None)
+        if artist:
+            target["artist"] = artist
+            if artist_url:
+                target["artistUrl"] = artist_url
+            else:
+                target.pop("artistUrl", None)
+        else:
+            target.pop("artist", None)
+            target.pop("artistUrl", None)
+
+        write_assignment(CONTENT_FILE, variable, content, CONTENT_HEADER)
+        json_response(self, 200, {
+            "ok": True,
+            "alternatives": alternatives,
+            "artist": artist,
+            "artistUrl": artist_url,
+            "images": list_images(),
+            "imageAssignments": collect_image_assignments(),
+        })
 
 
     def save_image_assignment(self, payload: dict[str, Any]) -> None:

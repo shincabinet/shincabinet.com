@@ -301,26 +301,104 @@
     return `<section class="character-profile__section ${className}" id="${esc(id)}"><header><p class="eyebrow">${esc(eyebrow)}</p><h2>${esc(title)}</h2></header>${content}</section>`;
   }
 
+  function artistCredit(item, className = "art-credit") {
+    const artist = String(item?.artist || "").trim();
+    if (!artist) return "";
+    const rawUrl = String(item?.artistUrl || "").trim();
+    const safeUrl = /^https?:\/\//i.test(rawUrl) ? rawUrl : "";
+    const name = safeUrl
+      ? `<a href="${esc(safeUrl)}" target="_blank" rel="noopener noreferrer">${esc(artist)}</a>`
+      : `<span>${esc(artist)}</span>`;
+    return `<small class="${esc(className)}">Art by ${name}</small>`;
+  }
+
   function referenceCard(reference, index) {
     const mature = reference.mature === true;
+    const alternativeCount = (reference.alternatives || []).filter((item) => item && item.image).length;
     return `<article class="reference-card${mature ? " reference-card--mature" : ""}">
       <button type="button" data-reference-index="${index}" data-mature="${mature}" aria-label="View ${esc(reference.title || "reference image")}">
-        <span class="reference-card__media"><img src="${esc(reference.image)}" alt="${esc(reference.alt || reference.title || "Character reference")}" loading="lazy">${mature ? '<span class="mature-cover"><strong>Mature</strong><small>Tap to reveal</small></span>' : ""}</span>
+        <span class="reference-card__media"><img src="${esc(reference.image)}" alt="${esc(reference.alt || reference.title || "Character reference")}" loading="lazy">${alternativeCount ? `<span class="media-version-badge">${alternativeCount + 1} versions</span>` : ""}${mature ? '<span class="mature-cover"><strong>Mature</strong><small>Tap to reveal</small></span>' : ""}</span>
         <span class="reference-card__caption">${esc(reference.title || "Reference")}</span>
       </button>
+      ${artistCredit(reference, "reference-card__credit")}
     </article>`;
+  }
+
+  function mediaVersions(item, primaryLabel = "Primary") {
+    const versions = [{
+      title: primaryLabel,
+      image: item.full || item.image,
+      alt: item.alt || item.title || primaryLabel
+    }];
+    (item.alternatives || []).forEach((alternative, index) => {
+      if (!alternative || !alternative.image) return;
+      versions.push({
+        title: alternative.title || `Alternative ${index + 1}`,
+        image: alternative.full || alternative.image,
+        alt: alternative.alt || alternative.title || item.alt || item.title || `Alternative ${index + 1}`
+      });
+    });
+    return versions;
+  }
+
+  function openMediaDialog(item, title, meta, fallbackAlt) {
+    const dialog = qs("#art-dialog");
+    if (!item || !dialog) return;
+    const image = qs("[data-art-dialog-image]", dialog);
+    const figure = qs(".art-dialog__figure", dialog);
+    if (!image || !figure) return;
+
+    let variants = qs("[data-art-dialog-variants]", dialog);
+    if (!variants) {
+      variants = document.createElement("div");
+      variants.className = "art-dialog__variants";
+      variants.dataset.artDialogVariants = "";
+      variants.setAttribute("aria-label", "Image versions");
+      image.insertAdjacentElement("afterend", variants);
+    }
+
+    const versions = mediaVersions(item);
+    const metaElement = qs("[data-art-dialog-meta]", dialog);
+    let creditElement = qs("[data-art-dialog-credit]", dialog);
+    if (!creditElement) {
+      creditElement = document.createElement("div");
+      creditElement.className = "art-dialog__credit";
+      creditElement.dataset.artDialogCredit = "";
+      const caption = qs(".art-dialog__caption", dialog);
+      if (caption) caption.insertAdjacentElement("afterend", creditElement);
+    }
+    creditElement.innerHTML = artistCredit(item, "art-dialog__credit-text");
+    creditElement.hidden = !String(item.artist || "").trim();
+    const selectVersion = (version, button = null, index = 0) => {
+      image.src = version.image;
+      image.alt = version.alt || fallbackAlt || title || "Artwork preview";
+      qsa("button", variants).forEach((itemButton) => itemButton.setAttribute("aria-pressed", String(itemButton === button)));
+      if (metaElement) metaElement.textContent = index === 0 || !version.title ? (meta || "") : `${meta || ""} · ${version.title}`;
+    };
+
+    dialog.classList.toggle("art-dialog--has-variants", versions.length > 1);
+    variants.innerHTML = versions.length > 1 ? versions.map((version, index) => `<button type="button" class="art-dialog__variant" data-version-index="${index}" aria-pressed="${index === 0}" title="${esc(version.title)}"><img src="${esc(version.image)}" alt=""><span>${esc(version.title)}</span></button>`).join("") : "";
+    variants.hidden = versions.length <= 1;
+    qsa("[data-version-index]", variants).forEach((button) => button.addEventListener("click", () => {
+      const index = Number(button.dataset.versionIndex);
+      const version = versions[index];
+      if (version) selectVersion(version, button, index);
+    }));
+
+    selectVersion(versions[0], qs('[data-version-index="0"]', variants), 0);
+    qs("[data-art-dialog-title]", dialog).textContent = title || item.title || "Artwork";
+    dialog.showModal();
   }
 
   function openReferenceImage(character, index) {
     const reference = (character.references || [])[Number(index)];
-    const dialog = qs("#art-dialog");
-    if (!reference || !dialog) return;
-    const image = qs("[data-art-dialog-image]", dialog);
-    image.src = reference.full || reference.image;
-    image.alt = reference.alt || reference.title || `${character.name} reference`;
-    qs("[data-art-dialog-title]", dialog).textContent = reference.title || `${character.name} reference`;
-    qs("[data-art-dialog-meta]", dialog).textContent = `${character.name} · Reference`;
-    dialog.showModal();
+    if (!reference) return;
+    openMediaDialog(
+      reference,
+      reference.title || `${character.name} reference`,
+      `${character.name} · Reference`,
+      reference.alt || `${character.name} reference`
+    );
   }
 
   function renderCharacterProfile() {
@@ -430,11 +508,13 @@
 
   function artworkCard(artwork) {
     const mature = artwork.mature === true;
+    const alternativeCount = (artwork.alternatives || []).filter((item) => item && item.image).length;
     return `<article class="gallery-card${mature ? " gallery-card--mature" : ""}" data-gallery-category="${esc(artwork.category)}" data-gallery-mature="${mature}">
       <button type="button" data-artwork-id="${esc(artwork.id)}" data-mature="${mature}" aria-label="View ${esc(artwork.title)}">
-        <span class="gallery-card__media"><img src="${esc(artwork.image)}" alt="${esc(artwork.alt)}" loading="lazy">${mature ? '<span class="mature-cover"><strong>Mature</strong><small>Tap to reveal</small></span>' : ""}</span>
+        <span class="gallery-card__media"><img src="${esc(artwork.image)}" alt="${esc(artwork.alt)}" loading="lazy">${alternativeCount ? `<span class="media-version-badge">${alternativeCount + 1} versions</span>` : ""}${mature ? '<span class="mature-cover"><strong>Mature</strong><small>Tap to reveal</small></span>' : ""}</span>
         <span class="gallery-card__caption"><strong>${esc(artwork.title)}</strong><small>${esc(artwork.character)} · ${esc(artwork.year)}</small></span>
       </button>
+      ${artistCredit(artwork, "gallery-card__credit")}
     </article>`;
   }
 
@@ -459,14 +539,13 @@
 
   function openArtwork(id) {
     const artwork = data.artworks.find((item) => item.id === id);
-    const dialog = qs("#art-dialog");
-    if (!artwork || !dialog) return;
-    const image = qs("[data-art-dialog-image]", dialog);
-    image.src = artwork.full || artwork.image;
-    image.alt = artwork.alt;
-    qs("[data-art-dialog-title]", dialog).textContent = artwork.title;
-    qs("[data-art-dialog-meta]", dialog).textContent = `${artwork.category} · ${artwork.character} · ${artwork.year}`;
-    dialog.showModal();
+    if (!artwork) return;
+    openMediaDialog(
+      artwork,
+      artwork.title,
+      `${artwork.category} · ${artwork.character} · ${artwork.year}`,
+      artwork.alt || artwork.title
+    );
   }
 
   function renderFursuits() {
