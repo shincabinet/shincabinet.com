@@ -314,6 +314,32 @@ window.SHIN_SITE = {
           "image": "/assets/images/characters/kite/kite-chibi-icon-t-ws.png",
           "mature": false,
           "alt": ""
+        },
+        {
+          "title": "Kite Fullart",
+          "image": "/assets/images/characters/kite/kite-pose-1-b-sfw-ws.png",
+          "mature": false,
+          "alt": "",
+          "alternatives": [
+            {
+              "title": "Transparent Version",
+              "image": "/assets/images/characters/kite/kite-pose-1-t-sfw-ws.png",
+              "alt": ""
+            }
+          ]
+        },
+        {
+          "title": "Kite Fullart NSFW",
+          "image": "/assets/images/characters/kite/kite-pose-1-b-nsfw-ws.png",
+          "mature": true,
+          "alt": "",
+          "alternatives": [
+            {
+              "title": "Transparent Version",
+              "image": "/assets/images/characters/kite/kite-pose-1-t-nsfw-ws.png",
+              "alt": ""
+            }
+          ]
         }
       ],
       "links": [],
