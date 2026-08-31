@@ -57,18 +57,25 @@
     return record.alternatives
       .filter((item) => item && item.source)
       .map((item, index) => ({
-        id: item.id || `alternative-${index + 1}`,
+        id: item.siteImageId || item.id || `alternative-${index + 1}`,
         title: item.title || `Alternative ${index + 1}`,
-        image: item.source,
+        image: item.siteImageId || item.source,
         alt: item.alt || ""
       }));
   }
 
   function originalImageUrl(value) {
-    const raw = imageSource(value);
-    if (!raw) return raw;
+    const requested = String(value || "").trim();
+    if (!requested) return requested;
 
     const host = mediaHost();
+    // siteimg_ is the public contract. The Raspberry Pi owns the alias and
+    // resolves it to the current img_ backing file, so swapping an image does
+    // not require a website deployment.
+    if (isSiteImageId(requested)) return host ? `${host}/s/${encodeURIComponent(requested.toLowerCase())}` : requested;
+
+    const raw = imageSource(requested);
+    if (!raw) return raw;
     if (isDynamicImageId(raw)) return host ? `${host}/i/${encodeURIComponent(raw.toLowerCase())}` : raw;
     if (isAbsoluteHttpUrl(raw)) return raw;
     if (mediaConfig.remoteImagesEnabled !== true || !host || !isManagedLocalImage(raw)) return raw;
@@ -94,10 +101,11 @@
   }
 
   function servedImageUrl(value) {
-    const sourceRef = imageSource(value);
-    const original = originalImageUrl(value);
+    const requested = String(value || "").trim();
+    const sourceRef = imageSource(requested);
+    const original = originalImageUrl(requested);
 
-    if (isDynamicImageId(sourceRef)) {
+    if (isSiteImageId(requested) || isDynamicImageId(sourceRef)) {
       const max = Math.round(Number(mediaConfig.maxImageDimension || 0));
       return Number.isFinite(max) && max > 0 ? `${original}?max=${Math.max(1, max)}` : original;
     }
@@ -117,7 +125,7 @@
     if (!raw) return "";
     try {
       const url = new URL(raw, location.origin);
-      if (!/^\/i\/img_[0-9a-f]{32}$/i.test(url.pathname)) return "";
+      if (!/^\/(?:i\/img_|s\/siteimg_)[0-9a-f]{32}$/i.test(url.pathname)) return "";
       if (!url.searchParams.has("max")) return "";
       url.searchParams.delete("max");
       return url.toString();
@@ -145,17 +153,42 @@
     }
   }
 
+  function siteImageIdFromPublicUrl(value) {
+    try {
+      const url = new URL(String(value || ""), location.origin);
+      const match = url.pathname.match(/^\/s\/(siteimg_[0-9a-f]{32})$/i);
+      return match ? match[1].toLowerCase() : "";
+    } catch {
+      return "";
+    }
+  }
+
   document.addEventListener("error", (event) => {
     const image = event.target;
     if (!(image instanceof HTMLImageElement)) return;
-    if (image.dataset.originalFallbackTried === "1") return;
 
     const current = image.currentSrc || image.src || "";
-    const fallback = image.dataset.originalImage || originalFromDynamicUrl(current) || originalFromTransformedUrl(current);
-    if (!fallback || fallback === current) return;
+    if (image.dataset.originalFallbackTried !== "1") {
+      const fallback = image.dataset.originalImage || originalFromDynamicUrl(current) || originalFromTransformedUrl(current);
+      if (fallback && fallback !== current) {
+        image.dataset.originalFallbackTried = "1";
+        image.src = fallback;
+        return;
+      }
+      image.dataset.originalFallbackTried = "1";
+    }
 
-    image.dataset.originalFallbackTried = "1";
-    image.src = fallback;
+    // Migration safety: if a site alias has not been synchronized to the Pi
+    // yet, fall back once to the source recorded in config/images.js.
+    if (image.dataset.siteSourceFallbackTried === "1") return;
+    const siteId = siteImageIdFromPublicUrl(current) || siteImageIdFromPublicUrl(image.dataset.originalImage || "");
+    const record = siteImageRecord(siteId);
+    const source = record ? String(record.source || "").trim() : "";
+    if (!source || isSiteImageId(source)) return;
+    const sourceFallback = servedImageUrl(source);
+    if (!sourceFallback || sourceFallback === current) return;
+    image.dataset.siteSourceFallbackTried = "1";
+    image.src = sourceFallback;
   }, true);
 
   function applyStaticHostedImages() {
@@ -645,7 +678,7 @@
           <div class="character-profile__intro">
             <a class="character-profile__back" href="/characters/">← Characters</a>
             <p class="eyebrow">${esc(character.role || "Character")}</p>
-            <div class="character-profile__identity">${character.icon ? `<img src="${esc(character.icon)}" alt="" aria-hidden="true">` : ""}<div><h1>${esc(character.name)}</h1><p>${esc(character.species || "")}${character.pronouns ? ` · ${esc(character.pronouns)}` : ""}</p></div></div>
+            <div class="character-profile__identity">${character.icon ? `<img src="${esc(servedImageUrl(character.icon))}" alt="" aria-hidden="true">` : ""}<div><h1>${esc(character.name)}</h1><p>${esc(character.species || "")}${character.pronouns ? ` · ${esc(character.pronouns)}` : ""}</p></div></div>
             ${character.tagline ? `<p class="character-profile__tagline">${esc(character.tagline)}</p>` : ""}
             ${tagsHtml}
             ${linksHtml}

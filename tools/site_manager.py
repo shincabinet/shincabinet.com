@@ -281,7 +281,7 @@ def site_image_list() -> list[dict[str, Any]]:
             "source": source,
             "alt": str(raw.get("alt") or ""),
             "alternatives": raw.get("alternatives") if isinstance(raw.get("alternatives"), list) else [],
-            "previewUrl": public_original_image_url(source) if source else "",
+            "previewUrl": public_original_image_url(image_id),
             "usageCount": counts.get(image_id, 0),
         })
     result.sort(key=lambda item: (item["label"].lower(), item["id"]))
@@ -338,6 +338,106 @@ def pi_request(path: str, *, method: str = "GET", body: bytes | None = None, con
         raise ValueError(f"Image Manager: {message}") from exc
     except urllib.error.URLError as exc:
         raise ValueError(f"Could not reach Raspberry Pi Image Manager: {exc.reason}") from exc
+
+
+def pi_set_alias(site_image_id: str, image_id: str) -> dict[str, Any]:
+    site_image_id = str(site_image_id or "").strip().lower()
+    image_id = str(image_id or "").strip().lower()
+    if not is_site_image_id(site_image_id) or not is_dynamic_image_id(image_id):
+        raise ValueError("A website alias requires a siteimg_ ID and an img_ ID.")
+    body = json.dumps({"imageId": image_id}).encode("utf-8")
+    return pi_request(f"/api/alias/{site_image_id}", method="PUT", body=body, content_type="application/json")
+
+
+def _legacy_relative_source(source: str) -> str:
+    clean = str(source or "").strip()
+    if clean.startswith("/assets/images/"):
+        return clean.removeprefix("/assets/images/").split("?", 1)[0].split("#", 1)[0]
+    try:
+        parsed = urlparse(clean)
+        if parsed.scheme in {"http", "https"} and parsed.netloc.lower() == urlparse(str(media_settings().get("imageHost") or "")).netloc.lower():
+            path = parsed.path.lstrip("/")
+            if not path.startswith(("i/", "s/", "cdn-cgi/")):
+                return path
+    except Exception:
+        pass
+    return ""
+
+
+def build_pi_match_index(items_remote: list[dict[str, Any]]) -> tuple[dict[str, str], dict[str, str]]:
+    by_path: dict[str, str] = {}
+    by_name_candidates: dict[str, list[str]] = {}
+    for item in items_remote:
+        image_id = str(item.get("id") or "").strip().lower()
+        path = str(item.get("path") or "").strip().lstrip("/")
+        if not path or not is_dynamic_image_id(image_id):
+            continue
+        by_path[path.lower()] = image_id
+        by_name_candidates.setdefault(Path(path).name.lower(), []).append(image_id)
+    # A basename fallback is safe only when the basename is unique on the Pi.
+    by_name = {name: ids[0] for name, ids in by_name_candidates.items() if len(set(ids)) == 1}
+    return by_path, by_name
+
+
+def match_source_to_pi_id(source: str, by_path: dict[str, str], by_name: dict[str, str]) -> str | None:
+    clean = str(source or "").strip().lower()
+    if is_dynamic_image_id(clean):
+        return clean
+    relative = _legacy_relative_source(source)
+    if not relative:
+        return None
+    exact = by_path.get(relative.lower())
+    if exact:
+        return exact
+    return by_name.get(Path(relative).name.lower())
+
+
+def sync_site_image_aliases(*, update_sources: bool = True) -> dict[str, Any]:
+    remote = pi_request("/api/catalog")
+    items_remote = remote.get("items", []) if isinstance(remote, dict) else []
+    by_path, by_name = build_pi_match_index(items_remote if isinstance(items_remote, list) else [])
+    registry = read_image_registry()
+    changed = 0
+    synced = 0
+    unmatched: list[str] = []
+
+    for site_image_id, record in registry.get("items", {}).items():
+        if not is_site_image_id(site_image_id) or not isinstance(record, dict):
+            continue
+        source = str(record.get("source") or "").strip()
+        image_id = match_source_to_pi_id(source, by_path, by_name)
+        if image_id:
+            if update_sources and source.lower() != image_id:
+                record["source"] = image_id
+                changed += 1
+            pi_set_alias(site_image_id, image_id)
+            synced += 1
+        else:
+            unmatched.append(f"{site_image_id}: {source or '(no source)'}")
+
+        alternatives = record.get("alternatives") if isinstance(record.get("alternatives"), list) else []
+        for index, alternative in enumerate(alternatives):
+            if not isinstance(alternative, dict):
+                continue
+            alt_site_id = str(alternative.get("siteImageId") or "").strip().lower()
+            if not is_site_image_id(alt_site_id):
+                alt_site_id = new_site_image_id(registry.setdefault("items", {}))
+                alternative["siteImageId"] = alt_site_id
+                changed += 1
+            alt_source = str(alternative.get("source") or "").strip()
+            alt_image_id = match_source_to_pi_id(alt_source, by_path, by_name)
+            if alt_image_id:
+                if update_sources and alt_source.lower() != alt_image_id:
+                    alternative["source"] = alt_image_id
+                    changed += 1
+                pi_set_alias(alt_site_id, alt_image_id)
+                synced += 1
+            else:
+                unmatched.append(f"{alt_site_id}: {alt_source or '(no source)'}")
+
+    if changed:
+        write_image_registry(registry)
+    return {"synced": synced, "changed": changed, "unmatched": unmatched, "catalogCount": len(items_remote)}
 
 
 def multipart_body(fields: dict[str, str], files: list[tuple[str, str, bytes, str]]) -> tuple[bytes, str]:
@@ -554,13 +654,10 @@ def media_settings() -> dict[str, Any]:
 
 def public_original_image_url(image_url: str) -> str:
     clean = normalize_image_url(image_url)
-    if is_site_image_id(clean):
-        record = site_image_record(clean)
-        if not record or not record.get("source"):
-            return ""
-        clean = normalize_source_reference(str(record.get("source")))
     media = media_settings()
     host = str(media.get("imageHost") or "").strip().rstrip("/")
+    if is_site_image_id(clean):
+        return f"{host}/s/{clean.lower()}" if host else clean
     if is_dynamic_image_id(clean):
         return f"{host}/i/{clean}" if host else clean
     if is_remote_image_url(clean):
@@ -1062,7 +1159,8 @@ class Handler(SimpleHTTPRequestHandler):
         write_local_manager_config(payload.get("imageManagerUrl") or existing.get("imageManagerUrl") or "", token)
         # Test immediately so a typo cannot silently be saved.
         config = pi_request("/api/config")
-        json_response(self, 200, {"ok": True, "connection": public_local_config(), "remote": config})
+        sync = sync_site_image_aliases(update_sources=True)
+        json_response(self, 200, {"ok": True, "connection": public_local_config(), "remote": config, "sync": sync})
 
     def create_site_image(self, payload: dict[str, Any]) -> None:
         source = normalize_source_reference(str(payload.get("source") or ""))
@@ -1077,6 +1175,8 @@ class Handler(SimpleHTTPRequestHandler):
             "alternatives": [],
         }
         write_image_registry(registry)
+        if is_dynamic_image_id(source):
+            pi_set_alias(image_id, source)
         json_response(self, 200, {"ok": True, "siteImage": next(x for x in site_image_list() if x["id"] == image_id), "siteImages": site_image_list(), "manager": manager_diagnostics()})
 
     def update_site_image(self, payload: dict[str, Any]) -> None:
@@ -1096,6 +1196,9 @@ class Handler(SimpleHTTPRequestHandler):
         if "alt" in payload:
             record["alt"] = str(payload.get("alt") or "").strip()[:500]
         write_image_registry(registry)
+        current_source = str(record.get("source") or "").strip().lower()
+        if is_dynamic_image_id(current_source):
+            pi_set_alias(image_id, current_source)
         json_response(self, 200, {"ok": True, "siteImages": site_image_list(), "manager": manager_diagnostics()})
 
     def save_site_image_alternatives(self, payload: dict[str, Any]) -> None:
@@ -1116,14 +1219,21 @@ class Handler(SimpleHTTPRequestHandler):
             alt_id = str(raw.get("id") or "").strip().lower()
             if not ALT_IMAGE_ID_RE.fullmatch(alt_id):
                 alt_id = new_alt_image_id()
+            alt_site_id = str(raw.get("siteImageId") or "").strip().lower()
+            if not is_site_image_id(alt_site_id):
+                alt_site_id = new_site_image_id(registry.setdefault("items", {}))
             normalized.append({
                 "id": alt_id,
+                "siteImageId": alt_site_id,
                 "title": str(raw.get("title") or f"Alternative {index + 1}").strip()[:120] or f"Alternative {index + 1}",
                 "source": source,
                 "alt": str(raw.get("alt") or "").strip()[:500],
             })
         record["alternatives"] = normalized
         write_image_registry(registry)
+        for alternative in normalized:
+            if is_dynamic_image_id(str(alternative.get("source") or "")):
+                pi_set_alias(str(alternative["siteImageId"]), str(alternative["source"]))
         json_response(self, 200, {"ok": True, "alternatives": normalized, "siteImages": site_image_list(), "manager": manager_diagnostics()})
 
     def replace_site_image_file(self, payload: dict[str, Any]) -> None:
@@ -1164,39 +1274,12 @@ class Handler(SimpleHTTPRequestHandler):
             "alternatives": [],
         }
         write_image_registry(registry)
+        pi_set_alias(image_id, str(result["id"]).lower())
         json_response(self, 200, {"ok": True, "remote": result, "siteImage": next(x for x in site_image_list() if x["id"] == image_id), "siteImages": site_image_list(), "manager": manager_diagnostics()})
 
     def auto_match_site_images(self, _payload: dict[str, Any]) -> None:
-        remote = pi_request("/api/catalog")
-        items_remote = remote.get("items", []) if isinstance(remote, dict) else []
-        by_path = {str(item.get("path") or ""): str(item.get("id") or "").lower() for item in items_remote if item.get("path") and is_dynamic_image_id(str(item.get("id") or ""))}
-        registry = read_image_registry()
-        changed = 0
-        unmatched: list[str] = []
-        for image_id, record in registry.get("items", {}).items():
-            if not isinstance(record, dict):
-                continue
-            source = str(record.get("source") or "").strip()
-            if not source.startswith("/assets/images/"):
-                continue
-            relative = source.removeprefix("/assets/images/").split("?", 1)[0].split("#", 1)[0]
-            remote_id = by_path.get(relative)
-            if remote_id:
-                record["source"] = remote_id
-                changed += 1
-            else:
-                unmatched.append(source)
-            for alternative in record.get("alternatives", []) if isinstance(record.get("alternatives"), list) else []:
-                alt_source = str(alternative.get("source") or "") if isinstance(alternative, dict) else ""
-                if alt_source.startswith("/assets/images/"):
-                    alt_rel = alt_source.removeprefix("/assets/images/").split("?", 1)[0].split("#", 1)[0]
-                    alt_remote = by_path.get(alt_rel)
-                    if alt_remote:
-                        alternative["source"] = alt_remote
-                        changed += 1
-        if changed:
-            write_image_registry(registry)
-        json_response(self, 200, {"ok": True, "matched": changed, "unmatched": unmatched, "siteImages": site_image_list(), "manager": manager_diagnostics()})
+        result = sync_site_image_aliases(update_sources=True)
+        json_response(self, 200, {"ok": True, "matched": result["changed"], "synced": result["synced"], "unmatched": result["unmatched"], "siteImages": site_image_list(), "manager": manager_diagnostics()})
 
     def save_character(self, payload: dict[str, Any]) -> None:
         previous_id = payload.get("previousId") or None
