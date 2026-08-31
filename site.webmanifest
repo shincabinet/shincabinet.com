@@ -5,7 +5,5 @@
   "display": "standalone",
   "background_color": "#fbfaf6",
   "theme_color": "#fbfaf6",
-  "icons": [
-    { "src": "/assets/images/characters/shin/shin-chibi-icon-t.png?v=2", "sizes": "256x256", "type": "image/png" }
-  ]
+  "icons": []
 }

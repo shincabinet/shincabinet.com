@@ -271,3 +271,11 @@ https://images.shincabinet.com/i/img_9f73...?max=2048
 The original remains available through the same ID without `?max=`. Replacing or moving the backing file in the Pi Image Manager does not require a website commit because the ID is unchanged.
 
 Direct `https://images.shincabinet.com/...` URLs and `/assets/images/...` paths remain supported only to make migration gradual.
+
+## Image architecture
+
+Artwork binaries are not stored in this repository. Website content references stable `siteimg_...` IDs from `config/images.js`. The Site Manager's **Media library** maps those IDs to permanent Raspberry Pi `img_...` IDs from `images.shincabinet.com`.
+
+Configure the local Site Manager's Pi connection with the Tailscale Serve URL and Image Manager API token. The credentials are stored in `.site-manager.local.json`, which is ignored by Git.
+
+Use **Auto-match legacy paths** once after migrating existing artwork to the Pi. After that, normal character/reference/gallery editing uses website image selectors rather than manually entering image IDs.
