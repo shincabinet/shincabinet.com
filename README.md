@@ -157,14 +157,11 @@ The GUI can:
 - automatically create each character's `/characters/<id>/` profile page;
 - enable or disable existing site pages;
 - control whether pages appear in the navigation, footer, or home cards;
-- upload and browse image assets;
+- paste and browse image URLs hosted by the Raspberry Pi Image Manager;
 - change individual image assignments in Gallery entries, commission cards, character fields, and custom-page config without globally repointing the old asset;
 - group alternate versions under Gallery and character reference images;
-- show how many site references use each image and which files contain them;
-- replace an image in place while preserving its canonical filename when possible;
-- automatically update all references when a replacement changes image format/path;
-- repoint every reference from one image to another existing canonical asset;
-- safely delete unused images, or replace references before deleting an in-use image;
+- show how many site references use each image URL and which files contain them;
+- link Gallery, character, commission, adoptable, and custom-page slots directly to `https://images.shincabinet.com/...` URLs;
 - edit common site-wide text and status values;
 - regenerate `sitemap.xml` after page/character visibility changes.
 
@@ -178,7 +175,7 @@ Characters now support an `enabled` field. `enabled: false` keeps the character 
 
 Gallery artwork and character reference images can optionally have alternate versions (for example clothing on/off, accessories, censored/uncensored, or expression changes). The Gallery/reference grid still shows only the primary image. When the image is opened, the primary version and its alternates appear in a thumbnail strip below the large preview.
 
-Use **Site Manager → Artwork details** to add, remove, or reorder alternatives. Upload the image files first from **Images**, then assign them to the primary Gallery/reference entry. Alternative image paths are also exposed in **Image assignments**, so they participate in the same replace/repoint/reference tracking as every other managed image.
+Use the separate Raspberry Pi Image Manager to upload the files, copy each public `https://images.shincabinet.com/...` URL, then use **Site Manager → Artwork details** to add, remove, or reorder alternatives. Alternative image URLs are also exposed in **Image assignments**.
 
 ### Artist credits
 
@@ -192,8 +189,52 @@ The stored shape is optional and backward-compatible:
 "alternatives": [
   {
     "title": "Jacket off",
-    "image": "/assets/images/library/example-jacket-off.webp",
+    "image": "https://images.shincabinet.com/characters/example/reference/jacket-off.webp",
     "alt": "Character without the jacket"
   }
 ]
 ```
+
+
+## Remote image host
+
+Artwork storage is intentionally separate from this GitHub repository. The Raspberry Pi image manager owns the physical files under `/mnt/storage/shincabinet-images`, while this website stores only public image URLs and metadata.
+
+Preferred new references look like:
+
+```text
+https://images.shincabinet.com/gallery/example/primary.webp
+https://images.shincabinet.com/characters/shinji/reference/main.png
+```
+
+Use the separate `images.shincabinet.com-pimb4` Image Manager to upload, rename, move, or delete files. Copy the public URL from that manager and paste it into this Site Manager's character, artwork-detail, or image-assignment fields. The website Site Manager never writes new artwork into `assets/images/`.
+
+### Legacy migration
+
+Existing `/assets/images/...` references remain supported while the old repository artwork is migrated. If **Map legacy /assets/images paths to image host** is enabled, this:
+
+```text
+/assets/images/gallery/full/example.webp
+```
+
+is served from:
+
+```text
+https://images.shincabinet.com/gallery/full/example.webp
+```
+
+Do not enable that legacy mapping until the corresponding files are present on the Raspberry Pi. New direct `https://images.shincabinet.com/...` references work whether the legacy switch is on or off.
+
+The long-term target is for GitHub to contain no portfolio/reference artwork. Static branding assets can also be migrated to the image host once their HTML/manifest references are changed and their remote URLs are verified.
+
+### Maximum served resolution
+
+When **Use Cloudflare image transformations** is enabled, the public site requests a transformed URL bounded by the configured maximum dimension. A setting of `2048` means the served image fits within a `2048 × 2048` box, keeps its aspect ratio, and is never upscaled. The untouched original remains available on `images.shincabinet.com`, and gallery/reference dialogs expose an **Open original image** link.
+
+For example:
+
+```text
+https://images.shincabinet.com/cdn-cgi/image/fit=scale-down,width=2048,height=2048,format=auto,onerror=redirect/gallery/example/primary.webp
+```
+
+Cloudflare Image Transformations must be enabled for the `shincabinet.com` zone. If transformations are disabled or the maximum is `0`, the original remote image is served directly.

@@ -21,7 +21,7 @@
       <button data-view="variants">Artwork details</button>
       <button data-view="pages">Pages</button>
       <button data-view="assignments">Image assignments</button>
-      <button data-view="images">Images</button>
+      <button data-view="images">Image links</button>
       <button data-view="settings">Site settings</button>
     </nav>
     <div class="side-bottom"><a class="preview-link" href="/" target="_blank">Open live preview ↗</a></div>
@@ -32,9 +32,9 @@
       <div class="grid">
         <div class="card metric"><strong id="metric-characters">—</strong><span>published characters</span></div>
         <div class="card metric"><strong id="metric-pages">—</strong><span>published pages</span></div>
-        <div class="card metric"><strong id="metric-images">—</strong><span>image assets</span></div>
+        <div class="card metric"><strong id="metric-images">—</strong><span>referenced image links</span></div>
       </div>
-      <div class="section card"><h2>How this works</h2><p>This manager edits <code>assets/js/content.js</code> and <code>config/pages.js</code>, creates character profile folders automatically, and regenerates <code>sitemap.xml</code>. The site preview runs from the same local server, so refresh it after saving.</p></div>
+      <div class="section card"><h2>How this works</h2><p>This manager edits <code>assets/js/content.js</code> and <code>config/pages.js</code>, creates character profile folders automatically, and regenerates <code>sitemap.xml</code>. Artwork files are managed separately on the Raspberry Pi; paste <code>https://images.shincabinet.com/…</code> URLs into image fields here.</p></div>
     </section>
 
     <section class="view" id="view-characters">
@@ -76,57 +76,20 @@
     </section>
 
     <section class="view" id="view-images">
-      <div class="topline"><div><h1>Images</h1><p>Browse, replace, repoint, or remove canonical assets. Reference changes are applied site-wide.</p></div></div>
-      <div class="card upload">
-        <div class="field"><span>Image file</span><input class="input" type="file" id="image-upload" accept="image/png,image/jpeg,image/webp,image/gif,image/avif"></div>
-        <div class="field"><span>Character folder <span class="help">optional</span></span><select id="image-character" class="input"><option value="">General library</option></select></div>
-        <button class="btn primary" id="upload-image">Upload new image</button>
-      </div>
+      <div class="topline"><div><h1>Image links</h1><p>Referenced artwork URLs used by the website. Upload, rename, move, or delete physical files with the Raspberry Pi Image Manager.</p></div></div>
+      <div class="card"><strong>Image storage is external.</strong><p class="muted" style="margin-bottom:0">New artwork should use direct <code>https://images.shincabinet.com/…</code> URLs. Legacy <code>/assets/images/…</code> references remain visible while you migrate existing artwork.</p></div>
       <div class="section image-grid" id="image-grid"></div>
     </section>
 
-    <dialog class="image-dialog" id="image-manager-dialog">
-      <div class="image-dialog-inner">
-        <div class="topline">
-          <div><h2 style="margin:0">Manage image</h2><p id="image-manage-path"></p></div>
-          <button class="btn" type="button" id="image-dialog-close">Close</button>
-        </div>
-        <div class="image-dialog-preview">
-          <img id="image-manage-preview" alt="Selected site asset">
-          <div>
-            <strong id="image-reference-summary"></strong>
-            <div class="usage-list" id="image-reference-list"></div>
-          </div>
-        </div>
-
-        <div class="subsection">
-          <h3>Replace the file</h3>
-          <p class="muted">Choose new artwork. If the format stays the same, the canonical filename is preserved. If the format changes, all references are rewritten to the new extension.</p>
-          <div class="upload">
-            <div class="field"><span>Replacement image</span><input class="input" type="file" id="image-replace-upload" accept="image/png,image/jpeg,image/webp,image/gif,image/avif"></div>
-            <button class="btn primary" type="button" id="replace-image">Replace file</button>
-          </div>
-        </div>
-
-        <div class="subsection">
-          <h3>Point references at another asset</h3>
-          <p class="muted">This changes every use of the current image to an existing canonical image. The current file is kept until you delete it.</p>
-          <div class="upload">
-            <div class="field"><span>Replacement asset</span><select class="input" id="image-repoint-target"><option value="">Choose another image…</option></select></div>
-            <button class="btn" type="button" id="repoint-image">Update references</button>
-          </div>
-        </div>
-
-        <div class="danger-zone">
-          <span><strong>Delete image</strong><br><span class="muted" id="image-delete-help">Unused images can be deleted immediately.</span></span>
-          <button class="btn danger" type="button" id="delete-image">Delete image</button>
-        </div>
-      </div>
-    </dialog>
-
     <section class="view" id="view-settings">
       <div class="topline"><div><h1>Site settings</h1><p>Common site-wide text and status values.</p></div><button class="btn primary" id="save-site">Save site settings</button></div>
-      <div class="editor"><div class="form-grid" id="site-fields"></div></div>
+      <div class="editor"><div class="form-grid" id="site-fields"></div>
+        <div class="subsection">
+          <h3>Remote image hosting</h3>
+          <p class="muted">New artwork should be linked directly with <code>https://images.shincabinet.com/…</code> URLs. The legacy mapping switch below exists only so old <code>/assets/images/…</code> references can be served from the Pi after you copy them there.</p>
+          <div class="form-grid" id="media-fields"></div>
+        </div>
+      </div>
     </section>
   </main>
 </div>
@@ -135,11 +98,11 @@
 let state={content:{site:{},characters:[]},pages:{items:[]},images:[],imageAssignments:[]};
 let selectedId=null;
 let editingNew=false;
-let selectedImagePath=null;
 const $=(q,root=document)=>root.querySelector(q);
 const $$=(q,root=document)=>[...root.querySelectorAll(q)];
 const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
 const cleanPath=p=>String(p||'').replace(/\?v=\d+$/,'');
+function managerImageUrl(path){const clean=cleanPath(path),item=(state.images||[]).find(i=>i.path===clean);return item?.previewUrl||clean}
 function notify(message,error=false){const el=$('#status');el.textContent=message;el.className='status show'+(error?' error':'');clearTimeout(notify.t);notify.t=setTimeout(()=>el.className='status',2800)}
 async function api(path,body){const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.error||'Save failed');return d}
 async function loadState(showNotice=true){try{const r=await fetch('/api/state',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Could not load site');state=d;renderAll();if(showNotice)notify('Site files loaded')}catch(e){notify(e.message,true)}}
@@ -149,15 +112,14 @@ function renderMetrics(){const chars=(state.content.characters||[]).filter(c=>c.
 $$('.nav button').forEach(btn=>btn.addEventListener('click',()=>{$$('.nav button').forEach(b=>b.classList.toggle('active',b===btn));$$('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+btn.dataset.view))}));
 $('#reload-state').addEventListener('click',loadState);
 
-function renderCharacterList(){const term=$('#character-search').value.trim().toLowerCase();const list=$('#character-items');const chars=(state.content.characters||[]).filter(c=>!term||`${c.name} ${c.id} ${c.species||''}`.toLowerCase().includes(term));list.innerHTML=chars.map(c=>`<button class="character-item ${selectedId===c.id?'active':''}" data-id="${esc(c.id)}"><img src="${esc(cleanPath(c.image))}" alt=""><span><strong>${esc(c.name)}</strong><small>${esc(c.species||c.id)}</small></span><i class="dot ${c.enabled!==false?'on':''}" title="${c.enabled!==false?'Published':'Hidden'}"></i></button>`).join('')||'<div class="editor-empty">No characters found.</div>';$$('.character-item',list).forEach(b=>b.addEventListener('click',()=>openCharacter(b.dataset.id)));const sel=$('#image-character');sel.innerHTML='<option value="">General library</option>'+state.content.characters.map(c=>`<option value="${esc(c.id)}">${esc(c.name)}</option>`).join('')}
+function renderCharacterList(){const term=$('#character-search').value.trim().toLowerCase();const list=$('#character-items');const chars=(state.content.characters||[]).filter(c=>!term||`${c.name} ${c.id} ${c.species||''}`.toLowerCase().includes(term));list.innerHTML=chars.map(c=>`<button class="character-item ${selectedId===c.id?'active':''}" data-id="${esc(c.id)}"><img src="${esc(managerImageUrl(c.image))}" alt=""><span><strong>${esc(c.name)}</strong><small>${esc(c.species||c.id)}</small></span><i class="dot ${c.enabled!==false?'on':''}" title="${c.enabled!==false?'Published':'Hidden'}"></i></button>`).join('')||'<div class="editor-empty">No characters found.</div>';$$('.character-item',list).forEach(b=>b.addEventListener('click',()=>openCharacter(b.dataset.id)))}
 $('#character-search').addEventListener('input',renderCharacterList);
 $('#new-character').addEventListener('click',()=>{editingNew=true;selectedId=null;renderCharacterEditor(defaultCharacter());renderCharacterList()});
 function defaultCharacter(){return{enabled:false,id:'',name:'',path:'',pronouns:'',species:'',role:'Character',category:'secondary',featured:false,image:'',alt:'',tagline:'',bio:[],tags:[],facts:[],palette:[],personality:[],designNotes:[],likes:[],dislikes:[],references:[],links:[]}}
 function openCharacter(id){editingNew=false;selectedId=id;const c=state.content.characters.find(x=>x.id===id);renderCharacterEditor(JSON.parse(JSON.stringify(c)));renderCharacterList()}
-function imageOptions(value=''){const paths=state.images.map(i=>i.path);if(value&&!paths.includes(cleanPath(value)))paths.unshift(cleanPath(value));return '<option value="">Choose an image…</option>'+paths.map(p=>`<option value="${esc(p)}" ${cleanPath(value)===p?'selected':''}>${esc(p)}</option>`).join('')}
 function lines(arr){return (arr||[]).join('\n')}
 function paragraphs(arr){return (arr||[]).join('\n\n')}
-function repeaterRows(type,items){if(type==='facts')return (items||[]).map(x=>`<div class="repeat-row" data-row><input class="input" data-k="label" placeholder="Label" value="${esc(x.label)}"><input class="input" data-k="value" placeholder="Value" value="${esc(x.value)}"><button class="icon-btn" data-remove type="button">×</button></div>`).join('');if(type==='palette')return (items||[]).map(x=>`<div class="repeat-row" data-row><input class="input" data-k="name" placeholder="Color name" value="${esc(x.name)}"><input class="input" data-k="hex" placeholder="#FFFFFF" value="${esc(x.hex)}"><button class="icon-btn" data-remove type="button">×</button></div>`).join('');if(type==='references')return (items||[]).map(x=>`<div class="repeat-row ref" data-row data-alternatives="${esc(JSON.stringify(x.alternatives||[]))}"><input class="input" data-k="title" placeholder="Title" value="${esc(x.title)}"><select class="input" data-k="image">${imageOptions(x.image)}</select><label class="toggle-cell"><input type="checkbox" data-k="mature" ${x.mature?'checked':''}> Mature</label><button class="icon-btn" data-remove type="button">×</button><input class="input" style="grid-column:1/-2" data-k="alt" placeholder="Alt text" value="${esc(x.alt)}"><input class="input" data-k="artist" placeholder="Artist credit (optional)" value="${esc(x.artist||'')}"><input class="input" style="grid-column:2/-2" data-k="artistUrl" placeholder="Artist link (optional)" value="${esc(x.artistUrl||'')}"></div>`).join('');if(type==='links')return (items||[]).map(x=>`<div class="repeat-row three" data-row><input class="input" data-k="label" placeholder="Label" value="${esc(x.label)}"><input class="input" data-k="display" placeholder="Display text" value="${esc(x.display||'')}"><input class="input" data-k="url" placeholder="https://…" value="${esc(x.url)}"><button class="icon-btn" data-remove type="button">×</button></div>`).join('');return''}
+function repeaterRows(type,items){if(type==='facts')return (items||[]).map(x=>`<div class="repeat-row" data-row><input class="input" data-k="label" placeholder="Label" value="${esc(x.label)}"><input class="input" data-k="value" placeholder="Value" value="${esc(x.value)}"><button class="icon-btn" data-remove type="button">×</button></div>`).join('');if(type==='palette')return (items||[]).map(x=>`<div class="repeat-row" data-row><input class="input" data-k="name" placeholder="Color name" value="${esc(x.name)}"><input class="input" data-k="hex" placeholder="#FFFFFF" value="${esc(x.hex)}"><button class="icon-btn" data-remove type="button">×</button></div>`).join('');if(type==='references')return (items||[]).map(x=>`<div class="repeat-row ref" data-row data-alternatives="${esc(JSON.stringify(x.alternatives||[]))}"><input class="input" data-k="title" placeholder="Title" value="${esc(x.title)}"><input class="input" data-k="image" type="url" placeholder="https://images.shincabinet.com/…" value="${esc(x.image||'')}"><label class="toggle-cell"><input type="checkbox" data-k="mature" ${x.mature?'checked':''}> Mature</label><button class="icon-btn" data-remove type="button">×</button><input class="input" style="grid-column:1/-2" data-k="alt" placeholder="Alt text" value="${esc(x.alt)}"><input class="input" data-k="artist" placeholder="Artist credit (optional)" value="${esc(x.artist||'')}"><input class="input" style="grid-column:2/-2" data-k="artistUrl" placeholder="Artist link (optional)" value="${esc(x.artistUrl||'')}"></div>`).join('');if(type==='links')return (items||[]).map(x=>`<div class="repeat-row three" data-row><input class="input" data-k="label" placeholder="Label" value="${esc(x.label)}"><input class="input" data-k="display" placeholder="Display text" value="${esc(x.display||'')}"><input class="input" data-k="url" placeholder="https://…" value="${esc(x.url)}"><button class="icon-btn" data-remove type="button">×</button></div>`).join('');return''}
 function renderCharacterEditor(c){const ed=$('#character-editor');ed.innerHTML=`
 <div class="topline"><div><h2 style="margin:0">${editingNew?'New character':esc(c.name)}</h2><p>${editingNew?'Create the profile, then publish it when ready.':`/characters/${esc(c.id)}/`}</p></div><div class="actions"><button class="btn" id="char-preview" ${editingNew?'disabled':''}>Preview ↗</button><button class="btn primary" id="save-character">Save character</button></div></div>
 <div class="form-grid">
@@ -169,7 +131,7 @@ function renderCharacterEditor(c){const ed=$('#character-editor');ed.innerHTML=`
 <div class="field"><span>Pronouns</span><input class="input" id="c-pronouns" value="${esc(c.pronouns)}"></div>
 <div class="field"><span>Role</span><input class="input" id="c-role" value="${esc(c.role)}" placeholder="Primary character"></div>
 <div class="field"><span>Category</span><input class="input" id="c-category" value="${esc(c.category)}" placeholder="primary"></div>
-<div class="field full"><span>Main image</span><select class="input" id="c-image">${imageOptions(c.image)}</select><span class="help">Use one canonical image here and reuse this same path elsewhere when appropriate.</span></div>
+<div class="field full"><span>Main image URL</span><input class="input" id="c-image" value="${esc(c.image||'')}" placeholder="https://images.shincabinet.com/characters/…"><span class="help">Upload the image with the Raspberry Pi Image Manager, copy its public URL, and paste it here.</span></div>
 <div class="field full"><span>Image alt text</span><input class="input" id="c-alt" value="${esc(c.alt)}"></div>
 <div class="field full"><span>Tagline</span><input class="input" id="c-tagline" value="${esc(c.tagline)}"></div>
 <div class="field full"><span>Bio <span class="help">blank line = new paragraph</span></span><textarea id="c-bio">${esc(paragraphs(c.bio))}</textarea></div>
@@ -194,12 +156,12 @@ function variantDescriptors(){
   (state.content.characters||[]).forEach(c=>(c.references||[]).forEach((r,index)=>sets.push({kind:'reference',characterId:c.id,referenceIndex:index,label:r.title||`${c.name} reference ${index+1}`,context:`${c.name} · Character reference`,image:r.image,alternatives:r.alternatives||[],artist:r.artist||'',artistUrl:r.artistUrl||''})));
   return sets;
 }
-function variantRows(items=[]){return items.map((x,index)=>`<div class="variant-row" data-variant-row data-index="${index}"><input class="input" data-v="title" placeholder="Version label" value="${esc(x.title||`Alternative ${index+1}`)}"><select class="input" data-v="image">${imageOptions(x.image)}</select><input class="input" data-v="alt" placeholder="Alt text (optional)" value="${esc(x.alt||'')}"><div class="variant-row-actions"><button class="icon-btn" type="button" data-variant-up title="Move up">↑</button><button class="icon-btn" type="button" data-variant-down title="Move down">↓</button><button class="icon-btn" type="button" data-variant-remove title="Remove">×</button></div></div>`).join('')}
+function variantRows(items=[]){return items.map((x,index)=>`<div class="variant-row" data-variant-row data-index="${index}"><input class="input" data-v="title" placeholder="Version label" value="${esc(x.title||`Alternative ${index+1}`)}"><input class="input" data-v="image" type="url" placeholder="https://images.shincabinet.com/…" value="${esc(x.image||'')}"><input class="input" data-v="alt" placeholder="Alt text (optional)" value="${esc(x.alt||'')}"><div class="variant-row-actions"><button class="icon-btn" type="button" data-variant-up title="Move up">↑</button><button class="icon-btn" type="button" data-variant-down title="Move down">↓</button><button class="icon-btn" type="button" data-variant-remove title="Remove">×</button></div></div>`).join('')}
 function renderVariants(){
   const root=$('#variant-sets');if(!root)return;
   const term=$('#variant-search').value.trim().toLowerCase(),source=$('#variant-source').value;
   const sets=variantDescriptors().filter(x=>(!source||x.kind===source)&&(!term||`${x.label} ${x.context} ${x.image} ${x.artist}`.toLowerCase().includes(term)));
-  root.innerHTML=sets.map(x=>`<article class="variant-set" data-kind="${x.kind}" ${x.id?`data-id="${esc(x.id)}"`:''} ${x.characterId?`data-character-id="${esc(x.characterId)}" data-reference-index="${x.referenceIndex}"`:''} data-primary-image="${esc(cleanPath(x.image))}"><div class="variant-set-head"><img loading="lazy" src="${esc(cleanPath(x.image))}?manager=${Date.now()}" alt=""><div><strong>${esc(x.label)}</strong><small>${esc(x.context)}</small><small><code>${esc(x.image)}</code></small></div><div class="actions"><button class="btn primary small" type="button" data-save-variants>Save details</button></div></div><div class="artwork-credit-fields"><label class="field"><span>Artist credit <span class="help">optional</span></span><input class="input" data-credit="artist" placeholder="Artist name or handle" value="${esc(x.artist)}"></label><label class="field"><span>Artist link <span class="help">optional</span></span><input class="input" data-credit="artistUrl" placeholder="https://artist-profile.example" value="${esc(x.artistUrl)}"></label></div><div class="variant-rows" data-variant-rows>${variantRows(x.alternatives)}</div>${x.alternatives.length?'':'<div class="variant-empty" data-variant-empty>No alternatives yet. The primary image is the only version shown.</div>'}<div class="variant-set-footer"><span class="muted">Credit applies to the primary image and all of its alternate versions. Blank credit fields stay hidden on the site.</span><button class="btn small" type="button" data-add-variant>+ Alternative</button></div></article>`).join('')||'<div class="card muted">No matching Gallery or character reference images.</div>';
+  root.innerHTML=sets.map(x=>`<article class="variant-set" data-kind="${x.kind}" ${x.id?`data-id="${esc(x.id)}"`:''} ${x.characterId?`data-character-id="${esc(x.characterId)}" data-reference-index="${x.referenceIndex}"`:''} data-primary-image="${esc(cleanPath(x.image))}"><div class="variant-set-head"><img loading="lazy" src="${esc(managerImageUrl(x.image))}?manager=${Date.now()}" alt=""><div><strong>${esc(x.label)}</strong><small>${esc(x.context)}</small><small><code>${esc(x.image)}</code></small></div><div class="actions"><button class="btn primary small" type="button" data-save-variants>Save details</button></div></div><div class="artwork-credit-fields"><label class="field"><span>Artist credit <span class="help">optional</span></span><input class="input" data-credit="artist" placeholder="Artist name or handle" value="${esc(x.artist)}"></label><label class="field"><span>Artist link <span class="help">optional</span></span><input class="input" data-credit="artistUrl" placeholder="https://artist-profile.example" value="${esc(x.artistUrl)}"></label></div><div class="variant-rows" data-variant-rows>${variantRows(x.alternatives)}</div>${x.alternatives.length?'':'<div class="variant-empty" data-variant-empty>No alternatives yet. The primary image is the only version shown.</div>'}<div class="variant-set-footer"><span class="muted">Credit applies to the primary image and all of its alternate versions. Blank credit fields stay hidden on the site.</span><button class="btn small" type="button" data-add-variant>+ Alternative</button></div></article>`).join('')||'<div class="card muted">No matching Gallery or character reference images.</div>';
   $$('[data-add-variant]',root).forEach(btn=>btn.addEventListener('click',()=>{const card=btn.closest('.variant-set'),box=$('[data-variant-rows]',card),count=$$('[data-variant-row]',box).length;box.insertAdjacentHTML('beforeend',variantRows([{title:`Alternative ${count+1}`,image:'',alt:''}]));const empty=$('[data-variant-empty]',card);if(empty)empty.remove();markVariantCard(card);wireVariantCard(card)}));
   $$('.variant-set',root).forEach(wireVariantCard);
 }
@@ -228,7 +190,6 @@ function findPage(items,id){for(const p of items){if(p.id===id)return p;const c=
 $('#save-pages').addEventListener('click',async()=>{try{$$('.page-row').forEach(row=>{const p=findPage(state.pages.items,row.dataset.pageId);p.enabled=$('[data-p="enabled"]',row).checked;p.menu=$('[data-p="menu"]',row).checked;p.footer=$('[data-p="footer"]',row).checked;p.homeCard=p.homeCard||{};p.homeCard.show=$('[data-p="home"]',row).checked});await api('/api/pages/save',{pages:state.pages});renderMetrics();notify('Page settings saved')}catch(e){notify(e.message,true)}});
 
 
-function assignmentImageOptions(value=''){const current=cleanPath(value);return state.images.map(i=>`<option value="${esc(i.path)}" ${i.path===current?'selected':''}>${esc(i.path)}</option>`).join('')}
 function assignmentKey(a){return `${a.source}|${JSON.stringify(a.path)}`}
 function renderAssignments(){
   const assignments=state.imageAssignments||[];
@@ -240,8 +201,8 @@ function renderAssignments(){
   const filtered=assignments.map((a,index)=>({...a,_index:index})).filter(a=>(!group||a.group===group)&&(!term||`${a.group} ${a.label} ${a.configFile} ${a.image}`.toLowerCase().includes(term)));
   const byGroup=new Map();for(const a of filtered){if(!byGroup.has(a.group))byGroup.set(a.group,[]);byGroup.get(a.group).push(a)}
   const root=$('#assignment-groups');
-  root.innerHTML=[...byGroup.entries()].map(([g,items])=>`<section class="assignment-group"><h2>${esc(g)} <span class="muted">(${items.length})</span></h2><div class="assignment-list">${items.map(a=>`<div class="assignment-row" data-assignment-index="${a._index}" data-original="${esc(a.cleanImage||cleanPath(a.image))}"><img loading="lazy" src="${esc(a.cleanImage||cleanPath(a.image))}?manager=${Date.now()}" alt=""><div class="assignment-info"><strong>${esc(a.label)}</strong><small>${esc(a.configFile)}</small></div><div class="assignment-control"><select class="input" data-assignment-select>${assignmentImageOptions(a.image)}</select><code>${esc(a.image)}</code></div><div class="actions"><button class="btn small" type="button" data-save-assignment>Save</button></div></div>`).join('')}</div></section>`).join('')||'<div class="card muted">No matching image assignments.</div>';
-  $$('[data-assignment-select]',root).forEach(sel=>sel.addEventListener('change',()=>{const row=sel.closest('.assignment-row');row.classList.toggle('changed',sel.value!==row.dataset.original);const img=$('img',row);img.src=sel.value+`?manager=${Date.now()}`}));
+  root.innerHTML=[...byGroup.entries()].map(([g,items])=>`<section class="assignment-group"><h2>${esc(g)} <span class="muted">(${items.length})</span></h2><div class="assignment-list">${items.map(a=>`<div class="assignment-row" data-assignment-index="${a._index}" data-original="${esc(a.cleanImage||cleanPath(a.image))}"><img loading="lazy" src="${esc(managerImageUrl(a.cleanImage||a.image))}?manager=${Date.now()}" alt=""><div class="assignment-info"><strong>${esc(a.label)}</strong><small>${esc(a.configFile)}</small></div><div class="assignment-control"><input class="input" type="url" data-assignment-select value="${esc(a.image)}" placeholder="https://images.shincabinet.com/…"><code>${esc(a.image)}</code></div><div class="actions"><button class="btn small" type="button" data-save-assignment>Save</button></div></div>`).join('')}</div></section>`).join('')||'<div class="card muted">No matching image assignments.</div>';
+  $$('[data-assignment-select]',root).forEach(sel=>sel.addEventListener('change',()=>{const row=sel.closest('.assignment-row');row.classList.toggle('changed',sel.value!==row.dataset.original);const img=$('img',row);img.src=managerImageUrl(sel.value)+`?manager=${Date.now()}`}));
   $$('[data-save-assignment]',root).forEach(btn=>btn.addEventListener('click',()=>saveAssignmentRow(btn.closest('.assignment-row'))));
 }
 async function saveAssignmentRow(row){try{const index=Number(row.dataset.assignmentIndex),a=state.imageAssignments[index],image=$('[data-assignment-select]',row).value;if(!a||!image)throw new Error('Choose an image.');await api('/api/image-assignment/save',{assignment:{source:a.source,path:a.path,image}});await loadState(false);notify(`Updated ${a.label}`)}catch(e){notify(e.message,true)}}
@@ -251,20 +212,23 @@ $('#assignment-group').addEventListener('change',renderAssignments);
 $('#save-all-assignments').addEventListener('click',saveAllAssignments);
 
 function formatBytes(n){if(n<1024)return `${n} B`;if(n<1024*1024)return `${(n/1024).toFixed(1)} KB`;return `${(n/1024/1024).toFixed(1)} MB`}
-function renderImages(){const grid=$('#image-grid');grid.innerHTML=state.images.map(i=>`<article class="image-card"><img loading="lazy" src="${esc(i.path)}?manager=${Date.now()}" alt=""><div><code>${esc(i.path)}</code><div class="image-meta"><span class="usage-badge">${i.referenceCount||0} reference${(i.referenceCount||0)===1?'':'s'} · ${formatBytes(i.size||0)}</span></div><div class="actions"><button class="btn small" type="button" data-manage-image="${esc(i.path)}">Manage</button></div></div></article>`).join('')||'<p class="muted">No image files found.</p>';$$('[data-manage-image]',grid).forEach(b=>b.addEventListener('click',()=>openImageManager(b.dataset.manageImage)))}
-function currentImage(){return state.images.find(i=>i.path===selectedImagePath)}
-function refreshImageDialog(){const image=currentImage();if(!image)return $('#image-manager-dialog').close();$('#image-manage-path').textContent=image.path;$('#image-manage-preview').src=image.path+`?manager=${Date.now()}`;const count=image.referenceCount||0;$('#image-reference-summary').textContent=count?`${count} site reference${count===1?'':'s'} use this image.`:'This image is currently unused.';$('#image-reference-list').innerHTML=(image.references||[]).map(r=>`<div class="usage-item"><code>${esc(r.file)}</code><span>${r.count}×</span></div>`).join('')||'<span class="muted">No references found.</span>';const target=$('#image-repoint-target');target.innerHTML='<option value="">Choose another image…</option>'+state.images.filter(i=>i.path!==image.path).map(i=>`<option value="${esc(i.path)}">${esc(i.path)}</option>`).join('');$('#image-delete-help').textContent=count?'This image is in use. Select a replacement asset above before deleting; its references will be moved first.':'This image has no references and can be deleted safely.';$('#image-replace-upload').value=''}
-function openImageManager(path){selectedImagePath=path;refreshImageDialog();$('#image-manager-dialog').showModal()}
-$('#image-dialog-close').addEventListener('click',()=>$('#image-manager-dialog').close());
-$('#image-manager-dialog').addEventListener('click',e=>{if(e.target===$('#image-manager-dialog'))$('#image-manager-dialog').close()});
-$('#upload-image').addEventListener('click',()=>{const file=$('#image-upload').files[0];if(!file)return notify('Choose an image first',true);const reader=new FileReader();reader.onload=async()=>{try{const d=await api('/api/image/upload',{filename:file.name,characterId:$('#image-character').value,data:reader.result});state.images=d.images;renderImages();$('#image-upload').value='';notify(`Uploaded ${d.path}`)}catch(e){notify(e.message,true)}};reader.readAsDataURL(file)});
-$('#replace-image').addEventListener('click',()=>{const image=currentImage(),file=$('#image-replace-upload').files[0];if(!image)return;if(!file)return notify('Choose a replacement image first',true);const reader=new FileReader();reader.onload=async()=>{try{const d=await api('/api/image/replace',{path:image.path,filename:file.name,data:reader.result});selectedImagePath=d.path;await loadState(false);refreshImageDialog();const extra=d.updatedReferences?` and updated ${d.updatedReferences} reference${d.updatedReferences===1?'':'s'}`:'';notify(`Replaced image${extra}`)}catch(e){notify(e.message,true)}};reader.readAsDataURL(file)});
-$('#repoint-image').addEventListener('click',async()=>{const image=currentImage(),replacement=$('#image-repoint-target').value;if(!image)return;if(!replacement)return notify('Choose a replacement asset first',true);if(!confirm(`Change every reference from\n${image.path}\n\nto\n${replacement}?\n\nThe original file will be kept.`))return;try{const d=await api('/api/image/repoint',{path:image.path,replacementPath:replacement});await loadState(false);selectedImagePath=image.path;refreshImageDialog();notify(`Updated ${d.updatedReferences} reference${d.updatedReferences===1?'':'s'}`)}catch(e){notify(e.message,true)}});
-$('#delete-image').addEventListener('click',async()=>{const image=currentImage();if(!image)return;const count=image.referenceCount||0,replacement=$('#image-repoint-target').value;if(count&&!replacement)return notify('This image is still in use. Choose a replacement asset first.',true);const detail=count?`\n\n${count} reference${count===1?'':'s'} will be moved to:\n${replacement}`:'';if(!confirm(`Delete ${image.path}?${detail}\n\nThis removes the physical image file.`))return;try{const d=await api('/api/image/delete',{path:image.path,replacementPath:replacement||''});selectedImagePath=null;$('#image-manager-dialog').close();await loadState(false);notify(count?`Deleted image and updated ${d.updatedReferences} references`:'Deleted image')}catch(e){notify(e.message,true)}});
+function renderImages(){
+  const grid=$('#image-grid');
+  grid.innerHTML=state.images.map(i=>`<article class="image-card"><img loading="lazy" src="${esc(i.previewUrl||i.path)}" alt=""><div><code>${esc(i.path)}</code><div class="image-meta"><span class="usage-badge">${i.referenceCount||0} reference${(i.referenceCount||0)===1?'':'s'}${i.existsLocally?` · legacy local ${formatBytes(i.size||0)}`:' · remote link'}</span></div><div class="actions"><a class="btn small" href="${esc(i.previewUrl||i.path)}" target="_blank" rel="noopener">Open ↗</a></div></div></article>`).join('')||'<p class="muted">No image links found.</p>';
+}
 
 const siteFields=[['name','Site name'],['shortName','Short name'],['artistName','Artist name'],['handle','Handle'],['intro','Homepage intro'],['profileBlurb','Profile blurb'],['email','Email'],['commissionStatus','Commission status'],['commissionNote','Commission note'],['fursuitStatus','Fursuit status'],['fursuitNote','Fursuit note']];
-function renderSettings(){const s=state.content.site||{};$('#site-fields').innerHTML=siteFields.map(([k,l])=>`<div class="field ${['intro','profileBlurb','commissionNote','fursuitNote'].includes(k)?'full':''}"><span>${esc(l)}</span><input class="input" data-site="${k}" value="${esc(s[k]||'')}"></div>`).join('')}
-$('#save-site').addEventListener('click',async()=>{try{const site={};$$('[data-site]').forEach(i=>site[i.dataset.site]=i.value);await api('/api/site/save',{site});Object.assign(state.content.site,site);notify('Site settings saved')}catch(e){notify(e.message,true)}});
+function renderSettings(){
+  const s=state.content.site||{},m=s.media||{};
+  $('#site-fields').innerHTML=siteFields.map(([k,l])=>`<div class="field ${['intro','profileBlurb','commissionNote','fursuitNote'].includes(k)?'full':''}"><span>${esc(l)}</span><input class="input" data-site="${k}" value="${esc(s[k]||'')}"></div>`).join('');
+  $('#media-fields').innerHTML=`
+    <div class="switch-row"><label for="media-remote">Map legacy /assets/images paths to image host</label><input type="checkbox" id="media-remote" ${m.remoteImagesEnabled===true?'checked':''}></div>
+    <div class="switch-row"><label for="media-transform">Use Cloudflare image transformations</label><input type="checkbox" id="media-transform" ${m.cloudflareTransformationsEnabled!==false?'checked':''}></div>
+    <label class="field full"><span>Image host</span><input class="input" id="media-host" value="${esc(m.imageHost||'https://images.shincabinet.com')}" placeholder="https://images.shincabinet.com"><span class="help">Only affects legacy paths. Direct https://images.shincabinet.com URLs always work.</span></label>
+    <label class="field"><span>Maximum served dimension <span class="help">pixels; 0 disables resizing</span></span><input class="input" id="media-max-dimension" type="number" min="0" max="12000" step="1" value="${esc(m.maxImageDimension??2048)}"></label>
+    <div class="field"><span>What this does</span><div class="muted">The browser receives a version bounded by this width × height, preserving aspect ratio and never upscaling. The original remains on the image host and is linked from artwork dialogs.</div></div>`;
+}
+$('#save-site').addEventListener('click',async()=>{try{const site={};$$('[data-site]').forEach(i=>site[i.dataset.site]=i.value);site.media={remoteImagesEnabled:$('#media-remote').checked,imageHost:$('#media-host').value.trim(),maxImageDimension:Number($('#media-max-dimension').value||0),cloudflareTransformationsEnabled:$('#media-transform').checked};await api('/api/site/save',{site});Object.assign(state.content.site,site);notify('Site settings saved')}catch(e){notify(e.message,true)}});
 loadState();
 </script>
 </body>

@@ -18,6 +18,12 @@ window.SHIN_SITE = {
     "commissionNote": "Prices are starting rates in USD.",
     "fursuitStatus": "Not published",
     "fursuitNote": "This page is not published yet.",
+    "media": {
+      "remoteImagesEnabled": false,
+      "imageHost": "https://images.shincabinet.com",
+      "maxImageDimension": 2048,
+      "cloudflareTransformationsEnabled": true
+    },
     "specialties": [
       "Character art",
       "Reference sheets",

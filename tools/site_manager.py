@@ -119,16 +119,47 @@ def write_character_page(character: dict[str, Any], previous_id: str | None = No
 
 
 def normalize_image_url(value: str) -> str:
-    """Return a canonical /assets/images/... path without query/hash data."""
-    value = unquote(str(value or "").strip())
-    value = value.split("#", 1)[0].split("?", 1)[0]
-    if not value.startswith("/assets/images/"):
-        raise ValueError("Image path must live under /assets/images/.")
-    return value
+    """Normalize a website image reference.
+
+    New artwork should use an absolute HTTPS URL on the configured image host.
+    Legacy /assets/images/... paths remain accepted during migration. Query strings
+    and fragments are intentionally removed from manager-owned references.
+    """
+    raw = str(value or "").strip()
+    if not raw:
+        raise ValueError("Image URL is required.")
+
+    if raw.startswith("/assets/images/"):
+        clean = unquote(raw.split("#", 1)[0].split("?", 1)[0])
+        if Path(clean).suffix.lower() not in IMAGE_EXTENSIONS:
+            raise ValueError("Unsupported image type.")
+        return clean
+
+    parsed = urlparse(raw)
+    if parsed.scheme.lower() != "https" or not parsed.netloc or parsed.username or parsed.password:
+        raise ValueError("Image URL must use https:// or a legacy /assets/images/... path.")
+    if Path(unquote(parsed.path)).suffix.lower() not in IMAGE_EXTENSIONS:
+        raise ValueError("Image URL must end in PNG, JPG, JPEG, WebP, GIF, or AVIF.")
+    # Keep the exact escaped path but remove query/fragment data from canonical links.
+    return f"https://{parsed.netloc}{parsed.path}"
+
+
+def is_remote_image_url(value: str) -> bool:
+    return str(value or "").lower().startswith("https://")
+
+
+def looks_like_image_reference(value: Any) -> bool:
+    try:
+        normalize_image_url(str(value or ""))
+        return True
+    except ValueError:
+        return False
 
 
 def image_file_from_url(value: str, require_exists: bool = True) -> Path:
     clean = normalize_image_url(value)
+    if is_remote_image_url(clean):
+        raise ValueError("Remote images are managed by images.shincabinet.com, not the website repository.")
     base = (ROOT / "assets" / "images").resolve()
     target = (ROOT / clean.lstrip("/")).resolve()
     if base not in target.parents:
@@ -171,7 +202,8 @@ def find_image_references(image_url: str) -> list[dict[str, Any]]:
 
 
 def image_mime_for_url(image_url: str) -> str:
-    extension = Path(normalize_image_url(image_url)).suffix.lower()
+    clean = normalize_image_url(image_url)
+    extension = Path(urlparse(clean).path if is_remote_image_url(clean) else clean).suffix.lower()
     return {
         ".png": "image/png",
         ".jpg": "image/jpeg",
@@ -250,21 +282,88 @@ def decode_image_data(data_url: str) -> bytes:
     return binary
 
 
+def media_settings() -> dict[str, Any]:
+    try:
+        _, content = read_assignment(CONTENT_FILE)
+        media = content.get("site", {}).get("media", {})
+        return media if isinstance(media, dict) else {}
+    except Exception:
+        return {}
+
+
+def public_original_image_url(image_url: str) -> str:
+    clean = normalize_image_url(image_url)
+    if is_remote_image_url(clean):
+        return clean
+    media = media_settings()
+    host = str(media.get("imageHost") or "").strip().rstrip("/")
+    if media.get("remoteImagesEnabled") is True and host:
+        return f"{host}/{clean.removeprefix('/assets/images/')}"
+    return clean
+
+
+def validate_image_reference(image_url: str) -> str:
+    """Validate a direct image-host URL or a legacy local image path."""
+    clean = normalize_image_url(image_url)
+    media = media_settings()
+    host = str(media.get("imageHost") or "").strip().rstrip("/")
+
+    if is_remote_image_url(clean):
+        if not host:
+            raise ValueError("Configure the image host in Site settings first.")
+        expected = urlparse(host)
+        actual = urlparse(clean)
+        if actual.scheme.lower() != "https" or actual.netloc.lower() != expected.netloc.lower():
+            raise ValueError(f"Image URL must be hosted on {host}.")
+        return clean
+
+    target = image_file_from_url(clean, require_exists=False)
+    if target.exists() and target.is_file():
+        return clean
+    if media.get("remoteImagesEnabled") is True and host:
+        return clean
+    raise ValueError("Legacy image file does not exist locally and legacy remote mapping is disabled.")
+
+
+def referenced_image_urls() -> set[str]:
+    """Return image references used by runtime configuration."""
+    local_pattern = re.compile(r"/assets/images/[A-Za-z0-9_./%+@() -]+\.(?:png|jpe?g|webp|gif|avif)", re.IGNORECASE)
+    remote_pattern = re.compile(r"https://[^\s\"'<>]+\.(?:png|jpe?g|webp|gif|avif)(?:[?#][^\s\"'<>]*)?", re.IGNORECASE)
+    result: set[str] = set()
+    for path in (CONTENT_FILE, CUSTOM_PAGES_FILE, PAGES_FILE):
+        if not path.exists():
+            continue
+        text = path.read_text(encoding="utf-8")
+        for pattern in (local_pattern, remote_pattern):
+            for match in pattern.finditer(text):
+                try:
+                    result.add(normalize_image_url(match.group(0)))
+                except ValueError:
+                    pass
+    return result
+
+
 def list_images() -> list[dict[str, Any]]:
     base = ROOT / "assets" / "images"
+    physical: dict[str, Path] = {}
+    if base.exists():
+        for path in sorted(base.rglob("*")):
+            if not path.is_file() or path.suffix.lower() not in IMAGE_EXTENSIONS:
+                continue
+            physical["/" + path.relative_to(ROOT).as_posix()] = path
+
+    all_paths = set(physical) | referenced_image_urls()
     result: list[dict[str, Any]] = []
-    if not base.exists():
-        return result
-    for path in sorted(base.rglob("*")):
-        if not path.is_file() or path.suffix.lower() not in IMAGE_EXTENSIONS:
-            continue
-        rel = "/" + path.relative_to(ROOT).as_posix()
-        stat = path.stat()
+    for rel in sorted(all_paths):
+        path = physical.get(rel)
         references = find_image_references(rel)
         result.append({
             "path": rel,
-            "name": path.name,
-            "size": stat.st_size,
+            "name": Path(rel).name,
+            "size": path.stat().st_size if path else 0,
+            "existsLocally": path is not None,
+            "remoteOnly": path is None,
+            "previewUrl": public_original_image_url(rel),
             "referenceCount": sum(r["count"] for r in references),
             "references": references,
         })
@@ -314,7 +413,7 @@ def collect_image_assignments() -> list[dict[str, Any]]:
             if isinstance(value, dict):
                 for key, child in value.items():
                     child_path = path + [key]
-                    if key == "image" and isinstance(child, str) and child.startswith("/assets/images/"):
+                    if key == "image" and isinstance(child, str) and looks_like_image_reference(child):
                         group, label = _assignment_label(source, child_path, value)
                         results.append({
                             "source": source,
@@ -322,7 +421,7 @@ def collect_image_assignments() -> list[dict[str, Any]]:
                             "group": group,
                             "label": label,
                             "image": child,
-                            "cleanImage": child.split("#", 1)[0].split("?", 1)[0],
+                            "cleanImage": normalize_image_url(child),
                             "configFile": file_path.relative_to(ROOT).as_posix(),
                         })
                     else:
@@ -552,6 +651,26 @@ class Handler(SimpleHTTPRequestHandler):
         for key in ("name", "shortName", "artistName", "handle", "intro", "profileBlurb", "email", "commissionStatus", "commissionNote", "fursuitStatus", "fursuitNote"):
             if key in site:
                 existing[key] = site[key]
+
+        if "media" in site:
+            media = site.get("media")
+            if not isinstance(media, dict):
+                raise ValueError("Invalid media settings.")
+            image_host = str(media.get("imageHost") or "").strip().rstrip("/")
+            if image_host and not re.fullmatch(r"https://[^\s/]+(?:\.[^\s/]+)+", image_host, flags=re.IGNORECASE):
+                raise ValueError("Image host must be an HTTPS origin such as https://images.shincabinet.com.")
+            try:
+                max_dimension = int(media.get("maxImageDimension", 0) or 0)
+            except (TypeError, ValueError):
+                raise ValueError("Maximum image dimension must be a whole number.")
+            if max_dimension < 0 or max_dimension > 12000:
+                raise ValueError("Maximum image dimension must be between 0 and 12000 pixels.")
+            existing["media"] = {
+                "remoteImagesEnabled": bool(media.get("remoteImagesEnabled", False)),
+                "imageHost": image_host,
+                "maxImageDimension": max_dimension,
+                "cloudflareTransformationsEnabled": bool(media.get("cloudflareTransformationsEnabled", False)),
+            }
         write_assignment(CONTENT_FILE, variable, content, CONTENT_HEADER)
         json_response(self, 200, {"ok": True})
 
@@ -571,7 +690,7 @@ class Handler(SimpleHTTPRequestHandler):
             if not isinstance(raw, dict):
                 raise ValueError("Invalid alternative image entry.")
             image_url = normalize_image_url(str(raw.get("image") or ""))
-            image_file_from_url(image_url)
+            validate_image_reference(image_url)
             title = str(raw.get("title") or f"Alternative {index + 1}").strip()[:120]
             alt = str(raw.get("alt") or "").strip()[:500]
             alternatives.append({"title": title or f"Alternative {index + 1}", "image": image_url, "alt": alt})
@@ -656,7 +775,7 @@ class Handler(SimpleHTTPRequestHandler):
             if not isinstance(path, list):
                 raise ValueError("Invalid image assignment path.")
             image_url = normalize_image_url(str(item.get("image") or ""))
-            image_file_from_url(image_url)
+            validate_image_reference(image_url)
             if source not in loaded:
                 file_path, header = file_map[source]
                 variable, data = read_assignment(file_path)
@@ -683,67 +802,14 @@ class Handler(SimpleHTTPRequestHandler):
         })
 
     def upload_image(self, payload: dict[str, Any]) -> None:
-        filename = Path(str(payload.get("filename") or "image")).name
-        extension = Path(filename).suffix.lower()
-        if extension not in IMAGE_EXTENSIONS:
-            raise ValueError("Supported image types: PNG, JPG, JPEG, WebP, GIF, AVIF.")
-        character_id = payload.get("characterId")
-        if character_id:
-            folder = ROOT / "assets" / "images" / "characters" / safe_slug(str(character_id))
-        else:
-            folder = ROOT / "assets" / "images" / "library"
-        folder.mkdir(parents=True, exist_ok=True)
-        stem = safe_slug(Path(filename).stem) or "image"
-        target = folder / f"{stem}{extension}"
-        if target.exists():
-            rel = "/" + target.relative_to(ROOT).as_posix()
-            raise ValueError(f"{rel} already exists. Use Replace from the image card instead.")
-        target.write_bytes(decode_image_data(str(payload.get("data") or "")))
-        rel = "/" + target.relative_to(ROOT).as_posix()
-        json_response(self, 200, {"ok": True, "path": rel, "images": list_images()})
+        raise ValueError("Local image uploads are disabled. Upload artwork with the Raspberry Pi Image Manager, then paste its images.shincabinet.com URL here.")
 
     def replace_image(self, payload: dict[str, Any]) -> None:
-        old_url = normalize_image_url(str(payload.get("path") or ""))
-        old_file = image_file_from_url(old_url)
-        filename = Path(str(payload.get("filename") or old_file.name)).name
-        extension = Path(filename).suffix.lower()
-        if extension not in IMAGE_EXTENSIONS:
-            raise ValueError("Supported image types: PNG, JPG, JPEG, WebP, GIF, AVIF.")
-        binary = decode_image_data(str(payload.get("data") or ""))
-
-        # Preserve the canonical filename whenever the format stays the same. If the
-        # format changes, keep the stem and update every site reference to the new extension.
-        if extension == old_file.suffix.lower():
-            target = old_file
-        else:
-            target = old_file.with_suffix(extension)
-            if target.exists() and target != old_file:
-                rel = "/" + target.relative_to(ROOT).as_posix()
-                raise ValueError(f"Cannot change format because {rel} already exists.")
-
-        temp = target.with_name(target.name + ".manager-tmp")
-        temp.write_bytes(binary)
-        os.replace(temp, target)
-        new_url = "/" + target.relative_to(ROOT).as_posix()
-        changed = rewrite_image_references(old_url, new_url) if new_url != old_url else []
-        version = bump_image_version(new_url)
-        if target != old_file and old_file.exists():
-            old_file.unlink()
-        json_response(self, 200, {
-            "ok": True,
-            "oldPath": old_url,
-            "path": new_url,
-            "updatedReferences": sum(item["count"] for item in changed),
-            "updatedFiles": changed,
-            "cacheVersion": version,
-            "images": list_images(),
-        })
+        raise ValueError("Local image replacement is disabled. Replace the file with the Raspberry Pi Image Manager.")
 
     def repoint_image(self, payload: dict[str, Any]) -> None:
         old_url = normalize_image_url(str(payload.get("path") or ""))
-        new_url = normalize_image_url(str(payload.get("replacementPath") or ""))
-        image_file_from_url(old_url)
-        image_file_from_url(new_url)
+        new_url = validate_image_reference(str(payload.get("replacementPath") or ""))
         if old_url == new_url:
             raise ValueError("Choose a different replacement image.")
         changed = rewrite_image_references(old_url, new_url)
@@ -757,30 +823,9 @@ class Handler(SimpleHTTPRequestHandler):
         })
 
     def delete_image(self, payload: dict[str, Any]) -> None:
-        old_url = normalize_image_url(str(payload.get("path") or ""))
-        old_file = image_file_from_url(old_url)
-        replacement_raw = str(payload.get("replacementPath") or "").strip()
-        refs = find_image_references(old_url)
-        changed: list[dict[str, Any]] = []
-        replacement_url = None
-        if refs:
-            if not replacement_raw:
-                count = sum(item["count"] for item in refs)
-                raise ValueError(f"This image is still referenced {count} time(s). Choose a replacement image before deleting it.")
-            replacement_url = normalize_image_url(replacement_raw)
-            image_file_from_url(replacement_url)
-            if replacement_url == old_url:
-                raise ValueError("Replacement image must be different from the image being deleted.")
-            changed = rewrite_image_references(old_url, replacement_url)
-        old_file.unlink()
-        json_response(self, 200, {
-            "ok": True,
-            "path": old_url,
-            "replacementPath": replacement_url,
-            "updatedReferences": sum(item["count"] for item in changed),
-            "updatedFiles": changed,
-            "images": list_images(),
-        })
+        raise ValueError("The website Site Manager never deletes image files. Delete artwork from the Raspberry Pi Image Manager instead.")
+
+
 
 
 def main() -> int:
