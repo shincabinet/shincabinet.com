@@ -73,11 +73,60 @@
     return `${host}/cdn-cgi/image/${options}/${sourcePath}${source.search}`;
   }
 
+  function originalFromTransformedUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    try {
+      const url = new URL(raw, location.origin);
+      const marker = "/cdn-cgi/image/";
+      const markerIndex = url.pathname.indexOf(marker);
+      if (markerIndex < 0) return "";
+      const remainder = url.pathname.slice(markerIndex + marker.length);
+      const optionEnd = remainder.indexOf("/");
+      if (optionEnd < 0) return "";
+      const sourcePath = remainder.slice(optionEnd + 1);
+      if (!sourcePath) return "";
+      return `${url.origin}/${sourcePath}${url.search}`;
+    } catch {
+      return "";
+    }
+  }
+
+  // Cloudflare Image Transformations are an optimization, not a hard
+  // dependency. If the transformed request fails (disabled feature, stale
+  // edge response, unsupported source, etc.), retry the untouched original
+  // exactly once so artwork never disappears from the site.
+  document.addEventListener("error", (event) => {
+    const image = event.target;
+    if (!(image instanceof HTMLImageElement)) return;
+    if (image.dataset.originalFallbackTried === "1") return;
+
+    const current = image.currentSrc || image.src || "";
+    const fallback = image.dataset.originalImage || originalFromTransformedUrl(current);
+    if (!fallback || fallback === current) return;
+
+    image.dataset.originalFallbackTried = "1";
+    image.src = fallback;
+  }, true);
+
   function applyStaticHostedImages() {
     qsa("img[data-site-image]").forEach((image) => {
       const canonical = image.dataset.siteImage || "";
       image.src = servedImageUrl(canonical);
       image.dataset.originalImage = originalImageUrl(canonical);
+    });
+
+    // Manager-owned static layout images (for example the homepage hero) live
+    // in site data rather than being hard-coded into HTML. This ensures a
+    // legacy -> images.shincabinet.com migration updates the visible preview.
+    qsa("img[data-site-image-key]").forEach((image) => {
+      const key = image.dataset.siteImageKey || "";
+      const record = data.site?.[key];
+      const canonical = typeof record === "string" ? record : record?.image;
+      if (!canonical) return;
+      image.src = servedImageUrl(canonical);
+      image.dataset.originalImage = originalImageUrl(canonical);
+      if (typeof record === "object" && record?.alt) image.alt = record.alt;
     });
   }
 

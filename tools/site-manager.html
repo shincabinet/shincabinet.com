@@ -35,6 +35,7 @@
         <div class="card metric"><strong id="metric-images">—</strong><span>referenced image links</span></div>
       </div>
       <div class="section card"><h2>How this works</h2><p>This manager edits <code>assets/js/content.js</code> and <code>config/pages.js</code>, creates character profile folders automatically, and regenerates <code>sitemap.xml</code>. Artwork files are managed separately on the Raspberry Pi; paste <code>https://images.shincabinet.com/…</code> URLs into image fields here.</p></div>
+      <div class="section card"><h2>Checkout being edited</h2><p class="muted">Use this to confirm the manager and the Git checkout you plan to push are the same copy.</p><p><code id="manager-root">Loading…</code></p><p class="muted" style="margin-bottom:0">Preview revision: <code id="manager-revision">—</code> · PID <code id="manager-pid">—</code></p></div>
     </section>
 
     <section class="view" id="view-characters">
@@ -65,7 +66,7 @@
 
     <section class="view" id="view-assignments">
       <div class="topline">
-        <div><h1>Image assignments</h1><p>Change one specific config slot without repointing every use of an asset.</p></div>
+        <div><h1>Image assignments</h1><p class="muted">Paste direct <code>https://images.shincabinet.com/…</code> URLs. When replacing a legacy <code>/assets/images/…</code> path, every matching manager-owned config reference to that same legacy image is migrated together.</p><p>Change one specific config slot without repointing every use of an asset.</p></div>
         <button class="btn primary" id="save-all-assignments" type="button">Save changed assignments</button>
       </div>
       <div class="card assignment-toolbar">
@@ -95,7 +96,7 @@
 </div>
 <div class="status" id="status" role="status" aria-live="polite"></div>
 <script>
-let state={content:{site:{},characters:[]},pages:{items:[]},images:[],imageAssignments:[]};
+let state={content:{site:{},characters:[]},pages:{items:[]},images:[],imageAssignments:[],manager:{}};
 let selectedId=null;
 let editingNew=false;
 const $=(q,root=document)=>root.querySelector(q);
@@ -104,11 +105,11 @@ const esc=s=>String(s??'').replace(/[&<>"']/g,m=>({'&':'&amp;','<':'&lt;','>':'&
 const cleanPath=p=>String(p||'').replace(/\?v=\d+$/,'');
 function managerImageUrl(path){const clean=cleanPath(path),item=(state.images||[]).find(i=>i.path===clean);return item?.previewUrl||clean}
 function notify(message,error=false){const el=$('#status');el.textContent=message;el.className='status show'+(error?' error':'');clearTimeout(notify.t);notify.t=setTimeout(()=>el.className='status',2800)}
-async function api(path,body){const r=await fetch(path,{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.error||'Save failed');return d}
+async function api(path,body){const r=await fetch(path,{method:'POST',cache:'no-store',headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});const d=await r.json();if(!r.ok)throw new Error(d.error||'Save failed');return d}
 async function loadState(showNotice=true){try{const r=await fetch('/api/state',{cache:'no-store'});const d=await r.json();if(!r.ok)throw new Error(d.error||'Could not load site');state=d;renderAll();if(showNotice)notify('Site files loaded')}catch(e){notify(e.message,true)}}
 function flattenPages(items,out=[],depth=0,parent=true){for(const p of items||[]){const effective=parent&&p.enabled!==false;out.push({page:p,depth,effective});flattenPages(p.children,out,depth+1,effective)}return out}
 function renderAll(){renderMetrics();renderCharacterList();renderVariants();renderPages();renderAssignments();renderImages();renderSettings();}
-function renderMetrics(){const chars=(state.content.characters||[]).filter(c=>c.enabled!==false).length;const pages=flattenPages(state.pages.items).filter(x=>x.effective&&!x.page.navOnly).length;$('#metric-characters').textContent=chars;$('#metric-pages').textContent=pages;$('#metric-images').textContent=state.images.length}
+function renderMetrics(){const chars=(state.content.characters||[]).filter(c=>c.enabled!==false).length;const pages=flattenPages(state.pages.items).filter(x=>x.effective&&!x.page.navOnly).length;$('#metric-characters').textContent=chars;$('#metric-pages').textContent=pages;$('#metric-images').textContent=state.images.length;if($('#manager-root'))$('#manager-root').textContent=state.manager?.root||'Unknown';if($('#manager-revision'))$('#manager-revision').textContent=state.manager?.revision||'—';if($('#manager-pid'))$('#manager-pid').textContent=state.manager?.pid??'—'}
 $$('.nav button').forEach(btn=>btn.addEventListener('click',()=>{$$('.nav button').forEach(b=>b.classList.toggle('active',b===btn));$$('.view').forEach(v=>v.classList.toggle('active',v.id==='view-'+btn.dataset.view))}));
 $('#reload-state').addEventListener('click',loadState);
 
@@ -187,7 +188,7 @@ $('#variant-source').addEventListener('change',renderVariants);
 
 function renderPages(){const tree=$('#page-tree');const flat=flattenPages(state.pages.items);tree.innerHTML=flat.map(({page,depth})=>`<div class="page-row ${depth?'child':''}" data-page-id="${esc(page.id)}"><div class="page-name"><strong>${esc(page.label)}</strong><small>${esc(page.path)}${page.navOnly?' · navigation group':''}</small></div><label class="toggle-cell"><input type="checkbox" data-p="enabled" ${page.enabled!==false?'checked':''}> Published</label><label class="toggle-cell"><input type="checkbox" data-p="menu" ${page.menu!==false?'checked':''}> Menu</label><label class="toggle-cell"><input type="checkbox" data-p="footer" ${page.footer?'checked':''}> Footer</label><label class="toggle-cell"><input type="checkbox" data-p="home" ${page.homeCard?.show?'checked':''}> Home card</label></div>`).join('')}
 function findPage(items,id){for(const p of items){if(p.id===id)return p;const c=findPage(p.children||[],id);if(c)return c}return null}
-$('#save-pages').addEventListener('click',async()=>{try{$$('.page-row').forEach(row=>{const p=findPage(state.pages.items,row.dataset.pageId);p.enabled=$('[data-p="enabled"]',row).checked;p.menu=$('[data-p="menu"]',row).checked;p.footer=$('[data-p="footer"]',row).checked;p.homeCard=p.homeCard||{};p.homeCard.show=$('[data-p="home"]',row).checked});await api('/api/pages/save',{pages:state.pages});renderMetrics();notify('Page settings saved')}catch(e){notify(e.message,true)}});
+$('#save-pages').addEventListener('click',async()=>{try{$$('.page-row').forEach(row=>{const p=findPage(state.pages.items,row.dataset.pageId);p.enabled=$('[data-p="enabled"]',row).checked;p.menu=$('[data-p="menu"]',row).checked;p.footer=$('[data-p="footer"]',row).checked;p.homeCard=p.homeCard||{};p.homeCard.show=$('[data-p="home"]',row).checked});await api('/api/pages/save',{pages:state.pages});await loadState(false);notify('Page settings saved to disk · preview refreshed')}catch(e){notify(e.message,true)}});
 
 
 function assignmentKey(a){return `${a.source}|${JSON.stringify(a.path)}`}
@@ -202,11 +203,11 @@ function renderAssignments(){
   const byGroup=new Map();for(const a of filtered){if(!byGroup.has(a.group))byGroup.set(a.group,[]);byGroup.get(a.group).push(a)}
   const root=$('#assignment-groups');
   root.innerHTML=[...byGroup.entries()].map(([g,items])=>`<section class="assignment-group"><h2>${esc(g)} <span class="muted">(${items.length})</span></h2><div class="assignment-list">${items.map(a=>`<div class="assignment-row" data-assignment-index="${a._index}" data-original="${esc(a.cleanImage||cleanPath(a.image))}"><img loading="lazy" src="${esc(managerImageUrl(a.cleanImage||a.image))}?manager=${Date.now()}" alt=""><div class="assignment-info"><strong>${esc(a.label)}</strong><small>${esc(a.configFile)}</small></div><div class="assignment-control"><input class="input" type="url" data-assignment-select value="${esc(a.image)}" placeholder="https://images.shincabinet.com/…"><code>${esc(a.image)}</code></div><div class="actions"><button class="btn small" type="button" data-save-assignment>Save</button></div></div>`).join('')}</div></section>`).join('')||'<div class="card muted">No matching image assignments.</div>';
-  $$('[data-assignment-select]',root).forEach(sel=>sel.addEventListener('change',()=>{const row=sel.closest('.assignment-row');row.classList.toggle('changed',sel.value!==row.dataset.original);const img=$('img',row);img.src=managerImageUrl(sel.value)+`?manager=${Date.now()}`}));
+  $$('[data-assignment-select]',root).forEach(sel=>sel.addEventListener('input',()=>{const row=sel.closest('.assignment-row');const current=cleanPath(sel.value.trim());row.classList.toggle('changed',current!==cleanPath(row.dataset.original));const img=$('img',row);img.src=managerImageUrl(sel.value)+`${String(managerImageUrl(sel.value)).includes('?')?'&':'?'}manager=${Date.now()}`}));
   $$('[data-save-assignment]',root).forEach(btn=>btn.addEventListener('click',()=>saveAssignmentRow(btn.closest('.assignment-row'))));
 }
-async function saveAssignmentRow(row){try{const index=Number(row.dataset.assignmentIndex),a=state.imageAssignments[index],image=$('[data-assignment-select]',row).value;if(!a||!image)throw new Error('Choose an image.');await api('/api/image-assignment/save',{assignment:{source:a.source,path:a.path,image}});await loadState(false);notify(`Updated ${a.label}`)}catch(e){notify(e.message,true)}}
-async function saveAllAssignments(){const rows=$$('.assignment-row.changed',$('#assignment-groups'));if(!rows.length)return notify('No image assignments have changed');const items=rows.map(row=>{const a=state.imageAssignments[Number(row.dataset.assignmentIndex)];return{source:a.source,path:a.path,image:$('[data-assignment-select]',row).value}});try{const d=await api('/api/image-assignments/save',{assignments:items});await loadState(false);notify(`Updated ${d.updated} image assignment${d.updated===1?'':'s'}`)}catch(e){notify(e.message,true)}}
+async function saveAssignmentRow(row){try{const index=Number(row.dataset.assignmentIndex),a=state.imageAssignments[index],image=$('[data-assignment-select]',row).value.trim();if(!a||!image)throw new Error('Choose an image.');const d=await api('/api/image-assignment/save',{assignment:{source:a.source,path:a.path,image}});await loadState(false);const extra=d.migratedMatches>1?` · migrated ${d.migratedMatches} matching legacy references`:'';notify(`Updated ${a.label}${extra}`)}catch(e){notify(e.message,true)}}
+async function saveAllAssignments(){const rows=$$('.assignment-row.changed',$('#assignment-groups'));if(!rows.length)return notify('No image assignments have changed');const items=rows.map(row=>{const a=state.imageAssignments[Number(row.dataset.assignmentIndex)];return{source:a.source,path:a.path,image:$('[data-assignment-select]',row).value.trim()}});try{const d=await api('/api/image-assignments/save',{assignments:items});await loadState(false);const extra=d.migratedMatches?` · ${d.migratedMatches} matching legacy references migrated`:'';notify(`Updated ${d.updated} image assignment${d.updated===1?'':'s'}${extra}`)}catch(e){notify(e.message,true)}}
 $('#assignment-search').addEventListener('input',renderAssignments);
 $('#assignment-group').addEventListener('change',renderAssignments);
 $('#save-all-assignments').addEventListener('click',saveAllAssignments);
@@ -223,12 +224,12 @@ function renderSettings(){
   $('#site-fields').innerHTML=siteFields.map(([k,l])=>`<div class="field ${['intro','profileBlurb','commissionNote','fursuitNote'].includes(k)?'full':''}"><span>${esc(l)}</span><input class="input" data-site="${k}" value="${esc(s[k]||'')}"></div>`).join('');
   $('#media-fields').innerHTML=`
     <div class="switch-row"><label for="media-remote">Map legacy /assets/images paths to image host</label><input type="checkbox" id="media-remote" ${m.remoteImagesEnabled===true?'checked':''}></div>
-    <div class="switch-row"><label for="media-transform">Use Cloudflare image transformations</label><input type="checkbox" id="media-transform" ${m.cloudflareTransformationsEnabled!==false?'checked':''}></div>
+    <div class="switch-row"><label for="media-transform">Use Cloudflare image transformations (falls back to original)</label><input type="checkbox" id="media-transform" ${m.cloudflareTransformationsEnabled!==false?'checked':''}></div>
     <label class="field full"><span>Image host</span><input class="input" id="media-host" value="${esc(m.imageHost||'https://images.shincabinet.com')}" placeholder="https://images.shincabinet.com"><span class="help">Only affects legacy paths. Direct https://images.shincabinet.com URLs always work.</span></label>
     <label class="field"><span>Maximum served dimension <span class="help">pixels; 0 disables resizing</span></span><input class="input" id="media-max-dimension" type="number" min="0" max="12000" step="1" value="${esc(m.maxImageDimension??2048)}"></label>
-    <div class="field"><span>What this does</span><div class="muted">The browser receives a version bounded by this width × height, preserving aspect ratio and never upscaling. The original remains on the image host and is linked from artwork dialogs.</div></div>`;
+    <div class="field"><span>What this does</span><div class="muted">The browser requests a version bounded by this width × height, preserving aspect ratio and never upscaling. If Cloudflare cannot transform it, the browser automatically retries the untouched original. The original remains linked from artwork dialogs.</div></div>`;
 }
-$('#save-site').addEventListener('click',async()=>{try{const site={};$$('[data-site]').forEach(i=>site[i.dataset.site]=i.value);site.media={remoteImagesEnabled:$('#media-remote').checked,imageHost:$('#media-host').value.trim(),maxImageDimension:Number($('#media-max-dimension').value||0),cloudflareTransformationsEnabled:$('#media-transform').checked};await api('/api/site/save',{site});Object.assign(state.content.site,site);notify('Site settings saved')}catch(e){notify(e.message,true)}});
+$('#save-site').addEventListener('click',async()=>{try{const site={};$$('[data-site]').forEach(i=>site[i.dataset.site]=i.value);site.media={remoteImagesEnabled:$('#media-remote').checked,imageHost:$('#media-host').value.trim(),maxImageDimension:Number($('#media-max-dimension').value||0),cloudflareTransformationsEnabled:$('#media-transform').checked};await api('/api/site/save',{site});await loadState(false);notify('Site settings saved to disk · preview refreshed')}catch(e){notify(e.message,true)}});
 loadState();
 </script>
 </body>

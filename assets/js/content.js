@@ -104,6 +104,10 @@ window.SHIN_SITE = {
           ]
         }
       ]
+    },
+    "homeHero": {
+      "image": "/assets/images/gallery/full/shin-chibi-pose.webp?v=1",
+      "alt": "Shin, an orange, cream, and dark brown fox-wolf character"
     }
   },
   "characters": [
@@ -191,7 +195,7 @@ window.SHIN_SITE = {
         },
         {
           "title": "Bound Shinji",
-          "image": "/assets/images/characters/shinji/bound-shinji.png",
+          "image": "https://images.shincabinet.com/characters/shinji/Bound_Shinji.png",
           "mature": false,
           "alt": "",
           "artist": "0nibite",
@@ -278,7 +282,7 @@ window.SHIN_SITE = {
       "role": "Character",
       "category": "secondary",
       "featured": false,
-      "image": "https://images.shincabinet.com/characters/kite/KITE_Chibi_Icon_T.png",
+      "image": "/assets/images/characters/kite/kite-chibi-icon-t.png",
       "alt": "",
       "tagline": "",
       "bio": [],
@@ -317,7 +321,7 @@ window.SHIN_SITE = {
       "references": [
         {
           "title": "Kite Chibi Icon",
-          "image": "https://images.shincabinet.com/characters/kite/KITE_Chibi_Icon_T_wS.png",
+          "image": "/assets/images/characters/kite/kite-chibi-icon-t-ws.png",
           "mature": false,
           "alt": ""
         },
