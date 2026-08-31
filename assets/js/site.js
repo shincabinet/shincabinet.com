@@ -30,15 +30,25 @@
     return /^https?:\/\//i.test(String(value || "").trim());
   }
 
+  function isDynamicImageId(value) {
+    return /^img_[0-9a-f]{32}$/i.test(String(value || "").trim());
+  }
+
   function originalImageUrl(value) {
     const raw = String(value || "").trim();
     if (!raw) return raw;
 
-    // Explicit remote URLs are the preferred format for new artwork. Legacy
-    // /assets/images/... references remain supported during migration.
+    const host = mediaHost();
+
+    // Dynamic image IDs are the preferred format. The ID remains stable even
+    // when the Raspberry Pi Image Manager replaces or moves the backing file.
+    if (isDynamicImageId(raw)) return host ? `${host}/i/${encodeURIComponent(raw.toLowerCase())}` : raw;
+
+    // Explicit remote URLs and legacy /assets/images/... references remain
+    // supported while older content is migrated to IDs.
     if (isAbsoluteHttpUrl(raw)) return raw;
 
-    const host = mediaHost();
+
     if (mediaConfig.remoteImagesEnabled !== true || !host || !isManagedLocalImage(raw)) return raw;
 
     const [pathAndQuery, hash = ""] = raw.split("#", 2);
@@ -62,7 +72,17 @@
   }
 
   function servedImageUrl(value) {
-    const original = originalImageUrl(value);
+    const raw = String(value || "").trim();
+    const original = originalImageUrl(raw);
+
+    // ID-backed images are resized by the Pi Image Manager itself. This keeps
+    // the public ID stable and avoids stale Cloudflare transformation caches
+    // when the file behind an ID is replaced.
+    if (isDynamicImageId(raw)) {
+      const max = Math.round(Number(mediaConfig.maxImageDimension || 0));
+      return Number.isFinite(max) && max > 0 ? `${original}?max=${Math.max(1, max)}` : original;
+    }
+
     if (!canTransformImage(original)) return original;
 
     const max = Math.max(1, Math.round(Number(mediaConfig.maxImageDimension)));
@@ -73,11 +93,74 @@
     return `${host}/cdn-cgi/image/${options}/${sourcePath}${source.search}`;
   }
 
+  function originalFromDynamicUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    try {
+      const url = new URL(raw, location.origin);
+      if (!/^\/i\/img_[0-9a-f]{32}$/i.test(url.pathname)) return "";
+      if (!url.searchParams.has("max")) return "";
+      url.searchParams.delete("max");
+      return url.toString();
+    } catch {
+      return "";
+    }
+  }
+
+  function originalFromTransformedUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return "";
+    try {
+      const url = new URL(raw, location.origin);
+      const marker = "/cdn-cgi/image/";
+      const markerIndex = url.pathname.indexOf(marker);
+      if (markerIndex < 0) return "";
+      const remainder = url.pathname.slice(markerIndex + marker.length);
+      const optionEnd = remainder.indexOf("/");
+      if (optionEnd < 0) return "";
+      const sourcePath = remainder.slice(optionEnd + 1);
+      if (!sourcePath) return "";
+      return `${url.origin}/${sourcePath}${url.search}`;
+    } catch {
+      return "";
+    }
+  }
+
+  // Cloudflare Image Transformations are an optimization, not a hard
+  // dependency. If the transformed request fails (disabled feature, stale
+  // edge response, unsupported source, etc.), retry the untouched original
+  // exactly once so artwork never disappears from the site.
+  document.addEventListener("error", (event) => {
+    const image = event.target;
+    if (!(image instanceof HTMLImageElement)) return;
+    if (image.dataset.originalFallbackTried === "1") return;
+
+    const current = image.currentSrc || image.src || "";
+    const fallback = image.dataset.originalImage || originalFromDynamicUrl(current) || originalFromTransformedUrl(current);
+    if (!fallback || fallback === current) return;
+
+    image.dataset.originalFallbackTried = "1";
+    image.src = fallback;
+  }, true);
+
   function applyStaticHostedImages() {
     qsa("img[data-site-image]").forEach((image) => {
       const canonical = image.dataset.siteImage || "";
       image.src = servedImageUrl(canonical);
       image.dataset.originalImage = originalImageUrl(canonical);
+    });
+
+    // Manager-owned static layout images (for example the homepage hero) live
+    // in site data rather than being hard-coded into HTML. This ensures a
+    // legacy -> images.shincabinet.com migration updates the visible preview.
+    qsa("img[data-site-image-key]").forEach((image) => {
+      const key = image.dataset.siteImageKey || "";
+      const record = data.site?.[key];
+      const canonical = typeof record === "string" ? record : record?.image;
+      if (!canonical) return;
+      image.src = servedImageUrl(canonical);
+      image.dataset.originalImage = originalImageUrl(canonical);
+      if (typeof record === "object" && record?.alt) image.alt = record.alt;
     });
   }
 

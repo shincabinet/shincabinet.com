@@ -195,7 +195,7 @@ window.SHIN_SITE = {
         },
         {
           "title": "Bound Shinji",
-          "image": "https://images.shincabinet.com/characters/shinji/Bound_Shinji.png",
+          "image": "/assets/images/characters/shinji/bound-shinji.png",
           "mature": false,
           "alt": "",
           "artist": "0nibite",
