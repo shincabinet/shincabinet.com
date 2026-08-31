@@ -15,6 +15,72 @@
     .replaceAll('"', "&quot;")
     .replaceAll("'", "&#039;");
 
+
+  const mediaConfig = data.site?.media || {};
+
+  function mediaHost() {
+    return String(mediaConfig.imageHost || "").trim().replace(/\/+$/, "");
+  }
+
+  function isManagedLocalImage(value) {
+    return String(value || "").startsWith("/assets/images/");
+  }
+
+  function isAbsoluteHttpUrl(value) {
+    return /^https?:\/\//i.test(String(value || "").trim());
+  }
+
+  function originalImageUrl(value) {
+    const raw = String(value || "").trim();
+    if (!raw) return raw;
+
+    // Explicit remote URLs are the preferred format for new artwork. Legacy
+    // /assets/images/... references remain supported during migration.
+    if (isAbsoluteHttpUrl(raw)) return raw;
+
+    const host = mediaHost();
+    if (mediaConfig.remoteImagesEnabled !== true || !host || !isManagedLocalImage(raw)) return raw;
+
+    const [pathAndQuery, hash = ""] = raw.split("#", 2);
+    const relative = pathAndQuery.replace(/^\/assets\/images\//, "");
+    return `${host}/${relative}${hash ? `#${hash}` : ""}`;
+  }
+
+  function canTransformImage(original) {
+    if (mediaConfig.cloudflareTransformationsEnabled !== true) return false;
+    const max = Number(mediaConfig.maxImageDimension || 0);
+    if (!Number.isFinite(max) || max <= 0) return false;
+    const host = mediaHost();
+    if (!host || !original) return false;
+    try {
+      const source = new URL(original, location.origin);
+      const imageHost = new URL(host, location.origin);
+      return source.origin === imageHost.origin;
+    } catch {
+      return false;
+    }
+  }
+
+  function servedImageUrl(value) {
+    const original = originalImageUrl(value);
+    if (!canTransformImage(original)) return original;
+
+    const max = Math.max(1, Math.round(Number(mediaConfig.maxImageDimension)));
+    const host = mediaHost();
+    const source = new URL(original);
+    const sourcePath = source.pathname.replace(/^\/+/, "");
+    const options = `fit=scale-down,width=${max},height=${max},format=auto,onerror=redirect`;
+    return `${host}/cdn-cgi/image/${options}/${sourcePath}${source.search}`;
+  }
+
+  function applyStaticHostedImages() {
+    qsa("img[data-site-image]").forEach((image) => {
+      const canonical = image.dataset.siteImage || "";
+      image.src = servedImageUrl(canonical);
+      image.dataset.originalImage = originalImageUrl(canonical);
+    });
+  }
+
   const normalizePath = (value = "/") => {
     let path = String(value).split("?")[0].split("#")[0] || "/";
     if (!path.startsWith("/")) path = `/${path}`;
@@ -239,7 +305,7 @@
     const searchable = [character.name, character.species, character.role, ...(character.tags || [])].join(" ").toLowerCase();
     return `<article class="character-card" data-character-category="${esc(character.category)}" data-character-searchable="${esc(searchable)}">
       <button type="button" data-character-id="${esc(character.id)}" aria-label="Open ${esc(character.name)} profile">
-        <span class="character-card__image"><img src="${esc(character.image)}" alt="${esc(character.alt || character.name)}" loading="lazy"></span>
+        <span class="character-card__image"><img src="${esc(servedImageUrl(character.image))}" alt="${esc(character.alt || character.name)}" loading="lazy"></span>
         <span class="character-card__copy"><strong>${esc(character.name)}</strong><small>${esc(character.species)} · ${esc(character.pronouns)}</small></span>
       </button>
     </article>`;
@@ -317,7 +383,7 @@
     const alternativeCount = (reference.alternatives || []).filter((item) => item && item.image).length;
     return `<article class="reference-card${mature ? " reference-card--mature" : ""}">
       <button type="button" data-reference-index="${index}" data-mature="${mature}" aria-label="View ${esc(reference.title || "reference image")}">
-        <span class="reference-card__media"><img src="${esc(reference.image)}" alt="${esc(reference.alt || reference.title || "Character reference")}" loading="lazy">${alternativeCount ? `<span class="media-version-badge">${alternativeCount + 1} versions</span>` : ""}${mature ? '<span class="mature-cover"><strong>Mature</strong><small>Tap to reveal</small></span>' : ""}</span>
+        <span class="reference-card__media"><img src="${esc(servedImageUrl(reference.image))}" alt="${esc(reference.alt || reference.title || "Character reference")}" loading="lazy">${alternativeCount ? `<span class="media-version-badge">${alternativeCount + 1} versions</span>` : ""}${mature ? '<span class="mature-cover"><strong>Mature</strong><small>Tap to reveal</small></span>' : ""}</span>
         <span class="reference-card__caption">${esc(reference.title || "Reference")}</span>
       </button>
       ${artistCredit(reference, "reference-card__credit")}
@@ -369,15 +435,29 @@
     }
     creditElement.innerHTML = artistCredit(item, "art-dialog__credit-text");
     creditElement.hidden = !String(item.artist || "").trim();
+
+    let originalLink = qs("[data-art-dialog-original]", dialog);
+    if (!originalLink) {
+      originalLink = document.createElement("a");
+      originalLink.className = "art-dialog__original";
+      originalLink.dataset.artDialogOriginal = "";
+      originalLink.target = "_blank";
+      originalLink.rel = "noopener noreferrer";
+      originalLink.textContent = "Open original image ↗";
+      creditElement.insertAdjacentElement("afterend", originalLink);
+    }
+
     const selectVersion = (version, button = null, index = 0) => {
-      image.src = version.image;
+      image.src = servedImageUrl(version.image);
       image.alt = version.alt || fallbackAlt || title || "Artwork preview";
+      originalLink.href = originalImageUrl(version.image);
+      originalLink.hidden = !originalLink.href;
       qsa("button", variants).forEach((itemButton) => itemButton.setAttribute("aria-pressed", String(itemButton === button)));
       if (metaElement) metaElement.textContent = index === 0 || !version.title ? (meta || "") : `${meta || ""} · ${version.title}`;
     };
 
     dialog.classList.toggle("art-dialog--has-variants", versions.length > 1);
-    variants.innerHTML = versions.length > 1 ? versions.map((version, index) => `<button type="button" class="art-dialog__variant" data-version-index="${index}" aria-pressed="${index === 0}" title="${esc(version.title)}"><img src="${esc(version.image)}" alt=""><span>${esc(version.title)}</span></button>`).join("") : "";
+    variants.innerHTML = versions.length > 1 ? versions.map((version, index) => `<button type="button" class="art-dialog__variant" data-version-index="${index}" aria-pressed="${index === 0}" title="${esc(version.title)}"><img src="${esc(servedImageUrl(version.image))}" alt=""><span>${esc(version.title)}</span></button>`).join("") : "";
     variants.hidden = versions.length <= 1;
     qsa("[data-version-index]", variants).forEach((button) => button.addEventListener("click", () => {
       const index = Number(button.dataset.versionIndex);
@@ -452,7 +532,7 @@
     root.innerHTML = `
       <section class="character-profile__hero">
         <div class="character-profile__hero-inner">
-          <div class="character-profile__visual"><img src="${esc(character.profileImage || character.image || character.icon)}" alt="${esc(character.alt || character.name)}"></div>
+          <div class="character-profile__visual"><img src="${esc(servedImageUrl(character.profileImage || character.image || character.icon))}" alt="${esc(character.alt || character.name)}"></div>
           <div class="character-profile__intro">
             <a class="character-profile__back" href="/characters/">← Characters</a>
             <p class="eyebrow">${esc(character.role || "Character")}</p>
@@ -511,7 +591,7 @@
     const alternativeCount = (artwork.alternatives || []).filter((item) => item && item.image).length;
     return `<article class="gallery-card${mature ? " gallery-card--mature" : ""}" data-gallery-category="${esc(artwork.category)}" data-gallery-mature="${mature}">
       <button type="button" data-artwork-id="${esc(artwork.id)}" data-mature="${mature}" aria-label="View ${esc(artwork.title)}">
-        <span class="gallery-card__media"><img src="${esc(artwork.image)}" alt="${esc(artwork.alt)}" loading="lazy">${alternativeCount ? `<span class="media-version-badge">${alternativeCount + 1} versions</span>` : ""}${mature ? '<span class="mature-cover"><strong>Mature</strong><small>Tap to reveal</small></span>' : ""}</span>
+        <span class="gallery-card__media"><img src="${esc(servedImageUrl(artwork.image))}" alt="${esc(artwork.alt)}" loading="lazy">${alternativeCount ? `<span class="media-version-badge">${alternativeCount + 1} versions</span>` : ""}${mature ? '<span class="mature-cover"><strong>Mature</strong><small>Tap to reveal</small></span>' : ""}</span>
         <span class="gallery-card__caption"><strong>${esc(artwork.title)}</strong><small>${esc(artwork.character)} · ${esc(artwork.year)}</small></span>
       </button>
       ${artistCredit(artwork, "gallery-card__credit")}
@@ -551,7 +631,7 @@
   function renderFursuits() {
     const builds = qs("[data-build-grid]");
     if (builds) {
-      builds.innerHTML = (data.fursuitProjects || []).map((project) => `<article class="build-card"><img src="${esc(project.image)}" alt="${esc(project.title)}" loading="lazy"><div><small>${esc(project.phase)} · ${esc(project.status)}</small><h3>${esc(project.title)}</h3><p>${esc(project.description)}</p></div></article>`).join("");
+      builds.innerHTML = (data.fursuitProjects || []).map((project) => `<article class="build-card"><img src="${esc(servedImageUrl(project.image))}" alt="${esc(project.title)}" loading="lazy"><div><small>${esc(project.phase)} · ${esc(project.status)}</small><h3>${esc(project.title)}</h3><p>${esc(project.description)}</p></div></article>`).join("");
     }
   }
 
@@ -571,7 +651,7 @@
     grid.innerHTML = adoptables.map((adoptable) => {
       const status = adoptable.status || "Available";
       const statusKey = String(status).toLowerCase().replace(/[^a-z0-9]+/g, "-");
-      const image = `<img src="${esc(adoptable.image)}" alt="${esc(adoptable.alt || adoptable.name)}" loading="lazy">`;
+      const image = `<img src="${esc(servedImageUrl(adoptable.image))}" alt="${esc(adoptable.alt || adoptable.name)}" loading="lazy">`;
       const visual = adoptable.url
         ? `<a class="adoptable-card__visual" href="${esc(adoptable.url)}" target="_blank" rel="noreferrer">${image}</a>`
         : `<div class="adoptable-card__visual">${image}</div>`;
@@ -595,7 +675,7 @@
   function renderCommissions() {
     const packages = qs("[data-commission-packages]");
     if (packages) packages.innerHTML = data.commissions.map((commission) => `<article class="price-card">
-      ${commission.image ? (commission.mature ? `<details class="price-card__mature"><summary>Mature example</summary><img class="price-card__image" src="${esc(commission.image)}" alt="Mature example of ${esc(commission.name)}" loading="lazy"></details>` : `<img class="price-card__image" src="${esc(commission.image)}" alt="Example of ${esc(commission.name)}" loading="lazy">`) : ""}
+      ${commission.image ? (commission.mature ? `<details class="price-card__mature"><summary>Mature example</summary><img class="price-card__image" src="${esc(servedImageUrl(commission.image))}" alt="Mature example of ${esc(commission.name)}" loading="lazy"></details>` : `<img class="price-card__image" src="${esc(servedImageUrl(commission.image))}" alt="Example of ${esc(commission.name)}" loading="lazy">`) : ""}
       <div class="price-card__body"><div class="price-card__heading"><h2>${esc(commission.name)}</h2><strong>${esc(commission.price)}</strong></div><p>${esc(commission.description)}</p><ul>${(commission.includes || []).map((item) => `<li>${esc(item)}</li>`).join("")}</ul></div>
     </article>`).join("");
   }
@@ -620,7 +700,7 @@
     const heading = sectionHeading(section);
     if (section.type === "text") return `<section class="section"><div class="section__inner generic-prose">${heading}<div class="generic-prose__body">${(section.paragraphs || []).map((paragraph) => `<p>${esc(paragraph)}</p>`).join("")}</div></div></section>`;
     if (section.type === "cards") return `<section class="section"><div class="section__inner">${heading}<div class="generic-card-grid">${(section.items || []).map((item) => `<article class="generic-card"><small>${esc(item.meta || "")}</small><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></article>`).join("")}</div></div></section>`;
-    if (section.type === "gallery") return `<section class="section"><div class="section__inner">${heading}<div class="generic-gallery">${(section.items || []).map((item) => `<figure><img src="${esc(item.image)}" alt="${esc(item.alt || item.title)}" loading="lazy"><figcaption><strong>${esc(item.title)}</strong><p>${esc(item.text || "")}</p></figcaption></figure>`).join("")}</div></div></section>`;
+    if (section.type === "gallery") return `<section class="section"><div class="section__inner">${heading}<div class="generic-gallery">${(section.items || []).map((item) => `<figure><img src="${esc(servedImageUrl(item.image))}" alt="${esc(item.alt || item.title)}" loading="lazy"><figcaption><strong>${esc(item.title)}</strong><p>${esc(item.text || "")}</p></figcaption></figure>`).join("")}</div></div></section>`;
     if (section.type === "timeline") return `<section class="section"><div class="section__inner">${heading}<div class="process-grid">${(section.items || []).map((item) => `<article class="process-step"><span>${esc(item.number)}</span><div><h3>${esc(item.title)}</h3><p>${esc(item.text)}</p></div></article>`).join("")}</div></div></section>`;
     if (section.type === "links") {
       const targets = (section.pages || []).map((id) => pageById.get(id)).filter(isVisible);
@@ -678,6 +758,7 @@
   }
 
   document.addEventListener("DOMContentLoaded", () => {
+    applyStaticHostedImages();
     setMetadata(currentPage);
     applySiteContent();
     renderNavigation();

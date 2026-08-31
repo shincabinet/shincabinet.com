@@ -853,6 +853,16 @@ dialog::backdrop { background: var(--dialog-backdrop); }
 }
 .art-dialog__credit[hidden] { display: none; }
 .art-dialog__credit-text { font-size: inherit; }
+.art-dialog__original {
+  display: inline-block;
+  margin-top: 0.35rem;
+  color: var(--muted);
+  font-size: 0.78rem;
+  text-decoration: underline;
+  text-underline-offset: 0.16em;
+}
+.art-dialog__original:hover { color: var(--text); }
+.art-dialog__original[hidden] { display: none; }
 
 .art-dialog__variants {
   margin-top: 1rem;

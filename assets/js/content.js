@@ -18,6 +18,12 @@ window.SHIN_SITE = {
     "commissionNote": "Prices are starting rates in USD.",
     "fursuitStatus": "Not published",
     "fursuitNote": "This page is not published yet.",
+    "media": {
+      "remoteImagesEnabled": false,
+      "imageHost": "https://images.shincabinet.com",
+      "maxImageDimension": 2048,
+      "cloudflareTransformationsEnabled": true
+    },
     "specialties": [
       "Character art",
       "Reference sheets",
@@ -272,7 +278,7 @@ window.SHIN_SITE = {
       "role": "Character",
       "category": "secondary",
       "featured": false,
-      "image": "/assets/images/characters/kite/kite-chibi-icon-t.png",
+      "image": "https://images.shincabinet.com/characters/kite/KITE_Chibi_Icon_T.png",
       "alt": "",
       "tagline": "",
       "bio": [],
@@ -311,7 +317,7 @@ window.SHIN_SITE = {
       "references": [
         {
           "title": "Kite Chibi Icon",
-          "image": "/assets/images/characters/kite/kite-chibi-icon-t-ws.png",
+          "image": "https://images.shincabinet.com/characters/kite/KITE_Chibi_Icon_T_wS.png",
           "mature": false,
           "alt": ""
         },
