@@ -93,7 +93,7 @@ window.SHIN_CUSTOM_PAGES = {
         "items": [
           {
             "title": "Character target",
-            "image": "/assets/images/gallery/full/shin-character-card.webp?v=1",
+            "image": "img_d8468026194a471aba790cd085af1354",
             "alt": "Shin character card",
             "text": "Replace this with the latest build photo when the physical work begins."
           },
