@@ -492,6 +492,10 @@ def normalize_image_url(value: str) -> str:
     if dynamic_match:
         return dynamic_match.group(1).lower()
 
+    alias_match = re.fullmatch(r"/s/(siteimg_[0-9a-f]{32})/?", unquote(parsed.path), re.IGNORECASE)
+    if alias_match:
+        return alias_match.group(1).lower()
+
     if Path(unquote(parsed.path)).suffix.lower() not in IMAGE_EXTENSIONS:
         raise ValueError("Image URL must end in PNG, JPG, JPEG, WebP, GIF, or AVIF.")
     return f"https://{parsed.netloc}{parsed.path}"
@@ -1461,14 +1465,22 @@ class Handler(SimpleHTTPRequestHandler):
             alt_id = str(raw.get("id") or "").strip().lower()
             if not ALT_IMAGE_ID_RE.fullmatch(alt_id):
                 alt_id = new_alt_image_id()
+            existing = existing_alts.get(alt_id) if ALT_IMAGE_ID_RE.fullmatch(alt_id) else None
+            alt_site_id = str(raw.get("siteImageId") or (existing or {}).get("siteImageId") or "").strip().lower()
+            if not is_site_image_id(alt_site_id):
+                alt_site_id = new_site_image_id(registry.setdefault("items", {}))
             alternatives.append({
                 "id": alt_id,
+                "siteImageId": alt_site_id,
                 "title": str(raw.get("title") or f"Alternative {index + 1}").strip()[:120] or f"Alternative {index + 1}",
                 "source": source,
                 "alt": str(raw.get("alt") or "").strip()[:500],
             })
         record["alternatives"] = alternatives
         write_image_registry(registry)
+        for alternative in alternatives:
+            if is_dynamic_image_id(str(alternative.get("source") or "")):
+                pi_set_alias(str(alternative["siteImageId"]), str(alternative["source"]))
 
         # Artist credit remains contextual to the gallery/reference usage.
         if artist:

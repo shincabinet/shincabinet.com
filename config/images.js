@@ -81,6 +81,7 @@ window.SHIN_IMAGES = {
       "alternatives": [
         {
           "id": "alt_dec5c209aaf24bc4",
+          "siteImageId": "siteimg_becdded60a685f1fade63eac45e98d02",
           "title": "Transparent Version",
           "source": "/assets/images/characters/kite/kite-pose-1-t-sfw-ws.png",
           "alt": ""
@@ -94,6 +95,7 @@ window.SHIN_IMAGES = {
       "alternatives": [
         {
           "id": "alt_50305326308245c8",
+          "siteImageId": "siteimg_58ed94e12ae05f17a724e3aec3dd0405",
           "title": "Transparent Version",
           "source": "/assets/images/characters/kite/kite-pose-1-t-nsfw-ws.png",
           "alt": ""
