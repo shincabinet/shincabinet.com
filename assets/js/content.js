@@ -104,7 +104,7 @@ window.SHIN_SITE = {
       ]
     },
     "homeHero": {
-      "image": "/assets/images/gallery/full/shin-chibi-pose.webp?v=1",
+      "image": "img_9322c3af059441229895c57df71bbba3",
       "alt": "Shin, an orange, cream, and dark brown fox-wolf character"
     }
   },
@@ -118,7 +118,7 @@ window.SHIN_SITE = {
       "role": "Primary character",
       "category": "primary",
       "featured": true,
-      "image": "/assets/images/characters/shin/shin-chibi-icon-t.png",
+      "image": "img_401aefc5413548ad8a456d1604eada89",
       "alt": "",
       "tagline": "My Sona",
       "bio": [],
@@ -157,19 +157,19 @@ window.SHIN_SITE = {
       "references": [
         {
           "title": "Shinji Chibi Icon",
-          "image": "/assets/images/characters/shin/shin-chibi-icon-t.png",
+          "image": "img_401aefc5413548ad8a456d1604eada89",
           "mature": false,
           "alt": ""
         },
         {
           "title": "Shinji Chibi Pose",
-          "image": "/assets/images/gallery/full/shin-chibi-pose.webp",
+          "image": "img_9322c3af059441229895c57df71bbba3",
           "mature": false,
           "alt": ""
         },
         {
           "title": "Shinji Relaxed",
-          "image": "/assets/images/gallery/full/shin-lounge.webp",
+          "image": "img_8796043120d74095bfe8f60c99c2bfb8",
           "mature": false,
           "alt": ""
         },
@@ -193,7 +193,7 @@ window.SHIN_SITE = {
         },
         {
           "title": "Bound Shinji",
-          "image": "/assets/images/characters/shinji/bound-shinji.png",
+          "image": "img_471426f8f65d47fbb5f94edf73879d7f",
           "mature": false,
           "alt": "",
           "artist": "0nibite",
@@ -212,7 +212,7 @@ window.SHIN_SITE = {
       "role": "Character",
       "category": "secondary",
       "featured": true,
-      "image": "/assets/images/characters/tav/tav-chibi-icon-t.png",
+      "image": "img_080a371d25cf47c3b934a580c1c24980",
       "alt": "",
       "tagline": "",
       "bio": [],
@@ -263,7 +263,7 @@ window.SHIN_SITE = {
       "references": [
         {
           "title": "Tav Chibi Icon",
-          "image": "/assets/images/characters/tav/tav-chibi-icon-t-ws.png",
+          "image": "img_188f9c71a17b4ecabc4b3c6b5262424a",
           "mature": false,
           "alt": ""
         }
@@ -325,26 +325,26 @@ window.SHIN_SITE = {
         },
         {
           "title": "Kite Fullart",
-          "image": "/assets/images/characters/kite/kite-pose-1-b-sfw-ws.png",
+          "image": "img_fa64ab6e80c14c7ebb0dbe0925abb468",
           "mature": false,
           "alt": "",
           "alternatives": [
             {
               "title": "Transparent Version",
-              "image": "/assets/images/characters/kite/kite-pose-1-t-sfw-ws.png",
+              "image": "img_1a9614216413413787c376eb61b21841",
               "alt": ""
             }
           ]
         },
         {
           "title": "Kite Fullart NSFW",
-          "image": "/assets/images/characters/kite/kite-pose-1-b-nsfw-ws.png",
+          "image": "img_548d78a28162413ab87676534d8ca448",
           "mature": true,
           "alt": "",
           "alternatives": [
             {
               "title": "Transparent Version",
-              "image": "/assets/images/characters/kite/kite-pose-1-t-nsfw-ws.png",
+              "image": "img_aef67cd3b53b4b3989397d96cb473df0",
               "alt": ""
             }
           ]
@@ -372,7 +372,7 @@ window.SHIN_SITE = {
       "category": "chibi",
       "character": "Shin",
       "year": "2026",
-      "image": "/assets/images/gallery/full/shin-chibi-pose.webp?v=1",
+      "image": "img_9322c3af059441229895c57df71bbba3",
       "alt": "Chibi illustration of Shin standing with arms open",
       "featured": true,
       "mature": false
@@ -383,7 +383,7 @@ window.SHIN_SITE = {
       "category": "illustration",
       "character": "Shin",
       "year": "2026",
-      "image": "/assets/images/gallery/full/shin-lounge.webp?v=1",
+      "image": "img_8796043120d74095bfe8f60c99c2bfb8",
       "alt": "Shin reclining in a relaxed pose",
       "featured": true,
       "mature": false
@@ -394,7 +394,7 @@ window.SHIN_SITE = {
       "category": "chibi",
       "character": "Shin",
       "year": "2026",
-      "image": "/assets/images/characters/shin/shin-chibi-icon-t.png",
+      "image": "img_401aefc5413548ad8a456d1604eada89",
       "alt": "Transparent front-facing chibi icon of Shin",
       "featured": true,
       "mature": false
@@ -462,7 +462,7 @@ window.SHIN_SITE = {
     {
       "name": "Chibi full body",
       "price": "$40+",
-      "image": "/assets/images/gallery/full/shin-chibi-pose.webp?v=1",
+      "image": "img_9322c3af059441229895c57df71bbba3",
       "description": "A simplified full-body pose focused on expression, silhouette, and markings.",
       "includes": [
         "One character",

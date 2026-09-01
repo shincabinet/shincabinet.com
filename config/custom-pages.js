@@ -27,9 +27,21 @@ window.SHIN_CUSTOM_PAGES = {
         "eyebrow": "Areas of work",
         "title": "What belongs here",
         "items": [
-          { "title": "Character art", "text": "Illustration, reference sheets, expression studies, and personal work.", "meta": "Drawing" },
-          { "title": "Fursuit craft", "text": "Head bases, paws, tails, sewing, finishing, and wearability tests.", "meta": "Making" },
-          { "title": "Process notes", "text": "Models, prototypes, material tests, revisions, and lessons worth keeping.", "meta": "Archive" }
+          {
+            "title": "Character art",
+            "text": "Illustration, reference sheets, expression studies, and personal work.",
+            "meta": "Drawing"
+          },
+          {
+            "title": "Fursuit craft",
+            "text": "Head bases, paws, tails, sewing, finishing, and wearability tests.",
+            "meta": "Making"
+          },
+          {
+            "title": "Process notes",
+            "text": "Models, prototypes, material tests, revisions, and lessons worth keeping.",
+            "meta": "Archive"
+          }
         ]
       },
       {
@@ -52,10 +64,26 @@ window.SHIN_CUSTOM_PAGES = {
         "eyebrow": "Current build",
         "title": "Shin mini partial",
         "items": [
-          { "number": "01", "title": "Digital sculpt", "text": "Resolve the silhouette, vision, ventilation, wall thickness, and print segmentation." },
-          { "number": "02", "title": "Print and assembly", "text": "Test fit, join sections, reinforce stress points, and preserve repair access." },
-          { "number": "03", "title": "Pattern and fur", "text": "Plan marking breaks, test pile direction, sew, fit, and shave." },
-          { "number": "04", "title": "Finish and document", "text": "Install details, photograph the result, and record materials and maintenance notes." }
+          {
+            "number": "01",
+            "title": "Digital sculpt",
+            "text": "Resolve the silhouette, vision, ventilation, wall thickness, and print segmentation."
+          },
+          {
+            "number": "02",
+            "title": "Print and assembly",
+            "text": "Test fit, join sections, reinforce stress points, and preserve repair access."
+          },
+          {
+            "number": "03",
+            "title": "Pattern and fur",
+            "text": "Plan marking breaks, test pile direction, sew, fit, and shave."
+          },
+          {
+            "number": "04",
+            "title": "Finish and document",
+            "text": "Install details, photograph the result, and record materials and maintenance notes."
+          }
         ]
       },
       {
@@ -63,13 +91,22 @@ window.SHIN_CUSTOM_PAGES = {
         "eyebrow": "Bench photos",
         "title": "Progress snapshots",
         "items": [
-          { "title": "Character target", "image": "/assets/images/gallery/full/shin-character-card.webp?v=1", "alt": "Shin character card", "text": "Replace this with the latest build photo when the physical work begins." },
-          { "title": "Silhouette reference", "image": "/assets/images/gallery/full/shin-chibi-pose.webp?v=1", "alt": "Shin chibi pose", "text": "Use visual references to keep proportions and expression consistent." }
+          {
+            "title": "Character target",
+            "image": "/assets/images/gallery/full/shin-character-card.webp?v=1",
+            "alt": "Shin character card",
+            "text": "Replace this with the latest build photo when the physical work begins."
+          },
+          {
+            "title": "Silhouette reference",
+            "image": "img_9322c3af059441229895c57df71bbba3",
+            "alt": "Shin chibi pose",
+            "text": "Use visual references to keep proportions and expression consistent."
+          }
         ]
       }
     ]
-  }
-,
+  },
   "tos": {
     "hero": {
       "eyebrow": "Additional Info / TOS",
@@ -80,11 +117,26 @@ window.SHIN_CUSTOM_PAGES = {
       {
         "type": "terms",
         "items": [
-          { "title": "Usage", "text": "Commissions are for personal use unless commercial rights are specifically quoted." },
-          { "title": "Deposit", "text": "A 50% deposit is required to reserve a commission slot." },
-          { "title": "Revisions", "text": "One sketch revision round is included. Large changes after approval cost extra." },
-          { "title": "Turnaround", "text": "Typical turnaround is 3–8 weeks after work begins." },
-          { "title": "Adult work", "text": "Adult work is limited to adult clients and adult characters." }
+          {
+            "title": "Usage",
+            "text": "Commissions are for personal use unless commercial rights are specifically quoted."
+          },
+          {
+            "title": "Deposit",
+            "text": "A 50% deposit is required to reserve a commission slot."
+          },
+          {
+            "title": "Revisions",
+            "text": "One sketch revision round is included. Large changes after approval cost extra."
+          },
+          {
+            "title": "Turnaround",
+            "text": "Typical turnaround is 3–8 weeks after work begins."
+          },
+          {
+            "title": "Adult work",
+            "text": "Adult work is limited to adult clients and adult characters."
+          }
         ]
       },
       {
