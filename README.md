@@ -198,46 +198,13 @@ The stored shape is optional and backward-compatible:
 
 ## Remote image host
 
-Artwork storage is intentionally separate from this GitHub repository. The Raspberry Pi image manager owns the physical files and the ID-to-file registry under `/mnt/storage/shincabinet-images`, while this website stores only permanent image IDs and metadata.
+Artwork migration uses permanent Raspberry Pi Image Manager IDs. Store `img_...` in site metadata; the browser resolves it through `https://images.shincabinet.com/i/<id>`.
 
-Preferred new references look like:
+Legacy `/assets/images/...` references remain local until explicitly replaced with an ID. Direct HTTPS image URLs are used as entered. The public website never rewrites a legacy local path to the image host and no longer generates Cloudflare `/cdn-cgi/image/` transformation URLs.
 
-```text
-https://images.shincabinet.com/gallery/example/primary.webp
-https://images.shincabinet.com/characters/shinji/reference/main.png
-```
+`site.media.maxImageDimension` controls the Pi Image Manager derivative request for ID-backed images. For example, `2048` requests `/i/<id>?max=2048` while **Open original image** uses `/i/<id>` without resizing.
 
-Use the separate `images.shincabinet.com-pimb4` Image Manager to upload, rename, move, or delete files. Copy the public URL from that manager and paste it into this Site Manager's character, artwork-detail, or image-assignment fields. The website Site Manager never writes new artwork into `assets/images/`.
-
-### Legacy migration
-
-Existing `/assets/images/...` references remain supported while the old repository artwork is migrated. If **Map legacy /assets/images paths to image host** is enabled, this:
-
-```text
-/assets/images/gallery/full/example.webp
-```
-
-is served from:
-
-```text
-https://images.shincabinet.com/gallery/full/example.webp
-```
-
-Do not enable that legacy mapping until the corresponding files are present on the Raspberry Pi. New direct `https://images.shincabinet.com/...` references work whether the legacy switch is on or off.
-
-The long-term target is for GitHub to contain no portfolio/reference artwork. Static branding assets can also be migrated to the image host once their HTML/manifest references are changed and their remote URLs are verified.
-
-### Maximum served resolution
-
-When **Use Cloudflare image transformations** is enabled, the public site requests a transformed URL bounded by the configured maximum dimension. A setting of `2048` means the served image fits within a `2048 × 2048` box, keeps its aspect ratio, and is never upscaled. The untouched original remains available on `images.shincabinet.com`, and gallery/reference dialogs expose an **Open original image** link.
-
-For example:
-
-```text
-https://images.shincabinet.com/cdn-cgi/image/fit=scale-down,width=2048,height=2048,format=auto,onerror=redirect/gallery/example/primary.webp
-```
-
-Cloudflare Image Transformations must be enabled for the `shincabinet.com` zone. If transformations are disabled or the maximum is `0`, the original remote image is served directly.
+See `IMAGE_IDS.md` for the complete routing and migration model.
 
 ## Dynamic image IDs
 
@@ -271,11 +238,3 @@ https://images.shincabinet.com/i/img_9f73...?max=2048
 The original remains available through the same ID without `?max=`. Replacing or moving the backing file in the Pi Image Manager does not require a website commit because the ID is unchanged.
 
 Direct `https://images.shincabinet.com/...` URLs and `/assets/images/...` paths remain supported only to make migration gradual.
-
-## Image architecture
-
-Artwork binaries are not stored in this repository. Website content references stable `siteimg_...` IDs from `config/images.js`. The Site Manager's **Media library** maps those IDs to permanent Raspberry Pi `img_...` IDs from `images.shincabinet.com`.
-
-Configure the local Site Manager's Pi connection with the Tailscale Serve URL and Image Manager API token. The credentials are stored in `.site-manager.local.json`, which is ignored by Git.
-
-Use **Auto-match legacy paths** once after migrating existing artwork to the Pi. After that, normal character/reference/gallery editing uses website image selectors rather than manually entering image IDs.

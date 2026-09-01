@@ -19,10 +19,8 @@ window.SHIN_SITE = {
     "fursuitStatus": "Not published",
     "fursuitNote": "This page is not published yet.",
     "media": {
-      "remoteImagesEnabled": true,
       "imageHost": "https://images.shincabinet.com",
-      "maxImageDimension": 2048,
-      "cloudflareTransformationsEnabled": true
+      "maxImageDimension": 2048
     },
     "specialties": [
       "Character art",
@@ -106,12 +104,8 @@ window.SHIN_SITE = {
       ]
     },
     "homeHero": {
-      "image": "siteimg_8f38b3cbb0344d059b2118521c8af990",
+      "image": "/assets/images/gallery/full/shin-chibi-pose.webp?v=1",
       "alt": "Shin, an orange, cream, and dark brown fox-wolf character"
-    },
-    "brandImage": {
-      "image": "siteimg_9e9a8edce9fa40f8bcefafb7b04f0d3c",
-      "alt": "Shin Cabinet"
     }
   },
   "characters": [
@@ -124,7 +118,7 @@ window.SHIN_SITE = {
       "role": "Primary character",
       "category": "primary",
       "featured": true,
-      "image": "siteimg_9e9a8edce9fa40f8bcefafb7b04f0d3c",
+      "image": "/assets/images/characters/shin/shin-chibi-icon-t.png",
       "alt": "",
       "tagline": "My Sona",
       "bio": [],
@@ -163,43 +157,43 @@ window.SHIN_SITE = {
       "references": [
         {
           "title": "Shinji Chibi Icon",
-          "image": "siteimg_9e9a8edce9fa40f8bcefafb7b04f0d3c",
+          "image": "/assets/images/characters/shin/shin-chibi-icon-t.png",
           "mature": false,
           "alt": ""
         },
         {
           "title": "Shinji Chibi Pose",
-          "image": "siteimg_8f38b3cbb0344d059b2118521c8af990",
+          "image": "/assets/images/gallery/full/shin-chibi-pose.webp",
           "mature": false,
           "alt": ""
         },
         {
           "title": "Shinji Relaxed",
-          "image": "siteimg_049603ba8abd40409c9023c3b43507f0",
+          "image": "/assets/images/gallery/full/shin-lounge.webp",
           "mature": false,
           "alt": ""
         },
         {
           "title": "Shinji Petplay",
-          "image": "siteimg_29905ef07b2f4beb91ddd8ae69bcb0d0",
+          "image": "/assets/images/gallery/full/shin-pet-play.webp",
           "mature": false,
           "alt": ""
         },
         {
           "title": "Shinji Crazy Comic",
-          "image": "siteimg_ee243c86a2b241d78718bb68ec41ad26",
+          "image": "/assets/images/gallery/full/shin-crazy.webp",
           "mature": true,
           "alt": ""
         },
         {
           "title": "Shinji Character Card",
-          "image": "siteimg_8d38afbc386d4ea394151e94f3ac4bd9",
+          "image": "/assets/images/gallery/full/shin-character-card.webp",
           "mature": false,
           "alt": ""
         },
         {
           "title": "Bound Shinji",
-          "image": "siteimg_e75f993973364a18a6cfd2ffa462098c",
+          "image": "/assets/images/characters/shinji/bound-shinji.png",
           "mature": false,
           "alt": "",
           "artist": "0nibite",
@@ -218,7 +212,7 @@ window.SHIN_SITE = {
       "role": "Character",
       "category": "secondary",
       "featured": true,
-      "image": "siteimg_08ab96d875d746f0b3ebd8c90a7265b1",
+      "image": "/assets/images/characters/tav/tav-chibi-icon-t.png",
       "alt": "",
       "tagline": "",
       "bio": [],
@@ -269,7 +263,7 @@ window.SHIN_SITE = {
       "references": [
         {
           "title": "Tav Chibi Icon",
-          "image": "siteimg_a5f725f4dde24e48a4c040cef08747f7",
+          "image": "/assets/images/characters/tav/tav-chibi-icon-t-ws.png",
           "mature": false,
           "alt": ""
         }
@@ -286,7 +280,7 @@ window.SHIN_SITE = {
       "role": "Character",
       "category": "secondary",
       "featured": false,
-      "image": "siteimg_692b5b6dd5ea4e85aea6dc1455e586fd",
+      "image": "/assets/images/characters/kite/kite-chibi-icon-t.png",
       "alt": "",
       "tagline": "",
       "bio": [],
@@ -325,21 +319,35 @@ window.SHIN_SITE = {
       "references": [
         {
           "title": "Kite Chibi Icon",
-          "image": "siteimg_ff5eba138fa14a5bb798eb949f222eec",
+          "image": "/assets/images/characters/kite/kite-chibi-icon-t-ws.png",
           "mature": false,
           "alt": ""
         },
         {
           "title": "Kite Fullart",
-          "image": "siteimg_11e0b8716b5144dc8f514a28d0b7c2a4",
+          "image": "/assets/images/characters/kite/kite-pose-1-b-sfw-ws.png",
           "mature": false,
-          "alt": ""
+          "alt": "",
+          "alternatives": [
+            {
+              "title": "Transparent Version",
+              "image": "/assets/images/characters/kite/kite-pose-1-t-sfw-ws.png",
+              "alt": ""
+            }
+          ]
         },
         {
           "title": "Kite Fullart NSFW",
-          "image": "siteimg_a6634afbc1ad479585568429a0226c94",
+          "image": "/assets/images/characters/kite/kite-pose-1-b-nsfw-ws.png",
           "mature": true,
-          "alt": ""
+          "alt": "",
+          "alternatives": [
+            {
+              "title": "Transparent Version",
+              "image": "/assets/images/characters/kite/kite-pose-1-t-nsfw-ws.png",
+              "alt": ""
+            }
+          ]
         }
       ],
       "links": [],
@@ -353,7 +361,7 @@ window.SHIN_SITE = {
       "category": "illustration",
       "character": "Michiru study",
       "year": "2026",
-      "image": "siteimg_e959822082814fc99e3b21613bdfa24b",
+      "image": "/assets/images/library/michiru-cheetah-speed-w-ws.webp?v=1",
       "alt": "Colorful furry character running with long sweeping tails",
       "featured": true,
       "mature": false
@@ -364,7 +372,7 @@ window.SHIN_SITE = {
       "category": "chibi",
       "character": "Shin",
       "year": "2026",
-      "image": "siteimg_8f38b3cbb0344d059b2118521c8af990",
+      "image": "/assets/images/gallery/full/shin-chibi-pose.webp?v=1",
       "alt": "Chibi illustration of Shin standing with arms open",
       "featured": true,
       "mature": false
@@ -375,7 +383,7 @@ window.SHIN_SITE = {
       "category": "illustration",
       "character": "Shin",
       "year": "2026",
-      "image": "siteimg_049603ba8abd40409c9023c3b43507f0",
+      "image": "/assets/images/gallery/full/shin-lounge.webp?v=1",
       "alt": "Shin reclining in a relaxed pose",
       "featured": true,
       "mature": false
@@ -386,7 +394,7 @@ window.SHIN_SITE = {
       "category": "chibi",
       "character": "Shin",
       "year": "2026",
-      "image": "siteimg_9e9a8edce9fa40f8bcefafb7b04f0d3c",
+      "image": "/assets/images/characters/shin/shin-chibi-icon-t.png",
       "alt": "Transparent front-facing chibi icon of Shin",
       "featured": true,
       "mature": false
@@ -397,7 +405,7 @@ window.SHIN_SITE = {
       "category": "chibi",
       "character": "Michiru study",
       "year": "2026",
-      "image": "siteimg_17c941e7248f4f54a34e881d76a4c0de",
+      "image": "/assets/images/gallery/full/michiru-chibi-icon.webp?v=1",
       "alt": "Front-facing chibi icon of a blue-haired furry character",
       "featured": false,
       "mature": false
@@ -408,7 +416,7 @@ window.SHIN_SITE = {
       "category": "illustration",
       "character": "Faputa study",
       "year": "2026",
-      "image": "siteimg_cd4f04ff18e7478ab86a964b5be51336",
+      "image": "/assets/images/gallery/full/faputa-test.webp?v=1",
       "alt": "Detailed white and red creature character posed against a transparent background",
       "featured": false,
       "mature": false
@@ -419,7 +427,7 @@ window.SHIN_SITE = {
       "category": "reference",
       "character": "Shin",
       "year": "2026",
-      "image": "siteimg_8d38afbc386d4ea394151e94f3ac4bd9",
+      "image": "/assets/images/gallery/full/shin-character-card.webp?v=1",
       "alt": "Character card showing multiple drawings and details for Shin",
       "featured": false,
       "mature": true
@@ -430,7 +438,7 @@ window.SHIN_SITE = {
       "category": "mature",
       "character": "Shin",
       "year": "2026",
-      "image": "siteimg_29905ef07b2f4beb91ddd8ae69bcb0d0",
+      "image": "/assets/images/gallery/full/shin-pet-play.webp?v=1",
       "alt": "Adult-themed furry character illustration with harness and leash",
       "featured": false,
       "mature": true
@@ -444,7 +452,7 @@ window.SHIN_SITE = {
     {
       "name": "Chibi icon",
       "price": "$25+",
-      "image": "siteimg_17c941e7248f4f54a34e881d76a4c0de",
+      "image": "/assets/images/gallery/full/michiru-chibi-icon.webp?v=1",
       "description": "An expressive head icon with clean color and a transparent or simple background.",
       "includes": [
         "One character",
@@ -454,7 +462,7 @@ window.SHIN_SITE = {
     {
       "name": "Chibi full body",
       "price": "$40+",
-      "image": "siteimg_8f38b3cbb0344d059b2118521c8af990",
+      "image": "/assets/images/gallery/full/shin-chibi-pose.webp?v=1",
       "description": "A simplified full-body pose focused on expression, silhouette, and markings.",
       "includes": [
         "One character",
@@ -464,7 +472,7 @@ window.SHIN_SITE = {
     {
       "name": "Full-body character",
       "price": "$65+",
-      "image": "siteimg_cd4f04ff18e7478ab86a964b5be51336",
+      "image": "/assets/images/gallery/full/faputa-test.webp?v=1",
       "description": "A finished full-body drawing with clean lines, color, and light shading.",
       "includes": [
         "One character",
@@ -474,7 +482,7 @@ window.SHIN_SITE = {
     {
       "name": "Character card",
       "price": "$125+",
-      "image": "siteimg_8d38afbc386d4ea394151e94f3ac4bd9",
+      "image": "/assets/images/gallery/full/shin-character-card.webp?v=1",
       "mature": true,
       "description": "A main pose with supporting expressions, details, or alternate drawings.",
       "includes": [

@@ -17,8 +17,6 @@
 
 
   const mediaConfig = data.site?.media || {};
-  const imageRegistry = window.SHIN_IMAGES || { version: 1, items: {} };
-  const siteImages = imageRegistry.items || {};
 
   function mediaHost() {
     return String(mediaConfig.imageHost || "").trim().replace(/\/+$/, "");
@@ -36,88 +34,35 @@
     return /^img_[0-9a-f]{32}$/i.test(String(value || "").trim());
   }
 
-  function isSiteImageId(value) {
-    return /^siteimg_[0-9a-f]{32}$/i.test(String(value || "").trim());
-  }
-
-  function siteImageRecord(value) {
-    const id = String(value || "").trim().toLowerCase();
-    return isSiteImageId(id) && siteImages[id] && typeof siteImages[id] === "object" ? siteImages[id] : null;
-  }
-
-  function imageSource(value) {
-    const raw = String(value || "").trim();
-    const record = siteImageRecord(raw);
-    return record ? String(record.source || "").trim() : raw;
-  }
-
-  function imageAlternatives(value) {
-    const record = siteImageRecord(value);
-    if (!record || !Array.isArray(record.alternatives)) return [];
-    return record.alternatives
-      .filter((item) => item && item.source)
-      .map((item, index) => ({
-        id: item.siteImageId || item.id || `alternative-${index + 1}`,
-        title: item.title || `Alternative ${index + 1}`,
-        image: item.siteImageId || item.source,
-        alt: item.alt || ""
-      }));
-  }
-
   function originalImageUrl(value) {
-    const requested = String(value || "").trim();
-    if (!requested) return requested;
-
-    const host = mediaHost();
-    // siteimg_ is the public contract. The Raspberry Pi owns the alias and
-    // resolves it to the current img_ backing file, so swapping an image does
-    // not require a website deployment.
-    if (isSiteImageId(requested)) return host ? `${host}/s/${encodeURIComponent(requested.toLowerCase())}` : requested;
-
-    const raw = imageSource(requested);
+    const raw = String(value || "").trim();
     if (!raw) return raw;
-    if (isDynamicImageId(raw)) return host ? `${host}/i/${encodeURIComponent(raw.toLowerCase())}` : raw;
-    if (isAbsoluteHttpUrl(raw)) return raw;
-    if (mediaConfig.remoteImagesEnabled !== true || !host || !isManagedLocalImage(raw)) return raw;
 
-    const [pathAndQuery, hash = ""] = raw.split("#", 2);
-    const relative = pathAndQuery.replace(/^\/assets\/images\//, "");
-    return `${host}/${relative}${hash ? `#${hash}` : ""}`;
-  }
-
-  function canTransformImage(original) {
-    if (mediaConfig.cloudflareTransformationsEnabled !== true) return false;
-    const max = Number(mediaConfig.maxImageDimension || 0);
-    if (!Number.isFinite(max) || max <= 0) return false;
     const host = mediaHost();
-    if (!host || !original) return false;
-    try {
-      const source = new URL(original, location.origin);
-      const imageHost = new URL(host, location.origin);
-      return source.origin === imageHost.origin;
-    } catch {
-      return false;
-    }
+
+    // Permanent dynamic IDs are the only references that are resolved through
+    // the Raspberry Pi image host. Legacy /assets/images/... paths stay local
+    // until they are explicitly replaced with an img_... ID in Site Manager.
+    if (isDynamicImageId(raw)) return host ? `${host}/i/${encodeURIComponent(raw.toLowerCase())}` : raw;
+
+    // Explicit URLs remain explicit. Never rewrite local legacy paths to the
+    // remote host: doing so creates 404s when the physical Pi path differs.
+    return raw;
   }
 
   function servedImageUrl(value) {
-    const requested = String(value || "").trim();
-    const sourceRef = imageSource(requested);
-    const original = originalImageUrl(requested);
+    const raw = String(value || "").trim();
+    const original = originalImageUrl(raw);
 
-    if (isSiteImageId(requested) || isDynamicImageId(sourceRef)) {
+    // ID-backed images are resized by the Pi Image Manager. The original is
+    // untouched and remains available at /i/<id> without ?max=.
+    if (isDynamicImageId(raw)) {
       const max = Math.round(Number(mediaConfig.maxImageDimension || 0));
       return Number.isFinite(max) && max > 0 ? `${original}?max=${Math.max(1, max)}` : original;
     }
 
-    if (!canTransformImage(original)) return original;
-
-    const max = Math.max(1, Math.round(Number(mediaConfig.maxImageDimension)));
-    const host = mediaHost();
-    const source = new URL(original);
-    const sourcePath = source.pathname.replace(/^\/+/, "");
-    const options = `fit=scale-down,width=${max},height=${max},format=auto,onerror=redirect`;
-    return `${host}/cdn-cgi/image/${options}/${sourcePath}${source.search}`;
+    // Legacy local paths and direct URLs are served exactly as stored.
+    return original;
   }
 
   function originalFromDynamicUrl(value) {
@@ -125,7 +70,7 @@
     if (!raw) return "";
     try {
       const url = new URL(raw, location.origin);
-      if (!/^\/(?:i\/img_|s\/siteimg_)[0-9a-f]{32}$/i.test(url.pathname)) return "";
+      if (!/^\/i\/img_[0-9a-f]{32}$/i.test(url.pathname)) return "";
       if (!url.searchParams.has("max")) return "";
       url.searchParams.delete("max");
       return url.toString();
@@ -134,61 +79,19 @@
     }
   }
 
-  function originalFromTransformedUrl(value) {
-    const raw = String(value || "").trim();
-    if (!raw) return "";
-    try {
-      const url = new URL(raw, location.origin);
-      const marker = "/cdn-cgi/image/";
-      const markerIndex = url.pathname.indexOf(marker);
-      if (markerIndex < 0) return "";
-      const remainder = url.pathname.slice(markerIndex + marker.length);
-      const optionEnd = remainder.indexOf("/");
-      if (optionEnd < 0) return "";
-      const sourcePath = remainder.slice(optionEnd + 1);
-      if (!sourcePath) return "";
-      return `${url.origin}/${sourcePath}${url.search}`;
-    } catch {
-      return "";
-    }
-  }
-
-  function siteImageIdFromPublicUrl(value) {
-    try {
-      const url = new URL(String(value || ""), location.origin);
-      const match = url.pathname.match(/^\/s\/(siteimg_[0-9a-f]{32})$/i);
-      return match ? match[1].toLowerCase() : "";
-    } catch {
-      return "";
-    }
-  }
-
+  // Resizing is optional. If the Pi derivative request fails, retry the stable
+  // original ID URL once. Legacy local paths never leave the primary site.
   document.addEventListener("error", (event) => {
     const image = event.target;
     if (!(image instanceof HTMLImageElement)) return;
+    if (image.dataset.originalFallbackTried === "1") return;
 
     const current = image.currentSrc || image.src || "";
-    if (image.dataset.originalFallbackTried !== "1") {
-      const fallback = image.dataset.originalImage || originalFromDynamicUrl(current) || originalFromTransformedUrl(current);
-      if (fallback && fallback !== current) {
-        image.dataset.originalFallbackTried = "1";
-        image.src = fallback;
-        return;
-      }
-      image.dataset.originalFallbackTried = "1";
-    }
+    const fallback = image.dataset.originalImage || originalFromDynamicUrl(current);
+    if (!fallback || fallback === current) return;
 
-    // Migration safety: if a site alias has not been synchronized to the Pi
-    // yet, fall back once to the source recorded in config/images.js.
-    if (image.dataset.siteSourceFallbackTried === "1") return;
-    const siteId = siteImageIdFromPublicUrl(current) || siteImageIdFromPublicUrl(image.dataset.originalImage || "");
-    const record = siteImageRecord(siteId);
-    const source = record ? String(record.source || "").trim() : "";
-    if (!source || isSiteImageId(source)) return;
-    const sourceFallback = servedImageUrl(source);
-    if (!sourceFallback || sourceFallback === current) return;
-    image.dataset.siteSourceFallbackTried = "1";
-    image.src = sourceFallback;
+    image.dataset.originalFallbackTried = "1";
+    image.src = fallback;
   }, true);
 
   function applyStaticHostedImages() {
@@ -198,6 +101,9 @@
       image.dataset.originalImage = originalImageUrl(canonical);
     });
 
+    // Manager-owned static layout images (for example the homepage hero) live
+    // in site data rather than being hard-coded into HTML. This ensures a
+    // legacy -> images.shincabinet.com migration updates the visible preview.
     qsa("img[data-site-image-key]").forEach((image) => {
       const key = image.dataset.siteImageKey || "";
       const record = data.site?.[key];
@@ -207,19 +113,6 @@
       image.dataset.originalImage = originalImageUrl(canonical);
       if (typeof record === "object" && record?.alt) image.alt = record.alt;
     });
-  }
-
-  function applyDynamicFavicon() {
-    const record = data.site?.brandImage;
-    const canonical = typeof record === "string" ? record : record?.image;
-    if (!canonical) return;
-    let link = qs('link[rel~="icon"]');
-    if (!link) {
-      link = document.createElement("link");
-      link.rel = "icon";
-      document.head.appendChild(link);
-    }
-    link.href = originalImageUrl(canonical);
   }
 
   const normalizePath = (value = "/") => {
@@ -521,7 +414,7 @@
 
   function referenceCard(reference, index) {
     const mature = reference.mature === true;
-    const alternativeCount = imageAlternatives(reference.image).length || (reference.alternatives || []).filter((item) => item && item.image).length;
+    const alternativeCount = (reference.alternatives || []).filter((item) => item && item.image).length;
     return `<article class="reference-card${mature ? " reference-card--mature" : ""}">
       <button type="button" data-reference-index="${index}" data-mature="${mature}" aria-label="View ${esc(reference.title || "reference image")}">
         <span class="reference-card__media"><img src="${esc(servedImageUrl(reference.image))}" alt="${esc(reference.alt || reference.title || "Character reference")}" loading="lazy">${alternativeCount ? `<span class="media-version-badge">${alternativeCount + 1} versions</span>` : ""}${mature ? '<span class="mature-cover"><strong>Mature</strong><small>Tap to reveal</small></span>' : ""}</span>
@@ -537,8 +430,7 @@
       image: item.full || item.image,
       alt: item.alt || item.title || primaryLabel
     }];
-    const alternatives = imageAlternatives(item.image).length ? imageAlternatives(item.image) : (item.alternatives || []);
-    alternatives.forEach((alternative, index) => {
+    (item.alternatives || []).forEach((alternative, index) => {
       if (!alternative || !alternative.image) return;
       versions.push({
         title: alternative.title || `Alternative ${index + 1}`,
@@ -678,7 +570,7 @@
           <div class="character-profile__intro">
             <a class="character-profile__back" href="/characters/">← Characters</a>
             <p class="eyebrow">${esc(character.role || "Character")}</p>
-            <div class="character-profile__identity">${character.icon ? `<img src="${esc(servedImageUrl(character.icon))}" alt="" aria-hidden="true">` : ""}<div><h1>${esc(character.name)}</h1><p>${esc(character.species || "")}${character.pronouns ? ` · ${esc(character.pronouns)}` : ""}</p></div></div>
+            <div class="character-profile__identity">${character.icon ? `<img src="${esc(character.icon)}" alt="" aria-hidden="true">` : ""}<div><h1>${esc(character.name)}</h1><p>${esc(character.species || "")}${character.pronouns ? ` · ${esc(character.pronouns)}` : ""}</p></div></div>
             ${character.tagline ? `<p class="character-profile__tagline">${esc(character.tagline)}</p>` : ""}
             ${tagsHtml}
             ${linksHtml}
@@ -730,7 +622,7 @@
 
   function artworkCard(artwork) {
     const mature = artwork.mature === true;
-    const alternativeCount = imageAlternatives(artwork.image).length || (artwork.alternatives || []).filter((item) => item && item.image).length;
+    const alternativeCount = (artwork.alternatives || []).filter((item) => item && item.image).length;
     return `<article class="gallery-card${mature ? " gallery-card--mature" : ""}" data-gallery-category="${esc(artwork.category)}" data-gallery-mature="${mature}">
       <button type="button" data-artwork-id="${esc(artwork.id)}" data-mature="${mature}" aria-label="View ${esc(artwork.title)}">
         <span class="gallery-card__media"><img src="${esc(servedImageUrl(artwork.image))}" alt="${esc(artwork.alt)}" loading="lazy">${alternativeCount ? `<span class="media-version-badge">${alternativeCount + 1} versions</span>` : ""}${mature ? '<span class="mature-cover"><strong>Mature</strong><small>Tap to reveal</small></span>' : ""}</span>
@@ -901,7 +793,6 @@
 
   document.addEventListener("DOMContentLoaded", () => {
     applyStaticHostedImages();
-  applyDynamicFavicon();
     setMetadata(currentPage);
     applySiteContent();
     renderNavigation();
