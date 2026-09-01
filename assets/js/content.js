@@ -280,7 +280,7 @@ window.SHIN_SITE = {
       "role": "Character",
       "category": "secondary",
       "featured": false,
-      "image": "/assets/images/characters/kite/kite-chibi-icon-t.png",
+      "image": "img_67ead28b98fc4b25b4efea1efed980b2",
       "alt": "",
       "tagline": "",
       "bio": [],
@@ -319,7 +319,7 @@ window.SHIN_SITE = {
       "references": [
         {
           "title": "Kite Chibi Icon",
-          "image": "/assets/images/characters/kite/kite-chibi-icon-t-ws.png",
+          "image": "img_96bc940a3c1142afa60bb87a29221498",
           "mature": false,
           "alt": ""
         },
