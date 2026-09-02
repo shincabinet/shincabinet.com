@@ -154,52 +154,6 @@ window.SHIN_SITE = {
       "designNotes": [],
       "likes": [],
       "dislikes": [],
-      "references": [
-        {
-          "title": "Shinji Chibi Icon",
-          "image": "img_401aefc5413548ad8a456d1604eada89",
-          "mature": false,
-          "alt": ""
-        },
-        {
-          "title": "Shinji Chibi Pose",
-          "image": "img_9322c3af059441229895c57df71bbba3",
-          "mature": false,
-          "alt": ""
-        },
-        {
-          "title": "Shinji Relaxed",
-          "image": "img_8796043120d74095bfe8f60c99c2bfb8",
-          "mature": false,
-          "alt": ""
-        },
-        {
-          "title": "Shinji Petplay",
-          "image": "img_8c505f318f9a4ff9afaa2e6803cf015c",
-          "mature": false,
-          "alt": ""
-        },
-        {
-          "title": "Shinji Crazy Comic",
-          "image": "img_889b32ec3e5e40d3862b9a025d27ec43",
-          "mature": true,
-          "alt": ""
-        },
-        {
-          "title": "Shinji Character Card",
-          "image": "img_d8468026194a471aba790cd085af1354",
-          "mature": false,
-          "alt": ""
-        },
-        {
-          "title": "Bound Shinji",
-          "image": "img_471426f8f65d47fbb5f94edf73879d7f",
-          "mature": false,
-          "alt": "",
-          "artist": "0nibite",
-          "artistUrl": "https://toyhou.se/0nibite"
-        }
-      ],
       "links": [],
       "path": "/characters/shinji/"
     },
@@ -260,14 +214,6 @@ window.SHIN_SITE = {
       "designNotes": [],
       "likes": [],
       "dislikes": [],
-      "references": [
-        {
-          "title": "Tav Chibi Icon",
-          "image": "img_188f9c71a17b4ecabc4b3c6b5262424a",
-          "mature": false,
-          "alt": ""
-        }
-      ],
       "links": [],
       "path": "/characters/tav/"
     },
@@ -316,40 +262,6 @@ window.SHIN_SITE = {
       "designNotes": [],
       "likes": [],
       "dislikes": [],
-      "references": [
-        {
-          "title": "Kite Chibi Icon",
-          "image": "img_96bc940a3c1142afa60bb87a29221498",
-          "mature": false,
-          "alt": ""
-        },
-        {
-          "title": "Kite Fullart",
-          "image": "img_fa64ab6e80c14c7ebb0dbe0925abb468",
-          "mature": false,
-          "alt": "",
-          "alternatives": [
-            {
-              "title": "Transparent Version",
-              "image": "img_1a9614216413413787c376eb61b21841",
-              "alt": ""
-            }
-          ]
-        },
-        {
-          "title": "Kite Fullart NSFW",
-          "image": "img_548d78a28162413ab87676534d8ca448",
-          "mature": true,
-          "alt": "",
-          "alternatives": [
-            {
-              "title": "Transparent Version",
-              "image": "img_aef67cd3b53b4b3989397d96cb473df0",
-              "alt": ""
-            }
-          ]
-        }
-      ],
       "links": [],
       "path": "/characters/kite/"
     }
@@ -358,90 +270,250 @@ window.SHIN_SITE = {
     {
       "id": "michiru-speed",
       "title": "Cheetah Speed",
+      "type": "artwork",
       "category": "illustration",
-      "character": "Michiru study",
-      "year": "2026",
       "image": "img_bd4ce2f0a7a4429c855aebf8438e6539",
+      "characters": [],
+      "subject": "Michiru study",
+      "year": "2026",
+      "description": "",
       "alt": "Colorful furry character running with long sweeping tails",
+      "mature": false,
       "featured": true,
-      "mature": false
+      "showInGallery": true
     },
     {
       "id": "shin-chibi-pose",
       "title": "Shin Chibi Pose",
+      "type": "reference",
       "category": "chibi",
-      "character": "Shin",
-      "year": "2026",
       "image": "img_9322c3af059441229895c57df71bbba3",
+      "characters": [
+        "shinji"
+      ],
+      "subject": "Shin",
+      "year": "2026",
+      "description": "",
       "alt": "Chibi illustration of Shin standing with arms open",
+      "mature": false,
       "featured": true,
-      "mature": false
+      "showInGallery": true
     },
     {
       "id": "shin-lounge",
       "title": "Shin Lounge",
+      "type": "reference",
       "category": "illustration",
-      "character": "Shin",
-      "year": "2026",
       "image": "img_8796043120d74095bfe8f60c99c2bfb8",
+      "characters": [
+        "shinji"
+      ],
+      "subject": "Shin",
+      "year": "2026",
+      "description": "",
       "alt": "Shin reclining in a relaxed pose",
+      "mature": false,
       "featured": true,
-      "mature": false
+      "showInGallery": true
     },
     {
       "id": "shin-icon-transparent",
       "title": "Shin Icon Cutout",
+      "type": "reference",
       "category": "chibi",
-      "character": "Shin",
-      "year": "2026",
       "image": "img_401aefc5413548ad8a456d1604eada89",
+      "characters": [
+        "shinji"
+      ],
+      "subject": "Shin",
+      "year": "2026",
+      "description": "",
       "alt": "Transparent front-facing chibi icon of Shin",
+      "mature": false,
       "featured": true,
-      "mature": false
+      "showInGallery": true
     },
     {
       "id": "michiru-chibi-icon",
       "title": "Michiru Chibi Icon",
+      "type": "artwork",
       "category": "chibi",
-      "character": "Michiru study",
-      "year": "2026",
       "image": "img_7cef55799d124e8fb06748419118da50",
+      "characters": [],
+      "subject": "Michiru study",
+      "year": "2026",
+      "description": "",
       "alt": "Front-facing chibi icon of a blue-haired furry character",
+      "mature": false,
       "featured": false,
-      "mature": false
+      "showInGallery": true
     },
     {
       "id": "faputa-test",
       "title": "Faputa Study",
+      "type": "artwork",
       "category": "illustration",
-      "character": "Faputa study",
-      "year": "2026",
       "image": "img_c930ba0535e7418dbbe6b366cdca1418",
+      "characters": [],
+      "subject": "Faputa study",
+      "year": "2026",
+      "description": "",
       "alt": "Detailed white and red creature character posed against a transparent background",
+      "mature": false,
       "featured": false,
-      "mature": false
+      "showInGallery": true
     },
     {
       "id": "shin-character-card",
       "title": "Shin Character Card",
+      "type": "reference",
       "category": "reference",
-      "character": "Shin",
-      "year": "2026",
       "image": "img_d8468026194a471aba790cd085af1354",
+      "characters": [
+        "shinji"
+      ],
+      "subject": "Shin",
+      "year": "2026",
+      "description": "",
       "alt": "Character card showing multiple drawings and details for Shin",
+      "mature": true,
       "featured": false,
-      "mature": true
+      "showInGallery": false
     },
     {
       "id": "shin-pet-play",
       "title": "Pet Play",
+      "type": "reference",
       "category": "mature",
-      "character": "Shin",
-      "year": "2026",
       "image": "img_8c505f318f9a4ff9afaa2e6803cf015c",
+      "characters": [
+        "shinji"
+      ],
+      "subject": "Shin",
+      "year": "2026",
+      "description": "",
       "alt": "Adult-themed furry character illustration with harness and leash",
+      "mature": true,
       "featured": false,
-      "mature": true
+      "showInGallery": true
+    },
+    {
+      "id": "shinji-shinji-crazy-comic",
+      "title": "Shinji Crazy Comic",
+      "type": "reference",
+      "category": "reference",
+      "image": "img_889b32ec3e5e40d3862b9a025d27ec43",
+      "characters": [
+        "shinji"
+      ],
+      "subject": "",
+      "year": "",
+      "description": "",
+      "alt": "",
+      "mature": true,
+      "featured": false,
+      "showInGallery": false
+    },
+    {
+      "id": "shinji-bound-shinji",
+      "title": "Bound Shinji",
+      "type": "reference",
+      "category": "reference",
+      "image": "img_471426f8f65d47fbb5f94edf73879d7f",
+      "characters": [
+        "shinji"
+      ],
+      "subject": "",
+      "year": "",
+      "description": "",
+      "alt": "",
+      "mature": false,
+      "featured": false,
+      "showInGallery": false,
+      "artist": "0nibite",
+      "artistUrl": "https://toyhou.se/0nibite"
+    },
+    {
+      "id": "tav-tav-chibi-icon",
+      "title": "Tav Chibi Icon",
+      "type": "reference",
+      "category": "reference",
+      "image": "img_188f9c71a17b4ecabc4b3c6b5262424a",
+      "characters": [
+        "tav"
+      ],
+      "subject": "",
+      "year": "",
+      "description": "",
+      "alt": "",
+      "mature": false,
+      "featured": false,
+      "showInGallery": false
+    },
+    {
+      "id": "kite-kite-chibi-icon",
+      "title": "Kite Chibi Icon",
+      "type": "reference",
+      "category": "reference",
+      "image": "img_96bc940a3c1142afa60bb87a29221498",
+      "characters": [
+        "kite"
+      ],
+      "subject": "",
+      "year": "",
+      "description": "",
+      "alt": "",
+      "mature": false,
+      "featured": false,
+      "showInGallery": false
+    },
+    {
+      "id": "kite-kite-fullart",
+      "title": "Kite Fullart",
+      "type": "reference",
+      "category": "reference",
+      "image": "img_fa64ab6e80c14c7ebb0dbe0925abb468",
+      "characters": [
+        "kite"
+      ],
+      "subject": "",
+      "year": "",
+      "description": "",
+      "alt": "",
+      "mature": false,
+      "featured": false,
+      "showInGallery": false,
+      "alternatives": [
+        {
+          "title": "Transparent Version",
+          "image": "img_1a9614216413413787c376eb61b21841",
+          "alt": ""
+        }
+      ]
+    },
+    {
+      "id": "kite-kite-fullart-nsfw",
+      "title": "Kite Fullart NSFW",
+      "type": "reference",
+      "category": "reference",
+      "image": "img_548d78a28162413ab87676534d8ca448",
+      "characters": [
+        "kite"
+      ],
+      "subject": "",
+      "year": "",
+      "description": "",
+      "alt": "",
+      "mature": true,
+      "featured": false,
+      "showInGallery": false,
+      "alternatives": [
+        {
+          "title": "Transparent Version",
+          "image": "img_aef67cd3b53b4b3989397d96cb473df0",
+          "alt": ""
+        }
+      ]
     }
   ],
   "adoptables": [],
@@ -490,5 +562,6 @@ window.SHIN_SITE = {
         "Two to four supporting details"
       ]
     }
-  ]
+  ],
+  "literature": []
 };

@@ -59,6 +59,20 @@ window.SHIN_PAGES = {
       "children": []
     },
     {
+      "id": "literature",
+      "label": "Literature",
+      "path": "/literature/",
+      "enabled": true,
+      "menu": true,
+      "footer": true,
+      "homeCard": {
+        "show": false
+      },
+      "title": "Literature — Shin Cabinet",
+      "description": "Stories, fanfic, and character writing from Shin Cabinet.",
+      "children": []
+    },
+    {
       "id": "commissions",
       "label": "Commission Info",
       "path": "/commissions/",

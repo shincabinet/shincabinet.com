@@ -22,14 +22,6 @@
     return String(mediaConfig.imageHost || "").trim().replace(/\/+$/, "");
   }
 
-  function isManagedLocalImage(value) {
-    return String(value || "").startsWith("/assets/images/");
-  }
-
-  function isAbsoluteHttpUrl(value) {
-    return /^https?:\/\//i.test(String(value || "").trim());
-  }
-
   function isDynamicImageId(value) {
     return /^img_[0-9a-f]{32}$/i.test(String(value || "").trim());
   }
@@ -412,15 +404,43 @@
     return `<small class="${esc(className)}">Art by ${name}</small>`;
   }
 
-  function referenceCard(reference, index) {
-    const mature = reference.mature === true;
-    const alternativeCount = (reference.alternatives || []).filter((item) => item && item.image).length;
+  function linkedCharacters(item) {
+    const ids = Array.isArray(item?.characters) ? item.characters : [];
+    return ids.map((id) => (data.characters || []).find((character) => character.id === id && character.enabled !== false)).filter(Boolean);
+  }
+
+  function artworksForCharacter(characterId, type = "") {
+    return (data.artworks || []).filter((artwork) => {
+      const linked = Array.isArray(artwork.characters) && artwork.characters.includes(characterId);
+      return linked && (!type || artwork.type === type);
+    });
+  }
+
+  function literatureForCharacter(characterId) {
+    return (data.literature || []).filter((work) => work.published !== false && Array.isArray(work.characters) && work.characters.includes(characterId));
+  }
+
+  function characterLinksHtml(item) {
+    const characters = linkedCharacters(item);
+    if (!characters.length) return "";
+    return `<div class="linked-character-list">${characters.map((character) => `<a class="character-chip" href="${esc(characterPath(character))}">${esc(character.name)} →</a>`).join("")}</div>`;
+  }
+
+  function artworkSubjectLabel(artwork) {
+    const names = linkedCharacters(artwork).map((character) => character.name);
+    if (names.length) return names.join(", ");
+    return String(artwork?.subject || artwork?.character || "").trim();
+  }
+
+  function referenceCard(artwork) {
+    const mature = artwork.mature === true;
+    const alternativeCount = (artwork.alternatives || []).filter((item) => item && item.image).length;
     return `<article class="reference-card${mature ? " reference-card--mature" : ""}">
-      <button type="button" data-reference-index="${index}" data-mature="${mature}" aria-label="View ${esc(reference.title || "reference image")}">
-        <span class="reference-card__media"><img src="${esc(servedImageUrl(reference.image))}" alt="${esc(reference.alt || reference.title || "Character reference")}" loading="lazy">${alternativeCount ? `<span class="media-version-badge">${alternativeCount + 1} versions</span>` : ""}${mature ? '<span class="mature-cover"><strong>Mature</strong><small>Tap to reveal</small></span>' : ""}</span>
-        <span class="reference-card__caption">${esc(reference.title || "Reference")}</span>
+      <button type="button" data-artwork-id="${esc(artwork.id)}" data-mature="${mature}" aria-label="View ${esc(artwork.title || "reference image")}">
+        <span class="reference-card__media"><img src="${esc(servedImageUrl(artwork.image))}" alt="${esc(artwork.alt || artwork.title || "Character reference")}" loading="lazy">${alternativeCount ? `<span class="media-version-badge">${alternativeCount + 1} versions</span>` : ""}${mature ? '<span class="mature-cover"><strong>Mature</strong><small>Tap to reveal</small></span>' : ""}</span>
+        <span class="reference-card__caption">${esc(artwork.title || "Reference")}</span>
       </button>
-      ${artistCredit(reference, "reference-card__credit")}
+      ${artistCredit(artwork, "reference-card__credit")}
     </article>`;
   }
 
@@ -470,6 +490,17 @@
     creditElement.innerHTML = artistCredit(item, "art-dialog__credit-text");
     creditElement.hidden = !String(item.artist || "").trim();
 
+    let characterElement = qs("[data-art-dialog-characters]", dialog);
+    if (!characterElement) {
+      characterElement = document.createElement("div");
+      characterElement.className = "art-dialog__characters";
+      characterElement.dataset.artDialogCharacters = "";
+      creditElement.insertAdjacentElement("afterend", characterElement);
+    }
+    const characterHtml = characterLinksHtml(item);
+    characterElement.innerHTML = characterHtml ? `<span>Characters</span>${characterHtml}` : "";
+    characterElement.hidden = !characterHtml;
+
     let originalLink = qs("[data-art-dialog-original]", dialog);
     if (!originalLink) {
       originalLink = document.createElement("a");
@@ -478,7 +509,7 @@
       originalLink.target = "_blank";
       originalLink.rel = "noopener noreferrer";
       originalLink.textContent = "Open original image ↗";
-      creditElement.insertAdjacentElement("afterend", originalLink);
+      characterElement.insertAdjacentElement("afterend", originalLink);
     }
 
     const selectVersion = (version, button = null, index = 0) => {
@@ -504,15 +535,13 @@
     dialog.showModal();
   }
 
-  function openReferenceImage(character, index) {
-    const reference = (character.references || [])[Number(index)];
-    if (!reference) return;
-    openMediaDialog(
-      reference,
-      reference.title || `${character.name} reference`,
-      `${character.name} · Reference`,
-      reference.alt || `${character.name} reference`
-    );
+  function literatureCard(work, compact = false) {
+    const characters = linkedCharacters(work);
+    const meta = [characters.map((character) => character.name).join(", "), (work.tags || []).slice(0, 3).join(" · ")].filter(Boolean).join(" · ");
+    return `<article class="literature-card${compact ? " literature-card--compact" : ""}">
+      ${work.coverImage ? `<a class="literature-card__cover" href="${esc(work.path || `/literature/${work.id}/`)}"><img src="${esc(servedImageUrl(work.coverImage))}" alt="" loading="lazy"></a>` : ""}
+      <div class="literature-card__body"><p class="eyebrow">${work.mature ? "Mature · " : ""}Literature</p><h3><a href="${esc(work.path || `/literature/${work.id}/`)}">${esc(work.title)}</a></h3>${meta ? `<small>${esc(meta)}</small>` : ""}${work.summary ? `<p>${esc(work.summary)}</p>` : ""}${characters.length ? characterLinksHtml(work) : ""}</div>
+    </article>`;
   }
 
   function renderCharacterProfile() {
@@ -536,8 +565,9 @@
 
     const bio = Array.isArray(character.bio) ? character.bio : (character.bio ? [character.bio] : []);
     const palette = normalizePalette(character.palette || []);
-    const artwork = (data.artworks || []).filter((item) => item.character === character.name);
-    const references = character.references || [];
+    const references = artworksForCharacter(character.id, "reference");
+    const artwork = artworksForCharacter(character.id, "artwork");
+    const literature = literatureForCharacter(character.id);
     const facts = character.facts || [];
     const links = character.links || [];
 
@@ -547,16 +577,19 @@
     const designHtml = [paletteHtml, textItems(character.designNotes || [])].filter(Boolean).join("");
     const refsHtml = references.length ? `<div class="reference-grid">${references.map(referenceCard).join("")}</div>` : "";
     const artworkHtml = artwork.length ? `<div class="gallery-grid character-profile__gallery">${artwork.map(artworkCard).join("")}</div>` : "";
+    const literatureHtml = literature.length ? `<div class="character-literature">${literature.map((work) => literatureCard(work, true)).join("")}</div>` : "";
     const linksHtml = links.length ? `<div class="character-profile__links">${links.map((link) => `<a class="text-link" href="${esc(link.url)}" target="_blank" rel="noreferrer">${esc(link.display || link.label || link.url)} →</a>`).join("")}</div>` : "";
     const tagsHtml = (character.tags || []).length ? `<div class="character-profile__tags">${character.tags.map((tag) => `<span>${esc(tag)}</span>`).join("")}</div>` : "";
 
     const sectionNav = [
       bioHtml && ["about", "About"],
       factsHtml && ["details", "Details"],
-      (designHtml || refsHtml) && ["design", "Design & references"],
+      designHtml && ["design", "Design"],
+      refsHtml && ["references", "References"],
       (character.personality || []).length && ["personality", "Personality"],
       ((character.likes || []).length || (character.dislikes || []).length) && ["preferences", "Likes / dislikes"],
-      artworkHtml && ["artwork", "Artwork"]
+      artworkHtml && ["artwork", "Gallery"],
+      literatureHtml && ["literature", "Literature"]
     ].filter(Boolean);
 
     const prefHtml = ((character.likes || []).length || (character.dislikes || []).length)
@@ -570,7 +603,7 @@
           <div class="character-profile__intro">
             <a class="character-profile__back" href="/characters/">← Characters</a>
             <p class="eyebrow">${esc(character.role || "Character")}</p>
-            <div class="character-profile__identity">${character.icon ? `<img src="${esc(character.icon)}" alt="" aria-hidden="true">` : ""}<div><h1>${esc(character.name)}</h1><p>${esc(character.species || "")}${character.pronouns ? ` · ${esc(character.pronouns)}` : ""}</p></div></div>
+            <div class="character-profile__identity">${character.icon ? `<img src="${esc(servedImageUrl(character.icon))}" alt="" aria-hidden="true">` : ""}<div><h1>${esc(character.name)}</h1><p>${esc(character.species || "")}${character.pronouns ? ` · ${esc(character.pronouns)}` : ""}</p></div></div>
             ${character.tagline ? `<p class="character-profile__tagline">${esc(character.tagline)}</p>` : ""}
             ${tagsHtml}
             ${linksHtml}
@@ -579,14 +612,16 @@
       </section>
       <section class="character-profile__body">
         <div class="character-profile__body-inner">
-          <nav class="character-profile__index" aria-label="Character profile sections">${sectionNav.map(([href, label]) => `<a href="#${esc(href)}">${esc(label)}</a>`).join("")}</nav>
+          ${sectionNav.length ? `<nav class="character-profile__index" aria-label="Character profile sections">${sectionNav.map(([href, label]) => `<a href="#${esc(href)}">${esc(label)}</a>`).join("")}</nav>` : ""}
           <div class="character-profile__content">
             ${profileSection("about", "Profile", "About", bioHtml)}
             ${profileSection("details", "Information", "Details", factsHtml)}
-            ${profileSection("design", "Reference", "Design & references", `${designHtml}${refsHtml}`)}
+            ${profileSection("design", "Design", "Palette & design notes", designHtml)}
+            ${profileSection("references", "Reference", "References", refsHtml, "character-profile__section--wide")}
             ${profileSection("personality", "Character", "Personality", textItems(character.personality || []))}
             ${profileSection("preferences", "Character", "Likes / dislikes", prefHtml)}
-            ${profileSection("artwork", "Archive", `Artwork featuring ${character.name}`, artworkHtml, "character-profile__section--wide")}
+            ${profileSection("artwork", "Archive", `Gallery featuring ${character.name}`, artworkHtml, "character-profile__section--wide")}
+            ${profileSection("literature", "Writing", "Literature", literatureHtml, "character-profile__section--wide")}
           </div>
         </div>
       </section>`;
@@ -603,14 +638,6 @@
       } catch {}
     }));
 
-    qsa("[data-reference-index]", root).forEach((button) => button.addEventListener("click", () => {
-      if (button.dataset.mature === "true" && button.dataset.revealed !== "true") {
-        button.dataset.revealed = "true";
-        return;
-      }
-      openReferenceImage(character, button.dataset.referenceIndex);
-    }));
-
     qsa("[data-artwork-id]", root).forEach((button) => button.addEventListener("click", () => {
       if (button.dataset.mature === "true" && button.dataset.revealed !== "true") {
         button.dataset.revealed = "true";
@@ -623,10 +650,12 @@
   function artworkCard(artwork) {
     const mature = artwork.mature === true;
     const alternativeCount = (artwork.alternatives || []).filter((item) => item && item.image).length;
+    const subject = artworkSubjectLabel(artwork);
+    const meta = [subject, artwork.year].filter(Boolean).join(" · ");
     return `<article class="gallery-card${mature ? " gallery-card--mature" : ""}" data-gallery-category="${esc(artwork.category)}" data-gallery-mature="${mature}">
       <button type="button" data-artwork-id="${esc(artwork.id)}" data-mature="${mature}" aria-label="View ${esc(artwork.title)}">
-        <span class="gallery-card__media"><img src="${esc(servedImageUrl(artwork.image))}" alt="${esc(artwork.alt)}" loading="lazy">${alternativeCount ? `<span class="media-version-badge">${alternativeCount + 1} versions</span>` : ""}${mature ? '<span class="mature-cover"><strong>Mature</strong><small>Tap to reveal</small></span>' : ""}</span>
-        <span class="gallery-card__caption"><strong>${esc(artwork.title)}</strong><small>${esc(artwork.character)} · ${esc(artwork.year)}</small></span>
+        <span class="gallery-card__media"><img src="${esc(servedImageUrl(artwork.image))}" alt="${esc(artwork.alt || artwork.title)}" loading="lazy">${alternativeCount ? `<span class="media-version-badge">${alternativeCount + 1} versions</span>` : ""}${mature ? '<span class="mature-cover"><strong>Mature</strong><small>Tap to reveal</small></span>' : ""}</span>
+        <span class="gallery-card__caption"><strong>${esc(artwork.title)}</strong>${meta ? `<small>${esc(meta)}</small>` : ""}</span>
       </button>
       ${artistCredit(artwork, "gallery-card__credit")}
     </article>`;
@@ -635,7 +664,7 @@
   function renderGallery() {
     const grid = qs("[data-gallery-grid]");
     if (!grid) return;
-    let artworks = [...data.artworks];
+    let artworks = (data.artworks || []).filter((artwork) => artwork.showInGallery !== false);
     if (grid.dataset.featuredOnly === "true") artworks = artworks.filter((artwork) => artwork.featured && !artwork.mature);
     const limit = Number(grid.dataset.limit || artworks.length);
     grid.innerHTML = artworks.slice(0, limit).map(artworkCard).join("");
@@ -652,14 +681,51 @@
   }
 
   function openArtwork(id) {
-    const artwork = data.artworks.find((item) => item.id === id);
+    const artwork = (data.artworks || []).find((item) => item.id === id);
     if (!artwork) return;
-    openMediaDialog(
-      artwork,
-      artwork.title,
-      `${artwork.category} · ${artwork.character} · ${artwork.year}`,
-      artwork.alt || artwork.title
-    );
+    const meta = [artwork.category, artworkSubjectLabel(artwork), artwork.year].filter(Boolean).join(" · ");
+    openMediaDialog(artwork, artwork.title, meta, artwork.alt || artwork.title);
+  }
+
+  function renderLiteratureDirectory() {
+    const grid = qs("[data-literature-grid]");
+    if (!grid) return;
+    const works = (data.literature || []).filter((work) => work.published !== false);
+    grid.innerHTML = works.map((work) => literatureCard(work)).join("");
+    const empty = qs("[data-literature-empty]");
+    if (empty) empty.hidden = works.length !== 0;
+  }
+
+  function renderLiteratureReader() {
+    const root = qs("[data-literature-reader]");
+    if (!root) return;
+    const id = root.dataset.literatureReader || document.body.dataset.literatureId || "";
+    const work = (data.literature || []).find((item) => item.id === id && item.published !== false);
+    if (!work) {
+      root.innerHTML = `<section class="disabled-page"><p class="eyebrow">Literature</p><h1>Work not found</h1><p>This writing is unpublished or no longer exists.</p><a class="button" href="/literature/">Back to Literature</a></section>`;
+      return;
+    }
+    document.title = `${work.title} — Literature — ${data.site.name}`;
+    const metaDescription = qs('meta[name="description"]');
+    if (metaDescription) metaDescription.content = work.summary || `${work.title} by ${work.author || data.site.artistName}.`;
+    const characters = linkedCharacters(work);
+    const authorUrl = /^https?:\/\//i.test(String(work.authorUrl || "")) ? work.authorUrl : "";
+    const author = work.author || data.site.artistName || "";
+    const authorHtml = authorUrl ? `<a href="${esc(authorUrl)}" target="_blank" rel="noopener noreferrer">${esc(author)}</a>` : esc(author);
+    const tags = (work.tags || []).map((tag) => `<span>${esc(tag)}</span>`).join("");
+    const body = window.SHIN_MARKDOWN?.render ? window.SHIN_MARKDOWN.render(work.body || "") : `<p>${esc(work.body || "")}</p>`;
+    root.innerHTML = `<article class="literature-reader">
+      <header class="literature-reader__header">
+        <a class="character-profile__back" href="/literature/">← Literature</a>
+        <p class="eyebrow">${work.mature ? "Mature · " : ""}Literature</p>
+        <h1>${esc(work.title)}</h1>
+        ${work.summary ? `<p class="literature-reader__summary">${esc(work.summary)}</p>` : ""}
+        <div class="literature-reader__meta">${author ? `<span>By ${authorHtml}</span>` : ""}${characters.length ? characterLinksHtml(work) : ""}</div>
+        ${tags ? `<div class="literature-tags">${tags}</div>` : ""}
+        ${work.coverImage ? `<img class="literature-reader__cover" src="${esc(servedImageUrl(work.coverImage))}" alt="">` : ""}
+      </header>
+      <div class="literature-prose">${body}</div>
+    </article>`;
   }
 
   function renderFursuits() {
@@ -812,6 +878,8 @@
     renderCharacters();
     renderCharacterProfile();
     renderGallery();
+    renderLiteratureDirectory();
+    renderLiteratureReader();
     renderAdoptables();
     renderFursuits();
     renderCommissions();

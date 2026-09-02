@@ -30,6 +30,7 @@ CONTENT_FILE = ROOT / "assets" / "js" / "content.js"
 PAGES_FILE = ROOT / "config" / "pages.js"
 CUSTOM_PAGES_FILE = ROOT / "config" / "custom-pages.js"
 TEMPLATE_FILE = ROOT / "tools" / "character-template.html"
+LITERATURE_TEMPLATE_FILE = ROOT / "tools" / "literature-template.html"
 MANAGER_FILE = ROOT / "tools" / "site-manager.html"
 SITEMAP_FILE = ROOT / "sitemap.xml"
 IMAGE_EXTENSIONS = {".png", ".jpg", ".jpeg", ".webp", ".gif", ".avif"}
@@ -177,6 +178,32 @@ def write_character_page(character: dict[str, Any], previous_id: str | None = No
     folder = ROOT / "characters" / character_id
     folder.mkdir(parents=True, exist_ok=True)
     atomic_write_text(folder / "index.html", character_page(character))
+
+
+
+def literature_page(work: dict[str, Any]) -> str:
+    template = LITERATURE_TEMPLATE_FILE.read_text(encoding="utf-8")
+    description = work.get("summary") or f"{work.get('title', 'Literature')} — writing from Shin Cabinet."
+    replacements = {
+        "{{ID}}": html.escape(str(work["id"]), quote=True),
+        "{{NAME}}": html.escape(str(work.get("title") or work["id"]), quote=False),
+        "{{DESCRIPTION}}": html.escape(str(description), quote=True),
+    }
+    for source, replacement in replacements.items():
+        template = template.replace(source, replacement)
+    return template
+
+
+def write_literature_page(work: dict[str, Any], previous_id: str | None = None) -> None:
+    work_id = safe_slug(str(work["id"]))
+    if previous_id and previous_id != work_id:
+        old_dir = ROOT / "literature" / safe_slug(previous_id)
+        new_dir = ROOT / "literature" / work_id
+        if old_dir.exists() and not new_dir.exists():
+            old_dir.rename(new_dir)
+    folder = ROOT / "literature" / work_id
+    folder.mkdir(parents=True, exist_ok=True)
+    atomic_write_text(folder / "index.html", literature_page(work))
 
 
 def normalize_image_url(value: str) -> str:
@@ -459,7 +486,8 @@ def _assignment_label(source: str, path: list[Any], parent: dict[str, Any] | Non
     """Return a friendly group/label for an image-bearing config field."""
     top = str(path[0]) if path else source
     groups = {
-        "artworks": "Gallery",
+        "artworks": "Artwork",
+        "literature": "Literature",
         "characters": "Characters",
         "commissions": "Commissions",
         "adoptables": "Adoptables",
@@ -611,6 +639,11 @@ def write_sitemap(pages: dict[str, Any], content: dict[str, Any] | None = None) 
             for character in content.get("characters", []):
                 if character.get("enabled", True):
                     urls.append(base + character.get("path", f"/characters/{character.get('id')}/"))
+        literature_page_config = next((i for i, e in walk_pages(pages.get("items", [])) if i.get("id") == "literature" and e), None)
+        if literature_page_config:
+            for work in content.get("literature", []):
+                if work.get("published", True):
+                    urls.append(base + work.get("path", f"/literature/{work.get('id')}/"))
     unique = list(dict.fromkeys(urls))
     body = "".join(f"  <url><loc>{html.escape(url)}</loc></url>\n" for url in unique)
     xml = '<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">\n' + body + '</urlset>\n'
@@ -634,6 +667,248 @@ def normalize_artist_url(value: Any) -> str:
     return url
 
 
+
+def _character_id_lookup(characters: list[dict[str, Any]]) -> dict[str, str]:
+    lookup: dict[str, str] = {}
+    for character in characters:
+        character_id = str(character.get("id") or "").strip()
+        if not character_id:
+            continue
+        lookup[character_id.lower()] = character_id
+        name = str(character.get("name") or "").strip()
+        if name:
+            lookup[name.lower()] = character_id
+    return lookup
+
+
+def normalize_character_ids(values: Any, characters: list[dict[str, Any]]) -> list[str]:
+    lookup = _character_id_lookup(characters)
+    output: list[str] = []
+    if not isinstance(values, list):
+        values = []
+    for value in values:
+        key = str(value or "").strip().lower()
+        character_id = lookup.get(key)
+        if character_id and character_id not in output:
+            output.append(character_id)
+    return output
+
+
+def normalize_alternatives(values: Any) -> list[dict[str, str]]:
+    if not isinstance(values, list):
+        return []
+    output: list[dict[str, str]] = []
+    for index, raw in enumerate(values[:40]):
+        if not isinstance(raw, dict):
+            continue
+        image = str(raw.get("image") or "").strip()
+        if not image:
+            continue
+        output.append({
+            "title": str(raw.get("title") or f"Alternative {index + 1}").strip()[:120] or f"Alternative {index + 1}",
+            "image": validate_image_reference(image),
+            "alt": str(raw.get("alt") or "").strip()[:500],
+        })
+    return output
+
+
+def normalize_artwork(raw: dict[str, Any], characters: list[dict[str, Any]]) -> dict[str, Any]:
+    artwork = dict(raw or {})
+    artwork_id = safe_slug(str(artwork.get("id") or artwork.get("title") or "artwork"))
+    title = str(artwork.get("title") or artwork_id.replace("-", " ").title()).strip()[:180]
+    kind = str(artwork.get("type") or "").strip().lower()
+    if kind not in {"artwork", "reference"}:
+        kind = "reference" if str(artwork.get("category") or "").strip().lower() == "reference" else "artwork"
+
+    image = str(artwork.get("image") or "").strip()
+    if not image:
+        raise ValueError("Artwork image is required.")
+
+    linked = normalize_character_ids(artwork.get("characters"), characters)
+    legacy_subject = str(artwork.get("subject") or artwork.get("character") or "").strip()[:160]
+    if legacy_subject:
+        legacy_match = normalize_character_ids([legacy_subject], characters)
+        for character_id in legacy_match:
+            if character_id not in linked:
+                linked.append(character_id)
+        # Keep a free-form subject only when it does not map cleanly to a site character.
+        if legacy_match and not artwork.get("subject"):
+            legacy_subject = ""
+
+    normalized: dict[str, Any] = {
+        "id": artwork_id,
+        "title": title,
+        "type": kind,
+        "category": str(artwork.get("category") or ("reference" if kind == "reference" else "illustration")).strip().lower()[:80],
+        "image": validate_image_reference(image),
+        "characters": linked,
+        "subject": legacy_subject,
+        "year": str(artwork.get("year") or "").strip()[:20],
+        "description": str(artwork.get("description") or "").strip()[:4000],
+        "alt": str(artwork.get("alt") or "").strip()[:500],
+        "mature": bool(artwork.get("mature", False)),
+        "featured": bool(artwork.get("featured", False)),
+        "showInGallery": bool(artwork.get("showInGallery", kind != "reference")),
+    }
+    alternatives = normalize_alternatives(artwork.get("alternatives"))
+    if alternatives:
+        normalized["alternatives"] = alternatives
+    artist = str(artwork.get("artist") or "").strip()[:120]
+    if artist:
+        normalized["artist"] = artist
+        if artwork.get("artistUrl"):
+            normalized["artistUrl"] = normalize_artist_url(artwork.get("artistUrl"))
+    return normalized
+
+
+def normalize_literature(raw: dict[str, Any], characters: list[dict[str, Any]]) -> dict[str, Any]:
+    work = dict(raw or {})
+    work_id = safe_slug(str(work.get("id") or work.get("title") or "literature"))
+    title = str(work.get("title") or work_id.replace("-", " ").title()).strip()[:180]
+    tags: list[str] = []
+    raw_tags = work.get("tags") if isinstance(work.get("tags"), list) else []
+    for raw_tag in raw_tags:
+        tag = str(raw_tag or "").strip()[:80]
+        if tag and tag not in tags:
+            tags.append(tag)
+    cover = str(work.get("coverImage") or "").strip()
+    normalized: dict[str, Any] = {
+        "id": work_id,
+        "title": title,
+        "summary": str(work.get("summary") or "").strip()[:4000],
+        "characters": normalize_character_ids(work.get("characters"), characters),
+        "author": str(work.get("author") or "").strip()[:120],
+        "tags": tags,
+        "mature": bool(work.get("mature", False)),
+        "published": bool(work.get("published", True)),
+        "body": str(work.get("body") or "")[:500000],
+        "path": f"/literature/{work_id}/",
+    }
+    if work.get("authorUrl"):
+        normalized["authorUrl"] = normalize_artist_url(work.get("authorUrl"))
+    if cover:
+        normalized["coverImage"] = validate_image_reference(cover)
+    return normalized
+
+
+def migrate_character_references(content: dict[str, Any]) -> int:
+    characters = content.setdefault("characters", [])
+    artworks = content.setdefault("artworks", [])
+    by_image: dict[str, dict[str, Any]] = {}
+    for artwork in artworks:
+        image = str(artwork.get("image") or "").strip()
+        if image:
+            try:
+                by_image[normalize_image_url(image)] = artwork
+            except ValueError:
+                pass
+
+    created = 0
+    for character in characters:
+        character_id = str(character.get("id") or "").strip()
+        references = character.get("references") if isinstance(character.get("references"), list) else []
+        for index, reference in enumerate(references):
+            if not isinstance(reference, dict):
+                continue
+            image = str(reference.get("image") or "").strip()
+            if not image:
+                continue
+            try:
+                clean_image = normalize_image_url(image)
+            except ValueError:
+                continue
+            existing = by_image.get(clean_image)
+            if existing is not None:
+                existing["type"] = "reference"
+                existing.setdefault("category", "reference")
+                linked = existing.get("characters") if isinstance(existing.get("characters"), list) else []
+                if character_id and character_id not in linked:
+                    linked.append(character_id)
+                existing["characters"] = linked
+                continue
+
+            candidate = {
+                "id": f"{character_id}-{safe_slug(str(reference.get('title') or f'reference-{index + 1}'))}",
+                "title": str(reference.get("title") or f"{character.get('name', character_id)} Reference {index + 1}"),
+                "type": "reference",
+                "category": "reference",
+                "image": image,
+                "characters": [character_id] if character_id else [],
+                "subject": "",
+                "year": str(reference.get("year") or ""),
+                "description": str(reference.get("description") or ""),
+                "alt": str(reference.get("alt") or ""),
+                "mature": bool(reference.get("mature", False)),
+                "featured": False,
+                "showInGallery": False,
+                "alternatives": reference.get("alternatives") or [],
+                "artist": reference.get("artist") or "",
+                "artistUrl": reference.get("artistUrl") or "",
+            }
+            normalized = normalize_artwork(candidate, characters)
+            # Avoid slug collisions while preserving stable IDs.
+            base_id = normalized["id"]
+            suffix = 2
+            existing_ids = {str(item.get("id") or "") for item in artworks}
+            while normalized["id"] in existing_ids:
+                normalized["id"] = f"{base_id}-{suffix}"
+                suffix += 1
+            artworks.append(normalized)
+            by_image[clean_image] = normalized
+            created += 1
+        character.pop("references", None)
+    return created
+
+
+
+def upsert_artwork(content: dict[str, Any], raw: dict[str, Any], previous_id: str | None = None) -> dict[str, Any]:
+    characters = content.setdefault("characters", [])
+    artworks = content.setdefault("artworks", [])
+    artwork = normalize_artwork(raw, characters)
+    previous_clean = safe_slug(previous_id) if previous_id else None
+    conflict = next((item for item in artworks if item.get("id") == artwork["id"] and item.get("id") != previous_clean), None)
+    if conflict:
+        raise ValueError(f"An artwork with ID '{artwork['id']}' already exists.")
+    index = next((i for i, item in enumerate(artworks) if item.get("id") == previous_clean), None) if previous_clean else None
+    if index is None:
+        artworks.append(artwork)
+    else:
+        artworks[index] = artwork
+    return artwork
+
+
+def delete_artwork_record(content: dict[str, Any], artwork_id: str) -> bool:
+    clean = safe_slug(artwork_id)
+    artworks = content.setdefault("artworks", [])
+    before = len(artworks)
+    content["artworks"] = [item for item in artworks if item.get("id") != clean]
+    return len(content["artworks"]) != before
+
+
+def upsert_literature(content: dict[str, Any], raw: dict[str, Any], previous_id: str | None = None) -> dict[str, Any]:
+    characters = content.setdefault("characters", [])
+    works = content.setdefault("literature", [])
+    work = normalize_literature(raw, characters)
+    previous_clean = safe_slug(previous_id) if previous_id else None
+    conflict = next((item for item in works if item.get("id") == work["id"] and item.get("id") != previous_clean), None)
+    if conflict:
+        raise ValueError(f"A literature work with ID '{work['id']}' already exists.")
+    index = next((i for i, item in enumerate(works) if item.get("id") == previous_clean), None) if previous_clean else None
+    if index is None:
+        works.append(work)
+    else:
+        works[index] = work
+    return work
+
+
+def delete_literature_record(content: dict[str, Any], work_id: str) -> bool:
+    clean = safe_slug(work_id)
+    works = content.setdefault("literature", [])
+    before = len(works)
+    content["literature"] = [item for item in works if item.get("id") != clean]
+    return len(content["literature"]) != before
+
+
 def normalize_character(raw: dict[str, Any]) -> dict[str, Any]:
     character = dict(raw)
     character["id"] = safe_slug(str(character.get("id") or character.get("name") or ""))
@@ -642,56 +917,16 @@ def normalize_character(raw: dict[str, Any]) -> dict[str, Any]:
     character["enabled"] = bool(character.get("enabled", True))
     character["featured"] = bool(character.get("featured", False))
 
-    # Canonicalize image links at save time. Direct image-host URLs must remain
-    # direct URLs; they must never be converted back to /assets/images paths.
     main_image = str(character.get("image") or "").strip()
     if main_image:
         character["image"] = validate_image_reference(main_image)
 
-    for key in ("bio", "tags", "personality", "designNotes", "likes", "dislikes", "references", "facts", "palette", "links"):
+    for key in ("bio", "tags", "personality", "designNotes", "likes", "dislikes", "facts", "palette", "links"):
         if not isinstance(character.get(key), list):
             character[key] = []
-    normalized_references: list[dict[str, Any]] = []
-    for raw_reference in character["references"]:
-        if not isinstance(raw_reference, dict):
-            continue
-        reference = dict(raw_reference)
-        reference_image = str(reference.get("image") or "").strip()
-        if reference_image:
-            reference["image"] = validate_image_reference(reference_image)
-
-        raw_alternatives = reference.get("alternatives")
-        if isinstance(raw_alternatives, list):
-            normalized_alternatives: list[dict[str, Any]] = []
-            for raw_alt in raw_alternatives:
-                if not isinstance(raw_alt, dict):
-                    continue
-                alt = dict(raw_alt)
-                alt_image = str(alt.get("image") or "").strip()
-                if not alt_image:
-                    continue
-                alt["image"] = validate_image_reference(alt_image)
-                normalized_alternatives.append(alt)
-            if normalized_alternatives:
-                reference["alternatives"] = normalized_alternatives
-            else:
-                reference.pop("alternatives", None)
-
-        artist = str(reference.get("artist") or "").strip()[:120]
-        artist_url = normalize_artist_url(reference.get("artistUrl")) if reference.get("artistUrl") else ""
-        if artist:
-            reference["artist"] = artist
-            if artist_url:
-                reference["artistUrl"] = artist_url
-            else:
-                reference.pop("artistUrl", None)
-        else:
-            reference.pop("artist", None)
-            reference.pop("artistUrl", None)
-        normalized_references.append(reference)
-    character["references"] = normalized_references
+    # Artwork/reference relationships are centralized in content.artworks.
+    character.pop("references", None)
     return character
-
 
 def json_response(handler: SimpleHTTPRequestHandler, status: int, payload: Any) -> None:
     data = json.dumps(payload, ensure_ascii=False).encode("utf-8")
@@ -810,6 +1045,14 @@ class Handler(SimpleHTTPRequestHandler):
                 return self.save_character(payload)
             if parsed.path == "/api/character/delete":
                 return self.delete_character(payload)
+            if parsed.path == "/api/artwork/save":
+                return self.save_artwork(payload)
+            if parsed.path == "/api/artwork/delete":
+                return self.delete_artwork(payload)
+            if parsed.path == "/api/literature/save":
+                return self.save_literature(payload)
+            if parsed.path == "/api/literature/delete":
+                return self.delete_literature(payload)
             if parsed.path == "/api/pages/save":
                 return self.save_pages(payload)
             if parsed.path == "/api/site/save":
@@ -833,7 +1076,7 @@ class Handler(SimpleHTTPRequestHandler):
             json_response(self, 400, {"error": str(exc)})
 
     def save_character(self, payload: dict[str, Any]) -> None:
-        previous_id = payload.get("previousId") or None
+        previous_id = str(payload.get("previousId") or "").strip() or None
         character = normalize_character(payload.get("character") or {})
         variable, content = read_assignment(CONTENT_FILE)
         characters = content.setdefault("characters", [])
@@ -847,12 +1090,14 @@ class Handler(SimpleHTTPRequestHandler):
         else:
             characters[index] = character
 
-        # When the character editor is used to replace a legacy path with a
-        # direct image-host URL, migrate other config entries that point at the
-        # exact same legacy image. This avoids leaving a duplicate Gallery or
-        # reference entry on /assets/images after the visible character field
-        # was moved to images.shincabinet.com.
-        migration_pairs: list[tuple[str, str]] = []
+        # Keep central artwork/literature relationships intact if a character ID changes.
+        if previous_id and previous_id != character["id"]:
+            for collection_name in ("artworks", "literature"):
+                for item in content.get(collection_name, []):
+                    linked = item.get("characters") if isinstance(item.get("characters"), list) else []
+                    item["characters"] = [character["id"] if value == previous_id else value for value in linked]
+
+        # Preserve the useful legacy->ID migration behavior for the character's main image only.
         if previous_character:
             old_main = str(previous_character.get("image") or "").strip()
             new_main = str(character.get("image") or "").strip()
@@ -860,41 +1105,7 @@ class Handler(SimpleHTTPRequestHandler):
                 old_clean = normalize_image_url(old_main)
                 new_clean = normalize_image_url(new_main)
                 if (old_clean.startswith("/assets/images/") or is_remote_image_url(old_clean)) and (is_remote_image_url(new_clean) or is_dynamic_image_id(new_clean)):
-                    migration_pairs.append((old_clean, new_clean))
-
-            old_refs = previous_character.get("references") if isinstance(previous_character.get("references"), list) else []
-            new_refs = character.get("references") if isinstance(character.get("references"), list) else []
-            for old_ref, new_ref in zip(old_refs, new_refs):
-                if not isinstance(old_ref, dict) or not isinstance(new_ref, dict):
-                    continue
-                old_image = str(old_ref.get("image") or "").strip()
-                new_image = str(new_ref.get("image") or "").strip()
-                if not old_image or not new_image:
-                    continue
-                old_clean = normalize_image_url(old_image)
-                new_clean = normalize_image_url(new_image)
-                if (old_clean.startswith("/assets/images/") or is_remote_image_url(old_clean)) and (is_remote_image_url(new_clean) or is_dynamic_image_id(new_clean)):
-                    migration_pairs.append((old_clean, new_clean))
-
-        changed_custom = False
-        changed_pages = False
-        if migration_pairs:
-            seen: set[tuple[str, str]] = set()
-            custom_variable, custom_data = read_assignment(CUSTOM_PAGES_FILE)
-            pages_variable, pages_data = read_assignment(PAGES_FILE)
-            for old_url, new_url in migration_pairs:
-                if (old_url, new_url) in seen:
-                    continue
-                seen.add((old_url, new_url))
-                replace_matching_config_images(content, old_url, new_url)
-                if replace_matching_config_images(custom_data, old_url, new_url):
-                    changed_custom = True
-                if replace_matching_config_images(pages_data, old_url, new_url):
-                    changed_pages = True
-            if changed_custom:
-                write_assignment(CUSTOM_PAGES_FILE, custom_variable, custom_data, CUSTOM_PAGES_HEADER)
-            if changed_pages:
-                write_assignment(PAGES_FILE, pages_variable, pages_data, PAGES_HEADER)
+                    replace_matching_config_images(content, old_clean, new_clean)
 
         write_assignment(CONTENT_FILE, variable, content, CONTENT_HEADER)
         write_character_page(character, previous_id)
@@ -909,8 +1120,54 @@ class Handler(SimpleHTTPRequestHandler):
         content["characters"] = [c for c in content.get("characters", []) if c.get("id") != character_id]
         if len(content["characters"]) == before:
             raise ValueError("Character not found.")
+        for collection_name in ("artworks", "literature"):
+            for item in content.get(collection_name, []):
+                linked = item.get("characters") if isinstance(item.get("characters"), list) else []
+                item["characters"] = [value for value in linked if value != character_id]
         write_assignment(CONTENT_FILE, variable, content, CONTENT_HEADER)
         folder = ROOT / "characters" / character_id
+        if folder.exists() and folder.is_dir():
+            shutil.rmtree(folder)
+        _, pages = read_assignment(PAGES_FILE)
+        write_sitemap(pages, content)
+        json_response(self, 200, {"ok": True, "manager": manager_diagnostics()})
+
+    def save_artwork(self, payload: dict[str, Any]) -> None:
+        previous_id = str(payload.get("previousId") or "").strip() or None
+        variable, content = read_assignment(CONTENT_FILE)
+        artwork = upsert_artwork(content, payload.get("artwork") or {}, previous_id)
+        write_assignment(CONTENT_FILE, variable, content, CONTENT_HEADER)
+        _, pages = read_assignment(PAGES_FILE)
+        write_sitemap(pages, content)
+        json_response(self, 200, {"ok": True, "artwork": artwork, "images": list_images(), "imageAssignments": collect_image_assignments(), "manager": manager_diagnostics()})
+
+    def delete_artwork(self, payload: dict[str, Any]) -> None:
+        artwork_id = str(payload.get("id") or "")
+        variable, content = read_assignment(CONTENT_FILE)
+        if not delete_artwork_record(content, artwork_id):
+            raise ValueError("Artwork not found.")
+        write_assignment(CONTENT_FILE, variable, content, CONTENT_HEADER)
+        _, pages = read_assignment(PAGES_FILE)
+        write_sitemap(pages, content)
+        json_response(self, 200, {"ok": True, "manager": manager_diagnostics()})
+
+    def save_literature(self, payload: dict[str, Any]) -> None:
+        previous_id = str(payload.get("previousId") or "").strip() or None
+        variable, content = read_assignment(CONTENT_FILE)
+        work = upsert_literature(content, payload.get("literature") or {}, previous_id)
+        write_assignment(CONTENT_FILE, variable, content, CONTENT_HEADER)
+        write_literature_page(work, previous_id)
+        _, pages = read_assignment(PAGES_FILE)
+        write_sitemap(pages, content)
+        json_response(self, 200, {"ok": True, "literature": work, "images": list_images(), "imageAssignments": collect_image_assignments(), "manager": manager_diagnostics()})
+
+    def delete_literature(self, payload: dict[str, Any]) -> None:
+        work_id = safe_slug(str(payload.get("id") or ""))
+        variable, content = read_assignment(CONTENT_FILE)
+        if not delete_literature_record(content, work_id):
+            raise ValueError("Literature work not found.")
+        write_assignment(CONTENT_FILE, variable, content, CONTENT_HEADER)
+        folder = ROOT / "literature" / work_id
         if folder.exists() and folder.is_dir():
             shutil.rmtree(folder)
         _, pages = read_assignment(PAGES_FILE)
@@ -960,6 +1217,8 @@ class Handler(SimpleHTTPRequestHandler):
 
     def save_image_variants(self, payload: dict[str, Any]) -> None:
         kind = str(payload.get("kind") or "")
+        if kind != "artwork":
+            raise ValueError("Artwork details are centralized in Gallery artwork records.")
         raw_alternatives = payload.get("alternatives")
         artist = str(payload.get("artist") or "").strip()[:120]
         artist_url = normalize_artist_url(payload.get("artistUrl")) if payload.get("artistUrl") else ""
@@ -968,41 +1227,12 @@ class Handler(SimpleHTTPRequestHandler):
         if len(raw_alternatives) > 40:
             raise ValueError("A single image can have at most 40 alternatives.")
 
-        alternatives: list[dict[str, str]] = []
-        for index, raw in enumerate(raw_alternatives):
-            if not isinstance(raw, dict):
-                raise ValueError("Invalid alternative image entry.")
-            image_url = normalize_image_url(str(raw.get("image") or ""))
-            validate_image_reference(image_url)
-            title = str(raw.get("title") or f"Alternative {index + 1}").strip()[:120]
-            alt = str(raw.get("alt") or "").strip()[:500]
-            alternatives.append({"title": title or f"Alternative {index + 1}", "image": image_url, "alt": alt})
-
+        alternatives = normalize_alternatives(raw_alternatives)
         variable, content = read_assignment(CONTENT_FILE)
-        target: dict[str, Any] | None = None
-
-        if kind == "artwork":
-            artwork_id = str(payload.get("id") or "")
-            target = next((item for item in content.get("artworks", []) if str(item.get("id")) == artwork_id), None)
-            if target is None:
-                raise ValueError("Gallery artwork no longer exists. Reload the manager.")
-        elif kind == "reference":
-            character_id = str(payload.get("characterId") or "")
-            reference_index = payload.get("referenceIndex")
-            if not isinstance(reference_index, int):
-                raise ValueError("Invalid reference image index.")
-            character = next((item for item in content.get("characters", []) if str(item.get("id")) == character_id), None)
-            if character is None:
-                raise ValueError("Character no longer exists. Reload the manager.")
-            references = character.get("references", [])
-            if reference_index < 0 or reference_index >= len(references):
-                raise ValueError("Reference image no longer exists. Reload the manager.")
-            target = references[reference_index]
-            primary = str(payload.get("primaryImage") or "")
-            if primary and normalize_image_url(str(target.get("image") or "")) != normalize_image_url(primary):
-                raise ValueError("Reference image changed since this page loaded. Reload the manager.")
-        else:
-            raise ValueError("Unknown image variant source.")
+        artwork_id = str(payload.get("id") or "")
+        target = next((item for item in content.get("artworks", []) if str(item.get("id")) == artwork_id), None)
+        if target is None:
+            raise ValueError("Artwork no longer exists. Reload the manager.")
 
         if alternatives:
             target["alternatives"] = alternatives

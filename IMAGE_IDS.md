@@ -33,3 +33,16 @@ The website does **not** rewrite legacy local paths to `images.shincabinet.com` 
 ## Migration
 
 Upload/find the artwork in the Raspberry Pi Image Manager, copy its permanent `img_...` ID, then replace the legacy path in Site Manager. You can migrate one image at a time without breaking the remaining local gallery.
+
+## Central artwork and literature
+
+Image IDs are deliberately independent of website metadata.
+
+- `artworks[].image` stores the primary image ID.
+- `artworks[].alternatives[].image` stores each alternative image ID.
+- `characters[].image` stores the character's main portrait ID.
+- `literature[].coverImage` may store an optional cover ID.
+
+Character associations, artist credits, gallery visibility, reference/artwork type, literature tags, story text, and other relationships belong to `shincabinet.com`, **not** the Raspberry Pi Image Manager.
+
+Replacing the physical file behind an ID on the Pi automatically changes every website location using that ID without a website commit.

@@ -14,6 +14,9 @@
 /assets/js/site.js
   Cache-Control: public, max-age=0, must-revalidate
 
+/assets/js/markdown.js
+  Cache-Control: public, max-age=0, must-revalidate
+
 /assets/css/styles.css
   Cache-Control: public, max-age=0, must-revalidate
 
