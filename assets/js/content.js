@@ -514,6 +514,30 @@ window.SHIN_SITE = {
           "alt": ""
         }
       ]
+    },
+    {
+      "id": "tav-full-body",
+      "title": "Tav Full Body",
+      "type": "reference",
+      "category": "illustration",
+      "image": "img_30c5296d1baf44c58269ad4b461f89a5",
+      "characters": [
+        "tav"
+      ],
+      "subject": "",
+      "year": "2026",
+      "description": "",
+      "alt": "",
+      "mature": false,
+      "featured": false,
+      "showInGallery": true,
+      "alternatives": [
+        {
+          "title": "With Pants",
+          "image": "img_27899846e15e4dd2b61d983bde62acd3",
+          "alt": ""
+        }
+      ]
     }
   ],
   "adoptables": [],
