@@ -266,7 +266,7 @@ window.SHIN_SITE = {
       "path": "/characters/kite/"
     },
     {
-      "enabled": false,
+      "enabled": true,
       "id": "esmarelda",
       "name": "Esmarelda",
       "pronouns": "",
@@ -274,7 +274,7 @@ window.SHIN_SITE = {
       "role": "Character",
       "category": "secondary",
       "featured": false,
-      "image": "",
+      "image": "img_091a345cdb80442fb10c8bfa7c143a97",
       "alt": "",
       "tagline": "",
       "bio": [],
