@@ -264,6 +264,29 @@ window.SHIN_SITE = {
       "dislikes": [],
       "links": [],
       "path": "/characters/kite/"
+    },
+    {
+      "enabled": false,
+      "id": "esmarelda",
+      "name": "Esmarelda",
+      "pronouns": "",
+      "species": "Orange Cat",
+      "role": "Character",
+      "category": "secondary",
+      "featured": false,
+      "image": "",
+      "alt": "",
+      "tagline": "",
+      "bio": [],
+      "tags": [],
+      "facts": [],
+      "palette": [],
+      "personality": [],
+      "designNotes": [],
+      "likes": [],
+      "dislikes": [],
+      "links": [],
+      "path": "/characters/esmarelda/"
     }
   ],
   "artworks": [
@@ -538,6 +561,38 @@ window.SHIN_SITE = {
           "alt": ""
         }
       ]
+    },
+    {
+      "id": "esmarelda-chibi-icon-t",
+      "title": "Esmarelda Chibi_Icon Transparent",
+      "type": "artwork",
+      "category": "illustration",
+      "image": "img_091a345cdb80442fb10c8bfa7c143a97",
+      "characters": [],
+      "subject": "",
+      "year": "2026",
+      "description": "",
+      "alt": "",
+      "mature": false,
+      "featured": false,
+      "showInGallery": true
+    },
+    {
+      "id": "esmarelda-chibi-icon-t-ws",
+      "title": "Esmarelda Chibi Icon wS",
+      "type": "artwork",
+      "category": "illustration",
+      "image": "img_21437df4526f465b9c116c00221437ea",
+      "characters": [
+        "esmarelda"
+      ],
+      "subject": "",
+      "year": "2026",
+      "description": "",
+      "alt": "",
+      "mature": false,
+      "featured": false,
+      "showInGallery": true
     }
   ],
   "adoptables": [],
